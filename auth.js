@@ -132,7 +132,6 @@ async function handleSignup(e) {
             showToast(`Welcome to Zenith Pranavi, ${name}! 🎉`, 'success');
             closeAuthModal();
 
-            // If email confirmation is disabled, user is logged in immediately
             if (data.session) {
                 handleAuthStateChange(data.user);
             } else {
@@ -227,19 +226,15 @@ function handleAuthStateChange(user) {
                         'Student';
         const initial = userName.charAt(0).toUpperCase();
 
-        // Update all UI elements
         document.getElementById('user-initial').textContent = initial;
         document.getElementById('user-display-name').textContent = userName;
         document.getElementById('dash-user-name').textContent = userName;
 
-        // Toggle nav buttons
         authButtons.classList.add('hidden');
         userMenu.classList.remove('hidden');
 
-        // Switch to dashboard
         showDashboard();
 
-        // Load dashboard data
         if (typeof loadDashboardData === 'function') {
             loadDashboardData(user);
         }
@@ -252,7 +247,6 @@ function showDashboard() {
     homepageEl.classList.add('hidden');
     dashboardEl.classList.remove('hidden');
 
-    // Clear active nav state
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
@@ -264,20 +258,14 @@ function showHomepage() {
     dashboardEl.classList.add('hidden');
     homepageEl.classList.remove('hidden');
 
-    // Reset nav buttons
     authButtons.classList.remove('hidden');
     userMenu.classList.add('hidden');
-
-    // Reload homepage tutors
-    if (typeof loadTutors === 'function') {
-        loadTutors();
-    }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ═══════════════════════════════════════════════════════════
-// SESSION PERSISTENCE (Auto-Login on page load)
+// SESSION PERSISTENCE
 // ═══════════════════════════════════════════════════════════
 
 async function checkExistingSession() {
@@ -300,7 +288,7 @@ async function checkExistingSession() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// AUTH STATE LISTENER (Real-time)
+// AUTH STATE LISTENER
 // ═══════════════════════════════════════════════════════════
 
 supabase.auth.onAuthStateChange((event, session) => {
@@ -352,31 +340,8 @@ document.getElementById('switch-to-login').addEventListener('click', (e) => {
 loginForm.addEventListener('submit', handleLogin);
 signupForm.addEventListener('submit', handleSignup);
 
-// Logout
+// Logout & Dashboard buttons
 document.getElementById('logout-btn').addEventListener('click', handleLogout);
-
-// Dashboard button
 document.getElementById('dashboard-btn').addEventListener('click', showDashboard);
-
-// Hero CTA buttons
-document.getElementById('hero-begin-btn').addEventListener('click', () => openAuthModal('signup'));
-document.getElementById('hero-talk-btn').addEventListener('click', () => {
-    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
-});
-
-// Pricing "Book Now" buttons → require auth
-document.querySelectorAll('.pricing-book-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            showDashboard();
-            setTimeout(() => {
-                document.getElementById('book-section').scrollIntoView({ behavior: 'smooth' });
-            }, 300);
-        } else {
-            openAuthModal('signup');
-        }
-    });
-});
 
 console.log('✅ Auth module loaded');

@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
    ZENITH PRANAVI — Main Application Controller
    ═══════════════════════════════════════════════════════════
-   Phase 3: Ties together Auth + Database + UI
+   EdTech Platform — Homepage + Dashboard
    ═══════════════════════════════════════════════════════════ */
 
 // ═══════════════════════════════════════════════════════════
@@ -14,16 +14,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Check for existing session (auto-login)
     await checkExistingSession();
 
-    // 2. Load homepage tutors
-    await loadTutors();
-
-    // 3. Set up event listeners
+    // 2. Set up event listeners
     initializeEventListeners();
 
-    // 4. Set min booking dates to today
+    // 3. Set min booking dates to today
     setMinBookingDates();
 
-    // 5. Initialize scroll animations
+    // 4. Initialize scroll animations
     initScrollAnimations();
 
     console.log('✅ Application fully initialized');
@@ -105,26 +102,9 @@ function initializeEventListeners() {
     // ── Footer Links ──
     const footerSignin = document.getElementById('footer-signin-link');
     const footerSignup = document.getElementById('footer-signup-link');
-    const footerDash   = document.getElementById('footer-dashboard-link');
-    const footerBook   = document.getElementById('footer-bookings-link');
 
     if (footerSignin) footerSignin.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('login'); });
     if (footerSignup) footerSignup.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('signup'); });
-    if (footerDash) footerDash.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) { showDashboard(); } else { openAuthModal('login'); }
-    });
-    if (footerBook) footerBook.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            showDashboard();
-            setTimeout(() => {
-                document.getElementById('book-section').scrollIntoView({ behavior: 'smooth' });
-            }, 300);
-        } else { openAuthModal('login'); }
-    });
 
     // ── Active Nav on Scroll ──
     window.addEventListener('scroll', updateActiveNavOnScroll);
@@ -145,9 +125,6 @@ function initializeEventListeners() {
 // BOOKING HANDLERS
 // ═══════════════════════════════════════════════════════════
 
-/**
- * Handle booking from dashboard form
- */
 async function handleDashboardBooking(e) {
     e.preventDefault();
 
@@ -164,7 +141,6 @@ async function handleDashboardBooking(e) {
 
     const tutorData = JSON.parse(tutorSelect.value);
 
-    // Validate date is not in the past
     if (new Date(date) < new Date(new Date().toDateString())) {
         showToast('Please select a future date.', 'warning');
         return;
@@ -190,9 +166,6 @@ async function handleDashboardBooking(e) {
     setButtonLoading(submitBtn, false);
 }
 
-/**
- * Handle booking from quick-book modal (tutor card)
- */
 async function handleQuickBooking(e) {
     e.preventDefault();
 
@@ -249,7 +222,6 @@ async function handleEnquiry(e) {
         return;
     }
 
-    // Basic email validation
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         showToast('Please enter a valid email address.', 'warning');
         return;
@@ -286,7 +258,6 @@ async function handleCtaForm(e) {
         return;
     }
 
-    // Save as an enquiry with auto-message
     const success = await submitEnquiry({
         name: email.split('@')[0],
         email: email,
@@ -304,9 +275,6 @@ async function handleCtaForm(e) {
 // UTILITY FUNCTIONS
 // ═══════════════════════════════════════════════════════════
 
-/**
- * Set minimum date on all date inputs to today
- */
 function setMinBookingDates() {
     const today = new Date().toISOString().split('T')[0];
     document.querySelectorAll('input[type="date"]').forEach(input => {
@@ -314,9 +282,6 @@ function setMinBookingDates() {
     });
 }
 
-/**
- * Update active nav link based on scroll position
- */
 function updateActiveNavOnScroll() {
     if (homepageEl.classList.contains('hidden')) return;
 
@@ -357,14 +322,11 @@ function initScrollAnimations() {
         });
     }, observerOptions);
 
-    // Apply fade-in to animated elements
     const selectors = [
-        '.pricing-card',
-        '.experience-card',
+        '.program-card',
         '.process-step',
         '.why-feature-card',
         '.contact-info-card',
-        '.tutor-card',
         '.impact-card',
         '.cta-card'
     ];
