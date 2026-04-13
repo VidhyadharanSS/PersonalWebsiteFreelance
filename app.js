@@ -285,7 +285,7 @@ function setMinBookingDates() {
 function updateActiveNavOnScroll() {
     if (homepageEl.classList.contains('hidden')) return;
 
-    const sections = ['home', 'programs', 'how-it-works', 'contact'];
+    const sections = ['home', 'programs', 'pricing', 'how-it-works', 'contact'];
     const scrollPos = window.scrollY + 160;
 
     for (let i = sections.length - 1; i >= 0; i--) {
@@ -328,7 +328,10 @@ function initScrollAnimations() {
         '.why-feature-card',
         '.contact-info-card',
         '.impact-card',
-        '.cta-card'
+        '.cta-card',
+        '.pricing-card',
+        '.experience-card',
+        '.trust-pill'
     ];
 
     document.querySelectorAll(selectors.join(', ')).forEach((el, index) => {
