@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Pranavi — Where Every Child Reaches Their Zenith | ZPed.in</title>
+    <meta name="description" content="World-class online tutoring for every child — every grade, every curriculum, every ability. Learning that feels personal, because it is.">
+    <meta name="keywords" content="online tutoring, education, CBSE, IGCSE, IB, special needs, ZPed.in, Zenith Pranavi">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- TOAST NOTIFICATION CONTAINER            -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="toast-container"></div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- NAVIGATION BAR                           -->
+    <!-- ═══════════════════════════════════════ -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#home" class="nav-brand">
+                <div class="brand-logo">
+                    <span>ZP</span>
+                </div>
+                <span class="brand-name">Zenith Pranavi</span>
+            </a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#home" class="nav-link active" data-section="home">HOME</a></li>
+                <li><a href="#programs" class="nav-link" data-section="programs">PROGRAMS</a></li>
+                <li><a href="#how-it-works" class="nav-link" data-section="how-it-works">HOW IT WORKS</a></li>
+                <li><a href="#contact" class="nav-link" data-section="contact">CONTACT</a></li>
+            </ul>
+            <div class="nav-actions">
+                <!-- Logged-out state -->
+                <div id="auth-buttons">
+                    <button class="btn btn-outline btn-nav" id="signin-btn">SIGN IN</button>
+                    <button class="btn btn-primary btn-nav" id="getstarted-btn">GET STARTED →</button>
+                </div>
+                <!-- Logged-in state -->
+                <div id="user-menu" class="hidden">
+                    <div class="user-avatar" id="user-avatar">
+                        <span id="user-initial">U</span>
+                    </div>
+                    <span class="user-greeting">Hello, <strong id="user-display-name">User</strong></span>
+                    <button class="btn btn-outline btn-nav btn-sm" id="dashboard-btn">Dashboard</button>
+                    <button class="btn btn-ghost btn-sm" id="logout-btn">Logout</button>
+                </div>
+            </div>
+            <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- AUTH MODAL                               -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <div class="modal-brand">
+                <div class="brand-logo brand-logo-lg">
+                    <span>ZP</span>
+                </div>
+                <h2 class="modal-title" id="modal-title">Welcome Back</h2>
+                <p class="modal-subtitle" id="modal-subtitle">Sign in to continue your learning journey</p>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="login-email">Email Address</label>
+                    <input type="email" id="login-email" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="login-submit">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loader hidden"></span>
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? <a href="#" id="switch-to-signup">Create one</a>
+                </p>
+            </form>
+
+            <!-- SIGNUP FORM -->
+            <form id="signup-form" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" placeholder="Enter your full name" required autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email Address</label>
+                    <input type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="Min 6 characters" required minlength="6" autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="signup-submit">
+                    <span class="btn-text">Create Account</span>
+                    <span class="btn-loader hidden"></span>
+                </button>
+                <p class="auth-switch">
+                    Already have an account? <a href="#" id="switch-to-login">Sign in</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--                    HOMEPAGE                             -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <main id="homepage">
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 1: HERO                      -->
+        <!-- ════════════════════════════════════ -->
+        <section class="hero" id="home">
+            <div class="hero-content">
+                <p class="hero-badge">🌸 &nbsp;GLOBAL ELEARNING &nbsp;· &nbsp;EVERY GRADE &nbsp;· &nbsp;EVERY CHILD</p>
+                
+                <!-- Decorative Emblem -->
+                <div class="hero-emblem">
+                    <div class="emblem-outer">
+                        <div class="emblem-inner">
+                            <span class="emblem-flower">🌸</span>
+                            <span class="emblem-text-top">Zenith Pranavi</span>
+                            <span class="emblem-zp">ZP</span>
+                            <span class="emblem-text-bottom">EDUCATION</span>
+                            <span class="emblem-sub">ZPed.in</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h1 class="hero-title">Zenith Pranavi</h1>
+                <p class="hero-subtitle">Where Every Child Reaches Their Zenith</p>
+                <p class="hero-desc">
+                    World-class online tutoring for every child — every grade, every 
+                    curriculum, every ability. Learning that feels personal, because it is.
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary btn-lg" id="hero-begin-btn">BEGIN YOUR JOURNEY →</button>
+                    <button class="btn btn-outline-gold btn-lg" id="hero-talk-btn">TALK TO US FIRST</button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number gold">50+</span>
+                        <span class="stat-label">COUNTRIES</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-number dark">12K+</span>
+                        <span class="stat-label">STUDENTS</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-number pink">98%</span>
+                        <span class="stat-label">SATISFACTION</span>
+                    </div>
+                </div>
+
+                <!-- Discover scroll indicator -->
+                <div class="scroll-indicator">
+                    <span>Discover</span>
+                    <div class="scroll-arrow">↓</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 2: WHY ZENITH PRANAVI        -->
+        <!-- ════════════════════════════════════ -->
+        <section class="section why-section" id="why">
+            <div class="container">
+                <div class="why-grid">
+                    <!-- Left: ZP Emblem -->
+                    <div class="why-emblem-col">
+                        <div class="why-emblem-wrapper">
+                            <div class="why-emblem-circle">
+                                <span class="why-flower">🌸</span>
+                                <span class="why-zp-text">ZP</span>
+                                <span class="why-brand-text">Zenith Pranavi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Content -->
+                    <div class="why-content-col">
+                        <p class="section-badge-left">WHY ZENITH PRANAVI</p>
+                        <h2 class="section-title-left">Learning That Sees<br>Every Child</h2>
+                        <div class="section-underline"></div>
+                        <p class="why-description">
+                            Most platforms teach to the average. We teach to the <em>individual</em>. 
+                            Whether your child is gifted, needs extra support, or simply learns 
+                            differently — we meet them exactly where they are.
+                        </p>
+
+                        <div class="why-features">
+                            <div class="why-feature-card">
+                                <div class="why-feature-icon">🌍</div>
+                                <div>
+                                    <strong>Global Curricula</strong>
+                                    <span>CBSE, IGCSE, IB, US Common Core — every major curriculum worldwide.</span>
+                                </div>
+                            </div>
+                            <div class="why-feature-card">
+                                <div class="why-feature-icon">🌸</div>
+                                <div>
+                                    <strong>Inclusive by Design</strong>
+                                    <span>Autism, ADHD, dyslexia support — not as an afterthought, as a foundation.</span>
+                                </div>
+                            </div>
+                            <div class="why-feature-card">
+                                <div class="why-feature-icon">💰</div>
+                                <div>
+                                    <strong>Fair Global Pricing</strong>
+                                    <span>Fees modulated by country. Quality education is not a privilege of geography.</span>
+                                </div>
+                            </div>
+                            <div class="why-feature-card">
+                                <div class="why-feature-icon">🌺</div>
+                                <div>
+                                    <strong>The Lily Promise</strong>
+                                    <span>Like the lily that blooms anywhere — we nurture every child to blossom.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 3: PHILOSOPHY QUOTE          -->
+        <!-- ════════════════════════════════════ -->
+        <section class="quote-section">
+            <div class="container">
+                <blockquote class="philosophy-quote">
+                    "The goal is not to make every child the <span class="underline-text">same kind of smart</span> — it's to 
+                    help every child discover the <span class="underline-text">kind of smart they already are</span>. At 
+                    Zenith Pranavi, that is not a philosophy. It is our daily practice."
+                </blockquote>
+                <p class="quote-attribution">— ZENITH PRANAVI EDUCATION &nbsp;🌸&nbsp; ZPED.IN</p>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 4: THE PROCESS               -->
+        <!-- ════════════════════════════════════ -->
+        <section class="section process-section" id="how-it-works">
+            <div class="container">
+                <p class="section-badge">THE PROCESS</p>
+                <h2 class="section-title process-title">Simple to Start.<br>Profound in Impact.</h2>
+                <div class="section-underline-center"></div>
+
+                <div class="process-steps">
+                    <div class="process-step">
+                        <div class="step-number-circle">01</div>
+                        <h3 class="step-title">Free Discovery Call</h3>
+                        <p class="step-desc">30 minutes understanding your child — strengths, challenges, curriculum, and dreams. No forms. No pressure. Just a real conversation.</p>
+                        <div class="step-tags">
+                            <span class="step-tag">30 MINUTES</span>
+                            <span class="step-tag">FREE</span>
+                        </div>
+                    </div>
+
+                    <div class="process-step">
+                        <div class="step-number-circle">02</div>
+                        <h3 class="step-title">Your Child's Learning Map</h3>
+                        <p class="step-desc">Our educators design a personalised path — not a template, a bespoke map drawn specifically for your child's unique mind and goals.</p>
+                        <div class="step-tags">
+                            <span class="step-tag">PERSONALISED</span>
+                            <span class="step-tag">48HRS</span>
+                        </div>
+                    </div>
+
+                    <div class="process-step">
+                        <div class="step-number-circle">03</div>
+                        <h3 class="step-title">Meet Your Matched Tutor</h3>
+                        <p class="step-desc">We match your child with an expert who specialises in their curriculum, learning style, and specific needs. Chemistry before commitment.</p>
+                        <div class="step-tags">
+                            <span class="step-tag">EXPERT-MATCHED</span>
+                        </div>
+                    </div>
+
+                    <div class="process-step">
+                        <div class="step-number-circle">04</div>
+                        <h3 class="step-title">Learn, Grow, Ascend</h3>
+                        <p class="step-desc">Live online sessions, flexible scheduling, parent progress reports, and monthly reviews. Education that moves with your child.</p>
+                        <div class="step-tags">
+                            <span class="step-tag">LIVE</span>
+                            <span class="step-tag">FLEXIBLE</span>
+                            <span class="step-tag">ADAPTIVE</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 5: PROGRAMS & PRICING        -->
+        <!-- ════════════════════════════════════ -->
+        <section class="section pricing-section" id="programs">
+            <div class="container">
+                <p class="section-badge">✦ &nbsp;TRANSPARENT PRICING</p>
+                <h2 class="section-title">Programs & Pricing</h2>
+                <p class="section-desc">Simple, fair pricing based on year level. Every plan includes live classes, doubt sessions, and parent meetings.</p>
+
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <div class="pricing-level">Year 1–6</div>
+                        <div class="pricing-tag">Foundation</div>
+                        <div class="pricing-amount">
+                            <span class="currency">$</span>
+                            <span class="price">13</span>
+                            <span class="per">/hour</span>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✓ Live 1-on-1 classes</li>
+                            <li>✓ Doubt clearing sessions</li>
+                            <li>✓ Monthly parent meetings</li>
+                            <li>✓ Progress tracking</li>
+                            <li>✓ 3-month learning plan</li>
+                        </ul>
+                        <button class="btn btn-primary btn-full pricing-book-btn" data-year="1-6" data-price="13">Book Now</button>
+                    </div>
+
+                    <div class="pricing-card featured">
+                        <div class="featured-badge">MOST POPULAR</div>
+                        <div class="pricing-level">Year 7–10</div>
+                        <div class="pricing-tag">Intermediate</div>
+                        <div class="pricing-amount">
+                            <span class="currency">$</span>
+                            <span class="price">20</span>
+                            <span class="per">/hour</span>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✓ Live 1-on-1 classes</li>
+                            <li>✓ Doubt clearing sessions</li>
+                            <li>✓ Monthly parent meetings</li>
+                            <li>✓ Progress tracking</li>
+                            <li>✓ 3-month learning plan</li>
+                            <li>✓ Exam preparation</li>
+                        </ul>
+                        <button class="btn btn-primary btn-full pricing-book-btn" data-year="7-10" data-price="20">Book Now</button>
+                    </div>
+
+                    <div class="pricing-card">
+                        <div class="pricing-level">Year 11–12</div>
+                        <div class="pricing-tag">Advanced</div>
+                        <div class="pricing-amount">
+                            <span class="currency">$</span>
+                            <span class="price">27</span>
+                            <span class="per">/hour</span>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✓ Live 1-on-1 classes</li>
+                            <li>✓ Doubt clearing sessions</li>
+                            <li>✓ Monthly parent meetings</li>
+                            <li>✓ Progress tracking</li>
+                            <li>✓ 3-month learning plan</li>
+                            <li>✓ University prep</li>
+                        </ul>
+                        <button class="btn btn-primary btn-full pricing-book-btn" data-year="11-12" data-price="27">Book Now</button>
+                    </div>
+
+                    <div class="pricing-card special">
+                        <div class="pricing-level">Special Needs</div>
+                        <div class="pricing-tag">Inclusive</div>
+                        <div class="pricing-amount">
+                            <span class="currency">$</span>
+                            <span class="price">27</span>
+                            <span class="per">/hour</span>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✓ Trained specialist tutors</li>
+                            <li>✓ Personalised approach</li>
+                            <li>✓ Parent collaboration</li>
+                            <li>✓ Adaptive learning plans</li>
+                            <li>✓ Progress tracking</li>
+                            <li>✓ Flexible scheduling</li>
+                        </ul>
+                        <button class="btn btn-primary btn-full pricing-book-btn" data-year="special" data-price="27">Book Now</button>
+                    </div>
+                </div>
+
+                <div class="pricing-note">
+                    <p>💡 <strong>Refund Policy:</strong> Unused classes are fully refundable (terms apply). No lock-in contracts.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 6: LEARNING EXPERIENCE       -->
+        <!-- ════════════════════════════════════ -->
+        <section class="section experience-section">
+            <div class="container">
+                <p class="section-badge">✦ &nbsp;THE ZENITH DIFFERENCE</p>
+                <h2 class="section-title">An Unmatched Learning Experience</h2>
+                <p class="section-desc">We don't just teach — we transform the way your child learns, grows, and excels.</p>
+
+                <div class="experience-grid">
+                    <div class="experience-card">
+                        <div class="experience-icon">🎯</div>
+                        <h3>Live Interactive Classes</h3>
+                        <p>Real-time sessions with expert tutors. No pre-recorded videos — every class is alive, engaging, and tailored to your child.</p>
+                    </div>
+                    <div class="experience-card">
+                        <div class="experience-icon">💬</div>
+                        <h3>Real-Time Doubt Solving</h3>
+                        <p>Questions don't wait, and neither do we. Instant doubt resolution during and between sessions ensures continuous understanding.</p>
+                    </div>
+                    <div class="experience-card">
+                        <div class="experience-icon">👤</div>
+                        <h3>Focused 1-on-1 Attention</h3>
+                        <p>Every session is private. Your child gets 100% of the tutor's attention, energy, and expertise — every single minute.</p>
+                    </div>
+                    <div class="experience-card">
+                        <div class="experience-icon">📊</div>
+                        <h3>Continuous Progress Tracking</h3>
+                        <p>Regular assessments, detailed reports, and parent meetings keep you informed about every milestone your child achieves.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 7: TUTORS LISTING            -->
+        <!-- ════════════════════════════════════ -->
+        <section class="section tutors-section" id="tutors">
+            <div class="container">
+                <p class="section-badge">✦ &nbsp;EXPERT EDUCATORS</p>
+                <h2 class="section-title">Meet Our Tutors</h2>
+                <p class="section-desc">Handpicked, verified, and passionate educators who make learning extraordinary.</p>
+
+                <div class="tutors-grid" id="tutors-grid">
+                    <div class="loading-skeleton">
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 8: CONTACT                   -->
+        <!-- ════════════════════════════════════ -->
+        <section class="section contact-section" id="contact">
+            <div class="container">
+                <p class="section-badge">✦ &nbsp;GET IN TOUCH</p>
+                <h2 class="section-title">Talk To Us</h2>
+                <p class="section-desc">Have questions? We'd love to hear from you. Send us a message and we'll respond promptly.</p>
+
+                <div class="contact-wrapper">
+                    <form class="contact-form" id="enquiry-form">
+                        <div class="form-group">
+                            <label for="enquiry-name">Your Name</label>
+                            <input type="text" id="enquiry-name" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="enquiry-email">Email Address</label>
+                            <input type="email" id="enquiry-email" placeholder="you@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="enquiry-message">Message</label>
+                            <textarea id="enquiry-message" rows="5" placeholder="How can we help you?" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full" id="enquiry-submit">
+                            <span class="btn-text">Send Message</span>
+                            <span class="btn-loader hidden"></span>
+                        </button>
+                    </form>
+                    <div class="contact-info">
+                        <div class="contact-info-card">
+                            <div class="contact-icon">📧</div>
+                            <h3>Email Us</h3>
+                            <p>hello@zped.in</p>
+                        </div>
+                        <div class="contact-info-card">
+                            <div class="contact-icon">🌐</div>
+                            <h3>Website</h3>
+                            <p>www.zped.in</p>
+                        </div>
+                        <div class="contact-info-card">
+                            <div class="contact-icon">🕐</div>
+                            <h3>Hours</h3>
+                            <p>Mon–Sat, 9 AM – 8 PM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 9: NUMBERS THAT MATTER       -->
+        <!-- ════════════════════════════════════ -->
+        <section class="section impact-section">
+            <div class="container">
+                <p class="section-badge">OUR IMPACT</p>
+                <h2 class="section-title impact-title">Numbers That Matter</h2>
+
+                <div class="impact-grid">
+                    <div class="impact-card">
+                        <div class="impact-number gold">50<span class="impact-plus">+</span></div>
+                        <div class="impact-label">COUNTRIES</div>
+                        <div class="impact-desc">Students from six continents</div>
+                    </div>
+                    <div class="impact-card">
+                        <div class="impact-number navy">12000<span class="impact-plus">+</span></div>
+                        <div class="impact-label">STUDENTS</div>
+                        <div class="impact-desc">Children whose paths we've shaped</div>
+                    </div>
+                    <div class="impact-card">
+                        <div class="impact-number pink">98<span class="impact-plus">%</span></div>
+                        <div class="impact-label">SATISFACTION</div>
+                        <div class="impact-desc">Parents say their child improved</div>
+                    </div>
+                    <div class="impact-card">
+                        <div class="impact-number navy">200<span class="impact-plus">+</span></div>
+                        <div class="impact-label">EDUCATORS</div>
+                        <div class="impact-desc">Expert tutors across every grade</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- SECTION 10: CTA — CLAIM FREE SESSION -->
+        <!-- ════════════════════════════════════ -->
+        <section class="section cta-section">
+            <div class="container">
+                <div class="cta-card">
+                    <h2 class="cta-title">
+                        Your Child's Zenith<br>
+                        <span class="cta-title-accent">Starts Here</span>
+                    </h2>
+                    <p class="cta-desc">
+                        Join thousands of families worldwide who trust Zenith Pranavi. Your first session is completely free.
+                    </p>
+                    <form class="cta-form" id="cta-form">
+                        <input type="email" class="cta-input" id="cta-email" placeholder="Enter your email address" required>
+                        <button type="submit" class="btn btn-primary cta-btn">CLAIM FREE SESSION →</button>
+                    </form>
+                    <p class="cta-note">No credit card · No commitment · Just learning 🌸</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
+        <!-- FOOTER (Multi-column)                -->
+        <!-- ════════════════════════════════════ -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <!-- Brand Column -->
+                    <div class="footer-brand-col">
+                        <div class="footer-brand-row">
+                            <div class="brand-logo"><span>ZP</span></div>
+                            <span class="brand-name">Zenith Pranavi</span>
+                        </div>
+                        <p class="footer-tagline">Where every child finds their path and walks it — boldly, joyfully, all the way to their zenith.</p>
+                    </div>
+
+                    <!-- Programs Column -->
+                    <div class="footer-col">
+                        <h4 class="footer-col-title">PROGRAMS</h4>
+                        <ul class="footer-col-links">
+                            <li><a href="#programs">Foundation Learning</a></li>
+                            <li><a href="#programs">Accelerated Track</a></li>
+                            <li><a href="#programs">Special Needs Support</a></li>
+                            <li><a href="#programs">Exam Preparation</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Company Column -->
+                    <div class="footer-col">
+                        <h4 class="footer-col-title">COMPANY</h4>
+                        <ul class="footer-col-links">
+                            <li><a href="#why">Our Story</a></li>
+                            <li><a href="#tutors">Our Educators</a></li>
+                            <li><a href="#contact">Contact Us</a></li>
+                            <li><a href="#how-it-works">How It Works</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Account Column -->
+                    <div class="footer-col">
+                        <h4 class="footer-col-title">ACCOUNT</h4>
+                        <ul class="footer-col-links">
+                            <li><a href="#" id="footer-signin-link">Sign In</a></li>
+                            <li><a href="#" id="footer-signup-link">Sign Up</a></li>
+                            <li><a href="#" id="footer-dashboard-link">Dashboard</a></li>
+                            <li><a href="#" id="footer-bookings-link">My Bookings</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-bottom">
+                    <p>&copy; 2025 Zenith Pranavi Education (ZPed.in). All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--                    DASHBOARD                            -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <main id="dashboard" class="hidden">
+        
+        <!-- Dashboard Hero -->
+        <section class="dashboard-hero">
+            <div class="container">
+                <div class="dashboard-welcome">
+                    <h1>Welcome back, <span id="dash-user-name">Student</span> 👋</h1>
+                    <p>Your learning dashboard — manage bookings, explore tutors, and track your progress.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Stats -->
+        <section class="dashboard-section">
+            <div class="container">
+                <div class="dashboard-stats">
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon">📚</div>
+                        <div class="dash-stat-number" id="total-bookings-count">0</div>
+                        <div class="dash-stat-label">Total Bookings</div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon">✅</div>
+                        <div class="dash-stat-number" id="confirmed-bookings-count">0</div>
+                        <div class="dash-stat-label">Confirmed</div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon">⏳</div>
+                        <div class="dash-stat-number" id="pending-bookings-count">0</div>
+                        <div class="dash-stat-label">Pending</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Book a Session -->
+        <section class="dashboard-section" id="book-section">
+            <div class="container">
+                <h2 class="dash-section-title">📖 Book a Session</h2>
+                <div class="booking-form-wrapper">
+                    <form id="booking-form" class="booking-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="booking-tutor">Select Tutor</label>
+                                <select id="booking-tutor" required>
+                                    <option value="">Choose a tutor...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="booking-subject">Subject</label>
+                                <input type="text" id="booking-subject" placeholder="e.g. Mathematics" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="booking-date">Date</label>
+                                <input type="date" id="booking-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="booking-time">Time</label>
+                                <select id="booking-time" required>
+                                    <option value="">Select time...</option>
+                                    <option value="09:00 AM">09:00 AM</option>
+                                    <option value="10:00 AM">10:00 AM</option>
+                                    <option value="11:00 AM">11:00 AM</option>
+                                    <option value="12:00 PM">12:00 PM</option>
+                                    <option value="01:00 PM">01:00 PM</option>
+                                    <option value="02:00 PM">02:00 PM</option>
+                                    <option value="03:00 PM">03:00 PM</option>
+                                    <option value="04:00 PM">04:00 PM</option>
+                                    <option value="05:00 PM">05:00 PM</option>
+                                    <option value="06:00 PM">06:00 PM</option>
+                                    <option value="07:00 PM">07:00 PM</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="booking-price-display">
+                            <span>Session Price: </span>
+                            <strong id="booking-price-label">$0/hour</strong>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full" id="booking-submit">
+                            <span class="btn-text">Confirm Booking</span>
+                            <span class="btn-loader hidden"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- My Bookings Table -->
+        <section class="dashboard-section">
+            <div class="container">
+                <h2 class="dash-section-title">📋 My Bookings</h2>
+                <div class="bookings-table-wrapper">
+                    <table class="bookings-table" id="bookings-table">
+                        <thead>
+                            <tr>
+                                <th>Tutor</th>
+                                <th>Subject</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookings-tbody">
+                            <tr class="empty-row">
+                                <td colspan="6">No bookings yet. Book your first session above!</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Tutors -->
+        <section class="dashboard-section">
+            <div class="container">
+                <h2 class="dash-section-title">🎓 Available Tutors</h2>
+                <div class="tutors-grid" id="dash-tutors-grid">
+                    <div class="loading-skeleton">
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-bottom">
+                    <p>&copy; 2025 Zenith Pranavi Education (ZPed.in). All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- BOOKING MODAL (Quick book from tutor)    -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="modal-overlay" id="booking-modal">
+        <div class="modal modal-booking">
+            <button class="modal-close" id="booking-modal-close">&times;</button>
+            <h2 class="modal-title">Book a Session</h2>
+            <p class="modal-subtitle" id="booking-modal-tutor-info">with Tutor Name — $XX/hour</p>
+            <form id="quick-booking-form" class="auth-form">
+                <div class="form-group">
+                    <label for="qb-subject">Subject</label>
+                    <input type="text" id="qb-subject" placeholder="e.g. Mathematics" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="qb-date">Date</label>
+                        <input type="date" id="qb-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="qb-time">Time</label>
+                        <select id="qb-time" required>
+                            <option value="">Select time...</option>
+                            <option value="09:00 AM">09:00 AM</option>
+                            <option value="10:00 AM">10:00 AM</option>
+                            <option value="11:00 AM">11:00 AM</option>
+                            <option value="12:00 PM">12:00 PM</option>
+                            <option value="01:00 PM">01:00 PM</option>
+                            <option value="02:00 PM">02:00 PM</option>
+                            <option value="03:00 PM">03:00 PM</option>
+                            <option value="04:00 PM">04:00 PM</option>
+                            <option value="05:00 PM">05:00 PM</option>
+                            <option value="06:00 PM">06:00 PM</option>
+                            <option value="07:00 PM">07:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="hidden" id="qb-tutor-name" value="">
+                <input type="hidden" id="qb-tutor-price" value="">
+                <button type="submit" class="btn btn-primary btn-full" id="qb-submit">
+                    <span class="btn-text">Confirm Booking</span>
+                    <span class="btn-loader hidden"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- SCRIPTS — Supabase + Custom Modules      -->
+    <!-- ═══════════════════════════════════════ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="database.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
