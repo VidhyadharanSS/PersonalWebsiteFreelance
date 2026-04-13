@@ -9,6 +9,11 @@
 const SUPABASE_URL = 'https://oqxwvkytyczmldnrqjll.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_nU4ihs42_7R5L5F9Cb4Pew_J_0XYxhe';
 
+// ──────────── SITE URL (for email redirects) ────────────
+const SITE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? window.location.origin
+    : 'https://zenith-pranavi.vercel.app';
+
 // ──────────── INITIALIZE SUPABASE CLIENT ────────────
 // The CDN creates `var supabase` (namespace). We must use `var` again (not const/let)
 // to reassign it to the actual client instance for all scripts to use.

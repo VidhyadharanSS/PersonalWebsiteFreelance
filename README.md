@@ -1,4 +1,4 @@
-# 🌸 Zenith Pranavi — ZPed.in
+# 🌸 Zenith Pranavi — ZPed.org
 
 **Where Every Child Reaches Their Zenith**
 
@@ -89,4 +89,4 @@ Your credentials are already configured in `config.js`:
 
 ---
 
-© 2025 Zenith Pranavi Education (ZPed.in). All rights reserved.
+© 2025 Zenith Pranavi Education (ZPed.org). All rights reserved.

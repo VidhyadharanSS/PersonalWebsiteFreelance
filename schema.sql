@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════
--- ZENITH PRANAVI (ZPed.in) — Complete Database Schema
+-- ZENITH PRANAVI (ZPed.org) — Complete Database Schema
 -- ═══════════════════════════════════════════════════════════════════════
 -- Project:  ZPranavi
 -- Account:  VidhyadharanSS  
@@ -46,7 +46,7 @@ CREATE TABLE tutors (
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
-COMMENT ON TABLE tutors IS 'Tutor profiles for Zenith Pranavi (ZPed.in)';
+COMMENT ON TABLE tutors IS 'Tutor profiles for Zenith Pranavi (ZPed.org)';
 COMMENT ON COLUMN tutors.subjects IS 'Array of subjects the tutor teaches';
 COMMENT ON COLUMN tutors.price_hour IS 'Hourly rate in USD (Year 1-6: $13, Year 7-10: $20, Year 11-12: $27, Special: $27)';
 COMMENT ON COLUMN tutors.status IS 'active = available for booking, inactive = unavailable';

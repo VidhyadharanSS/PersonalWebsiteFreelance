@@ -122,7 +122,8 @@ async function handleSignup(e) {
                 data: {
                     name: name,
                     full_name: name
-                }
+                },
+                emailRedirectTo: SITE_URL
             }
         });
 
@@ -265,11 +266,78 @@ function showHomepage() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// EMAIL CONFIRMATION HANDLER
+// ═══════════════════════════════════════════════════════════
+// When user clicks the email confirmation link, Supabase redirects to
+// SITE_URL#access_token=...&type=signup  (or uses query params).
+// We need to detect this and let Supabase client exchange the token.
+
+async function handleEmailConfirmationRedirect() {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(window.location.search);
+
+    // Check for token in URL hash (Supabase PKCE / implicit flow)
+    const hasHashToken = hash && (hash.includes('access_token') || hash.includes('type=signup') || hash.includes('type=recovery') || hash.includes('type=email'));
+    // Check for auth code in query params (Supabase PKCE flow)
+    const hasCodeParam = params.has('code');
+
+    if (hasHashToken || hasCodeParam) {
+        console.log('🔐 Email confirmation redirect detected — processing...');
+
+        try {
+            // If using PKCE code exchange flow
+            if (hasCodeParam) {
+                const code = params.get('code');
+                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+                if (error) throw error;
+                if (data?.session?.user) {
+                    const userName = data.session.user.user_metadata?.name ||
+                                   data.session.user.user_metadata?.full_name ||
+                                   data.session.user.email?.split('@')[0] || 'Student';
+                    showToast(`Email confirmed! Welcome, ${userName}! 🎉`, 'success');
+                }
+            } else {
+                // Hash-based flow: Supabase client auto-detects and sets session
+                // We just need to wait a moment for it to process
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                if (session?.user) {
+                    const userName = session.user.user_metadata?.name ||
+                                   session.user.user_metadata?.full_name ||
+                                   session.user.email?.split('@')[0] || 'Student';
+                    showToast(`Email confirmed! Welcome, ${userName}! 🎉`, 'success');
+                }
+            }
+
+            // Clean the URL (remove hash/query tokens for clean UX)
+            if (window.history.replaceState) {
+                window.history.replaceState(null, '', window.location.pathname);
+            }
+
+            return true; // Confirmation was handled
+        } catch (error) {
+            console.error('Email confirmation error:', error);
+            showToast('Email confirmation failed. Please try signing in.', 'error');
+            // Clean URL even on error
+            if (window.history.replaceState) {
+                window.history.replaceState(null, '', window.location.pathname);
+            }
+            return false;
+        }
+    }
+
+    return false; // No confirmation redirect detected
+}
+
+// ═══════════════════════════════════════════════════════════
 // SESSION PERSISTENCE
 // ═══════════════════════════════════════════════════════════
 
 async function checkExistingSession() {
     try {
+        // First: check if this is an email confirmation redirect
+        const wasConfirmation = await handleEmailConfirmationRedirect();
+
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) throw error;
