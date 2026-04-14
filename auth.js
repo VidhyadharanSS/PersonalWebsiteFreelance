@@ -390,6 +390,8 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeAuthModal();
         if (typeof closeBookingModal === 'function') closeBookingModal();
+        if (typeof closeMultiStepModal === 'function') closeMultiStepModal();
+        if (typeof closeProgramModal === 'function') closeProgramModal();
     }
 });
 

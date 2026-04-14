@@ -89,8 +89,17 @@ function initializeEventListeners() {
     // ── Contact/Enquiry Form ──
     document.getElementById('enquiry-form').addEventListener('submit', handleEnquiry);
 
-    // ── CTA "Claim Free Session" Form ──
+    // ── CTA "Claim Free Session" Forms ──
     document.getElementById('cta-form').addEventListener('submit', handleCtaForm);
+
+    // ── Final CTA Form (Duplicate before footer) → Opens Multi-Step Modal ──
+    document.getElementById('final-cta-form').addEventListener('submit', handleFinalCtaForm);
+
+    // ── Initialize Multi-Step Booking Modal ──
+    initMultiStepForm();
+
+    // ── Initialize Program Selection Modal ──
+    initProgramModal();
 
     // ── Footer Links ──
     const footerSignin = document.getElementById('footer-signin-link');
@@ -251,16 +260,23 @@ async function handleCtaForm(e) {
         return;
     }
 
-    const success = await submitEnquiry({
-        name: email.split('@')[0],
-        email: email,
-        message: '🌸 Requested a FREE discovery session via homepage CTA.'
-    });
+    // Open the multi-step booking modal with pre-filled email
+    openMultiStepModal(email);
+}
 
-    if (success) {
-        emailInput.value = '';
-        showToast('Thank you! We\'ll reach out to schedule your free session. 🎉', 'success');
-    }
+
+// ═══════════════════════════════════════════════════════════
+// FINAL CTA FORM HANDLER (Opens Multi-Step Modal)
+// ═══════════════════════════════════════════════════════════
+
+async function handleFinalCtaForm(e) {
+    e.preventDefault();
+
+    const emailInput = document.getElementById('final-cta-email');
+    const email = emailInput.value.trim();
+
+    // Open multi-step modal regardless (email is optional pre-fill)
+    openMultiStepModal(email);
 }
 
 
@@ -410,6 +426,602 @@ function initScrollAnimations() {
         el.style.transitionDelay = `${index * 0.08}s`;
         observer.observe(el);
     });
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// MULTI-STEP FORM MODAL (High-Conversion Booking Flow)
+// ═══════════════════════════════════════════════════════════
+
+const msfModal = document.getElementById('msf-modal');
+let msfCurrentStep = 1;
+const MSF_TOTAL_STEPS = 6;
+
+// Collected form data
+let msfData = {
+    parentName: '', parentEmail: '', parentPhone: '', parentAltPhone: '',
+    studentName: '', studentGrade: '', curriculum: '',
+    subject: '', timeSlot: '', mode: 'Online', ctaEmail: ''
+};
+
+/**
+ * Open the multi-step booking modal
+ * @param {string} prefilledEmail - Optional email from CTA input
+ */
+function openMultiStepModal(prefilledEmail = '') {
+    msfData.ctaEmail = prefilledEmail;
+    msfCurrentStep = 1;
+
+    // Check if user is already logged in
+    checkMsfAuthState();
+
+    // Pre-fill email if provided
+    if (prefilledEmail) {
+        const emailField = document.getElementById('msf-email');
+        const signupEmailField = document.getElementById('msf-signup-email');
+        const parentEmailField = document.getElementById('msf-parent-email');
+        if (emailField) emailField.value = prefilledEmail;
+        if (signupEmailField) signupEmailField.value = prefilledEmail;
+        if (parentEmailField) parentEmailField.value = prefilledEmail;
+    }
+
+    goToMsfStep(1);
+    msfModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMultiStepModal() {
+    msfModal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+/**
+ * Navigate to a specific step
+ */
+function goToMsfStep(step) {
+    msfCurrentStep = step;
+
+    // Hide all steps
+    document.querySelectorAll('.msf-step').forEach(s => s.classList.remove('active'));
+    // Show target step
+    const targetStep = document.getElementById(`msf-step-${step}`);
+    if (targetStep) targetStep.classList.add('active');
+
+    // Update progress bar
+    const progressBar = document.getElementById('msf-progress-bar');
+    progressBar.style.width = `${(step / MSF_TOTAL_STEPS) * 100}%`;
+
+    // Update step dots
+    document.querySelectorAll('.msf-step-dot').forEach(dot => {
+        const dotStep = parseInt(dot.dataset.step);
+        dot.classList.remove('active', 'completed');
+        if (dotStep === step) dot.classList.add('active');
+        else if (dotStep < step) dot.classList.add('completed');
+    });
+}
+
+/**
+ * Check if user is already authenticated for Step 1
+ */
+async function checkMsfAuthState() {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const skipAuth = document.getElementById('msf-skip-auth');
+        const emailPanel = document.getElementById('msf-auth-email');
+        const authTabs = document.querySelector('.msf-auth-tabs');
+
+        if (session?.user) {
+            // User is logged in — show skip option
+            const name = session.user.user_metadata?.name ||
+                        session.user.user_metadata?.full_name ||
+                        session.user.email?.split('@')[0] || 'User';
+            document.getElementById('msf-logged-name').textContent = `Signed in as ${name}`;
+
+            // Pre-fill parent details
+            document.getElementById('msf-parent-name').value = name;
+            document.getElementById('msf-parent-email').value = session.user.email || '';
+
+            skipAuth.classList.remove('hidden');
+            emailPanel.classList.remove('active');
+            if (authTabs) authTabs.style.display = 'none';
+
+            // Hide all other auth panels
+            document.querySelectorAll('.msf-auth-panel').forEach(p => p.classList.remove('active'));
+        } else {
+            skipAuth.classList.add('hidden');
+            emailPanel.classList.add('active');
+            if (authTabs) authTabs.style.display = '';
+        }
+    } catch (e) {
+        console.error('MSF auth check error:', e);
+    }
+}
+
+/**
+ * Validate current step before proceeding
+ */
+function validateMsfStep(step) {
+    switch (step) {
+        case 2: {
+            const name = document.getElementById('msf-parent-name').value.trim();
+            const email = document.getElementById('msf-parent-email').value.trim();
+            const phone = document.getElementById('msf-parent-phone').value.trim();
+            const altPhone = document.getElementById('msf-parent-alt-phone').value.trim();
+            if (!name || !email || !phone || !altPhone) {
+                showToast('Please fill in all parent details.', 'warning');
+                return false;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showToast('Please enter a valid email address.', 'warning');
+                return false;
+            }
+            msfData.parentName = name;
+            msfData.parentEmail = email;
+            msfData.parentPhone = document.getElementById('msf-parent-phone-code').value + ' ' + phone;
+            msfData.parentAltPhone = document.getElementById('msf-parent-alt-code').value + ' ' + altPhone;
+            return true;
+        }
+        case 3: {
+            const studentName = document.getElementById('msf-student-name').value.trim();
+            const studentGrade = document.getElementById('msf-student-grade').value;
+            if (!studentName || !studentGrade) {
+                showToast('Please fill in student name and grade.', 'warning');
+                return false;
+            }
+            msfData.studentName = studentName;
+            msfData.studentGrade = studentGrade;
+            return true;
+        }
+        case 4: {
+            const curriculum = document.getElementById('msf-curriculum-value').value;
+            if (!curriculum) {
+                showToast('Please select a curriculum.', 'warning');
+                return false;
+            }
+            msfData.curriculum = curriculum;
+            return true;
+        }
+        case 5: {
+            const subject = document.getElementById('msf-subject').value.trim();
+            const timeSlot = document.getElementById('msf-time-slot').value;
+            if (!subject || !timeSlot) {
+                showToast('Please fill in subject and preferred time slot.', 'warning');
+                return false;
+            }
+            msfData.subject = subject;
+            msfData.timeSlot = timeSlot;
+            msfData.mode = document.getElementById('msf-mode').value;
+            return true;
+        }
+        default:
+            return true;
+    }
+}
+
+/**
+ * Initialize all multi-step form event listeners
+ */
+function initMultiStepForm() {
+    if (!msfModal) return;
+
+    // Close modal
+    document.getElementById('msf-close').addEventListener('click', closeMultiStepModal);
+    msfModal.addEventListener('click', (e) => {
+        if (e.target === msfModal) closeMultiStepModal();
+    });
+
+    // Auth tabs (email / phone toggle)
+    document.querySelectorAll('.msf-auth-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.msf-auth-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            document.querySelectorAll('.msf-auth-panel').forEach(p => p.classList.remove('active'));
+            const panelId = `msf-auth-${tab.dataset.authTab}`;
+            const panel = document.getElementById(panelId);
+            if (panel) panel.classList.add('active');
+        });
+    });
+
+    // Switch to signup
+    document.getElementById('msf-switch-signup').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.msf-auth-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('msf-auth-signup').classList.add('active');
+    });
+
+    // Switch to login
+    document.getElementById('msf-switch-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.msf-auth-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('msf-auth-email').classList.add('active');
+    });
+
+    // Forgot password trigger
+    document.getElementById('msf-forgot-trigger').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.msf-auth-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('msf-auth-forgot').classList.add('active');
+    });
+
+    // Back to login from forgot
+    document.getElementById('msf-back-to-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.msf-auth-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('msf-auth-email').classList.add('active');
+    });
+
+    // Email Login
+    document.getElementById('msf-email-login').addEventListener('click', async () => {
+        const email = document.getElementById('msf-email').value.trim();
+        const password = document.getElementById('msf-password').value;
+        const btn = document.getElementById('msf-email-login');
+
+        if (!email || !password) {
+            showToast('Please enter email and password.', 'warning');
+            return;
+        }
+
+        setButtonLoading(btn, true);
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+
+            const name = data.user?.user_metadata?.name || email.split('@')[0];
+            showToast(`Signed in as ${name}! ✅`, 'success');
+
+            // Pre-fill parent details
+            document.getElementById('msf-parent-name').value = name;
+            document.getElementById('msf-parent-email').value = email;
+
+            goToMsfStep(2);
+        } catch (error) {
+            showToast(error.message || 'Login failed.', 'error');
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    });
+
+    // Email Signup
+    document.getElementById('msf-signup-btn').addEventListener('click', async () => {
+        const name = document.getElementById('msf-signup-name').value.trim();
+        const email = document.getElementById('msf-signup-email').value.trim();
+        const password = document.getElementById('msf-signup-password').value;
+        const btn = document.getElementById('msf-signup-btn');
+
+        if (!name || !email || !password) {
+            showToast('Please fill in all fields.', 'warning');
+            return;
+        }
+        if (password.length < 6) {
+            showToast('Password must be at least 6 characters.', 'warning');
+            return;
+        }
+
+        setButtonLoading(btn, true);
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email, password,
+                options: { data: { name, full_name: name }, emailRedirectTo: SITE_URL }
+            });
+            if (error) throw error;
+
+            showToast(`Account created! Welcome, ${name}! 🎉`, 'success');
+
+            document.getElementById('msf-parent-name').value = name;
+            document.getElementById('msf-parent-email').value = email;
+
+            if (data.session) {
+                handleAuthStateChange(data.user);
+            } else {
+                showToast('Check your email to verify your account.', 'info');
+            }
+
+            goToMsfStep(2);
+        } catch (error) {
+            showToast(error.message || 'Signup failed.', 'error');
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    });
+
+    // Phone OTP (Send)
+    document.getElementById('msf-send-otp').addEventListener('click', async () => {
+        const code = document.getElementById('msf-phone-code').value;
+        const phone = document.getElementById('msf-phone').value.trim();
+        const btn = document.getElementById('msf-send-otp');
+
+        if (!phone) {
+            showToast('Please enter your phone number.', 'warning');
+            return;
+        }
+
+        setButtonLoading(btn, true);
+        try {
+            const { error } = await supabase.auth.signInWithOtp({ phone: code + phone });
+            if (error) throw error;
+
+            showToast('OTP sent! Check your phone. 📲', 'success');
+            document.getElementById('msf-otp-group').classList.remove('hidden');
+        } catch (error) {
+            showToast(error.message || 'Failed to send OTP. Try email login instead.', 'error');
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    });
+
+    // Phone OTP (Verify)
+    document.getElementById('msf-verify-otp').addEventListener('click', async () => {
+        const code = document.getElementById('msf-phone-code').value;
+        const phone = document.getElementById('msf-phone').value.trim();
+        const otp = document.getElementById('msf-otp').value.trim();
+        const btn = document.getElementById('msf-verify-otp');
+
+        if (!otp || otp.length < 6) {
+            showToast('Please enter the 6-digit OTP.', 'warning');
+            return;
+        }
+
+        setButtonLoading(btn, true);
+        try {
+            const { data, error } = await supabase.auth.verifyOtp({
+                phone: code + phone, token: otp, type: 'sms'
+            });
+            if (error) throw error;
+
+            showToast('Phone verified! ✅', 'success');
+            goToMsfStep(2);
+        } catch (error) {
+            showToast(error.message || 'OTP verification failed.', 'error');
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    });
+
+    // Forgot password send
+    document.getElementById('msf-forgot-send').addEventListener('click', async () => {
+        const email = document.getElementById('msf-forgot-email').value.trim();
+        const btn = document.getElementById('msf-forgot-send');
+
+        if (!email) {
+            showToast('Please enter your email.', 'warning');
+            return;
+        }
+
+        setButtonLoading(btn, true);
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: SITE_URL
+            });
+            if (error) throw error;
+            showToast('Password reset link sent! Check your email. 📧', 'success');
+        } catch (error) {
+            showToast(error.message || 'Failed to send reset link.', 'error');
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    });
+
+    // Skip auth (already logged in)
+    document.getElementById('msf-skip-btn').addEventListener('click', () => {
+        goToMsfStep(2);
+    });
+
+    // Back / Next navigation buttons
+    document.querySelectorAll('.msf-back-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const goto = parseInt(btn.dataset.goto);
+            goToMsfStep(goto);
+        });
+    });
+
+    document.querySelectorAll('.msf-next-btn:not(.msf-submit-btn)').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const goto = parseInt(btn.dataset.goto);
+            const currentStep = goto - 1;
+            if (validateMsfStep(currentStep)) {
+                goToMsfStep(goto);
+            }
+        });
+    });
+
+    // Curriculum pill selection
+    document.querySelectorAll('.msf-curriculum-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('.msf-curriculum-pill').forEach(p => p.classList.remove('selected'));
+            pill.classList.add('selected');
+            document.getElementById('msf-curriculum-value').value = pill.dataset.curriculum;
+        });
+    });
+
+    // Final Submit (Step 5 → Step 6)
+    document.getElementById('msf-final-submit').addEventListener('click', async () => {
+        if (!validateMsfStep(5)) return;
+
+        const btn = document.getElementById('msf-final-submit');
+        setButtonLoading(btn, true);
+
+        try {
+            // Submit as enquiry to Supabase
+            const message = `🌸 FREE SESSION REQUEST (Multi-Step Form)
+─────────────────────────────
+PARENT: ${msfData.parentName}
+EMAIL: ${msfData.parentEmail}
+PHONE: ${msfData.parentPhone}
+ALT PHONE: ${msfData.parentAltPhone}
+─────────────────────────────
+STUDENT: ${msfData.studentName}
+GRADE: ${msfData.studentGrade}
+CURRICULUM: ${msfData.curriculum}
+─────────────────────────────
+SUBJECT: ${msfData.subject}
+TIME: ${msfData.timeSlot}
+MODE: ${msfData.mode}`;
+
+            await submitEnquiry({
+                name: msfData.parentName,
+                email: msfData.parentEmail,
+                message: message
+            });
+
+            // Show confirmation summary
+            const summary = document.getElementById('msf-confirm-summary');
+            summary.innerHTML = `
+                <strong>Student:</strong> ${msfData.studentName} (${msfData.studentGrade})<br>
+                <strong>Curriculum:</strong> ${msfData.curriculum}<br>
+                <strong>Subject:</strong> ${msfData.subject}<br>
+                <strong>Time:</strong> ${msfData.timeSlot} (${msfData.mode})<br>
+                <strong>Contact:</strong> ${msfData.parentEmail}
+            `;
+
+            goToMsfStep(6);
+        } catch (error) {
+            showToast('Something went wrong. Please try again.', 'error');
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    });
+
+    // Done button (Step 6)
+    document.getElementById('msf-done-btn').addEventListener('click', () => {
+        closeMultiStepModal();
+        // Reset form
+        msfData = {
+            parentName: '', parentEmail: '', parentPhone: '', parentAltPhone: '',
+            studentName: '', studentGrade: '', curriculum: '',
+            subject: '', timeSlot: '', mode: 'Online', ctaEmail: ''
+        };
+    });
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// PROGRAM SELECTION MODAL (Pricing → Discovery Call)
+// ═══════════════════════════════════════════════════════════
+
+const programModal = document.getElementById('program-modal');
+let selectedProgram = { name: '', grades: '', price: 0 };
+
+function openProgramModal() {
+    if (!programModal) return;
+
+    // Reset to step 1
+    document.querySelectorAll('.pm-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('pm-step-1').classList.add('active');
+
+    programModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeProgramModal() {
+    if (!programModal) return;
+    programModal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function initProgramModal() {
+    if (!programModal) return;
+
+    // Close
+    document.getElementById('program-modal-close').addEventListener('click', closeProgramModal);
+    programModal.addEventListener('click', (e) => {
+        if (e.target === programModal) closeProgramModal();
+    });
+
+    // Program card selection
+    document.querySelectorAll('.pm-card').forEach(card => {
+        card.addEventListener('click', () => {
+            selectedProgram.name = card.dataset.program;
+            selectedProgram.grades = card.dataset.grades;
+            selectedProgram.price = parseInt(card.dataset.price);
+
+            document.getElementById('pm-selected-name').textContent = selectedProgram.name;
+            document.getElementById('pm-selected-rate').textContent = `$${selectedProgram.price}`;
+
+            // Go to step 2
+            document.querySelectorAll('.pm-step').forEach(s => s.classList.remove('active'));
+            document.getElementById('pm-step-2').classList.add('active');
+        });
+    });
+
+    // Back buttons
+    document.getElementById('pm-back-1').addEventListener('click', () => {
+        document.querySelectorAll('.pm-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('pm-step-1').classList.add('active');
+    });
+
+    document.getElementById('pm-back-2').addEventListener('click', () => {
+        document.querySelectorAll('.pm-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('pm-step-2').classList.add('active');
+    });
+
+    // Claim button → show booking form
+    document.getElementById('pm-claim-btn').addEventListener('click', () => {
+        document.querySelectorAll('.pm-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('pm-step-3').classList.add('active');
+    });
+
+    // Slot selection
+    document.querySelectorAll('.pm-slot').forEach(slot => {
+        slot.addEventListener('click', () => {
+            document.querySelectorAll('.pm-slot').forEach(s => s.classList.remove('selected'));
+            slot.classList.add('selected');
+            document.getElementById('pm-slot-value').value = slot.dataset.slot;
+        });
+    });
+
+    // Booking form submit
+    document.getElementById('pm-booking-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const childName = document.getElementById('pm-child-name').value.trim();
+        const childAge = document.getElementById('pm-child-age').value;
+        const parentEmail = document.getElementById('pm-parent-email').value.trim();
+        const whatsappCode = document.getElementById('pm-whatsapp-code').value;
+        const whatsapp = document.getElementById('pm-parent-whatsapp').value.trim();
+        const slot = document.getElementById('pm-slot-value').value;
+        const btn = document.getElementById('pm-submit-btn');
+
+        if (!childName || !childAge || !parentEmail || !whatsapp) {
+            showToast('Please fill in all fields.', 'warning');
+            return;
+        }
+        if (!slot) {
+            showToast('Please select a time slot.', 'warning');
+            return;
+        }
+
+        setButtonLoading(btn, true);
+
+        try {
+            const message = `🌸 FREE DISCOVERY CALL (Program Modal)
+─────────────────────────────
+PROGRAM: ${selectedProgram.name} (${selectedProgram.grades})
+PRICE: $${selectedProgram.price}/hour
+─────────────────────────────
+CHILD: ${childName} (Age ${childAge})
+PARENT EMAIL: ${parentEmail}
+WHATSAPP: ${whatsappCode} ${whatsapp}
+SLOT: ${slot}`;
+
+            await submitEnquiry({
+                name: childName,
+                email: parentEmail,
+                message: message
+            });
+
+            // Go to success
+            document.querySelectorAll('.pm-step').forEach(s => s.classList.remove('active'));
+            document.getElementById('pm-step-4').classList.add('active');
+        } catch (error) {
+            showToast('Failed to submit. Please try again.', 'error');
+        } finally {
+            setButtonLoading(btn, false);
+        }
+    });
+
+    // Done button
+    document.getElementById('pm-done-btn').addEventListener('click', closeProgramModal);
 }
 
 

@@ -315,7 +315,7 @@
                             <li><span class="check gold">✓</span> Refund for unused classes</li>
                         </ul>
                         <p class="pricing-terms">Terms apply for refund policy</p>
-                        <button class="btn pricing-btn pricing-btn-navy" onclick="openAuthModal('signup')">Start Year 1–6</button>
+                        <button class="btn pricing-btn pricing-btn-navy" onclick="openProgramModal()">Start Year 1–6</button>
                     </div>
 
                     <!-- Card 2: Year 7–10 -->
@@ -332,7 +332,7 @@
                             <li><span class="check gold">✓</span> Refund for unused classes</li>
                         </ul>
                         <p class="pricing-terms">Terms apply for refund policy</p>
-                        <button class="btn pricing-btn pricing-btn-navy" onclick="openAuthModal('signup')">Start Year 7–10</button>
+                        <button class="btn pricing-btn pricing-btn-navy" onclick="openProgramModal()">Start Year 7–10</button>
                     </div>
 
                     <!-- Card 3: Year 11–12 (MOST POPULAR) -->
@@ -350,7 +350,7 @@
                             <li><span class="check gold">✓</span> Refund for unused classes</li>
                         </ul>
                         <p class="pricing-terms">Terms apply for refund policy</p>
-                        <button class="btn pricing-btn pricing-btn-gold" onclick="openAuthModal('signup')">Start Year 11–12</button>
+                        <button class="btn pricing-btn pricing-btn-gold" onclick="openProgramModal()">Start Year 11–12</button>
                     </div>
 
                     <!-- Card 4: Special Needs -->
@@ -368,7 +368,7 @@
                             <li><span class="check pink-deep">✓</span> Refund for unused classes</li>
                         </ul>
                         <p class="pricing-terms">Terms apply for refund policy</p>
-                        <button class="btn pricing-btn pricing-btn-pink" onclick="openAuthModal('signup')">Start Inclusive Plan</button>
+                        <button class="btn pricing-btn pricing-btn-pink" onclick="openProgramModal()">Start Inclusive Plan</button>
                     </div>
                 </div>
 
@@ -384,7 +384,7 @@
                     </div>
                     <div class="trust-pill">
                         <span class="trust-icon">🤝</span>
-                        <span class="trust-text">Parent Meetings Included — you are part of every step</span>
+                        <span class="trust-text"><strong>Parent Meetings Included</strong> — you are part of every step</span>
                     </div>
                 </div>
             </div>
@@ -574,6 +574,30 @@
             </div>
         </section>
 
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- SECTION 9B: FINAL CTA (Before Footer — Duplicate)   -->
+        <!-- High-conversion CTA with multi-step booking flow     -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <section class="section cta-section cta-section-final" id="final-cta">
+            <div class="container">
+                <div class="cta-card cta-card-final">
+                    <div class="cta-card-glow"></div>
+                    <h2 class="cta-title">
+                        Your Child's Zenith<br>
+                        <span class="cta-title-accent">Starts Here</span>
+                    </h2>
+                    <p class="cta-desc">
+                        Join <strong>thousands of families</strong> worldwide who trust Zenith Pranavi. Your first session is <strong>completely free</strong>.
+                    </p>
+                    <form class="cta-form" id="final-cta-form">
+                        <input type="email" class="cta-input" id="final-cta-email" placeholder="Enter your email address">
+                        <button type="submit" class="btn btn-primary cta-btn">CLAIM FREE SESSION →</button>
+                    </form>
+                    <p class="cta-note">No credit card · No commitment · Just learning 🌸</p>
+                </div>
+            </div>
+        </section>
+
         <!-- ════════════════════════════════════ -->
         <!-- SECTION 10: CONTACT                  -->
         <!-- ════════════════════════════════════ -->
@@ -641,7 +665,7 @@
                             <img src="logo-icon.jpeg" alt="Zenith Pranavi" class="footer-logo-img">
                             <span class="brand-name">Zenith Pranavi</span>
                         </div>
-                        <p class="footer-tagline">Where every child finds their path and walks it — boldly, joyfully, all the way to their zenith.</p>
+                        <p class="footer-tagline">Where every child finds their path and walks it — <strong>boldly, joyfully</strong>, all the way to their zenith.</p>
                     </div>
 
                     <!-- Programs Column -->
@@ -872,7 +896,7 @@
         </footer>
     </main>
 
-    <!-- BOOKING MODAL -->
+    <!-- BOOKING MODAL (legacy — kept for dashboard) -->
     <div class="modal-overlay" id="booking-modal">
         <div class="modal modal-booking">
             <button class="modal-close" id="booking-modal-close">&times;</button>
@@ -913,6 +937,466 @@
                     <span class="btn-loader hidden"></span>
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- MULTI-STEP BOOKING FLOW MODAL (High-Conversion)            -->
+    <!-- Triggered by "CLAIM FREE SESSION" CTA buttons              -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="msf-modal">
+        <div class="modal modal-multistep">
+            <button class="modal-close" id="msf-close">&times;</button>
+
+            <!-- Progress Bar -->
+            <div class="msf-progress">
+                <div class="msf-progress-bar" id="msf-progress-bar" style="width:16.66%"></div>
+            </div>
+            <div class="msf-step-indicator">
+                <span class="msf-step-dot active" data-step="1">1</span>
+                <span class="msf-step-dot" data-step="2">2</span>
+                <span class="msf-step-dot" data-step="3">3</span>
+                <span class="msf-step-dot" data-step="4">4</span>
+                <span class="msf-step-dot" data-step="5">5</span>
+                <span class="msf-step-dot" data-step="6">6</span>
+            </div>
+
+            <!-- ─── STEP 1: LOGIN / SIGN IN ─── -->
+            <div class="msf-step active" id="msf-step-1">
+                <div class="msf-step-header">
+                    <span class="msf-step-badge">Step 1 of 6</span>
+                    <h3 class="msf-step-title">Sign In or Create Account</h3>
+                    <p class="msf-step-sub">To book your free session, let's start with your account.</p>
+                </div>
+
+                <!-- Auth Tabs -->
+                <div class="msf-auth-tabs">
+                    <button type="button" class="msf-auth-tab active" data-auth-tab="email">📧 Email Login</button>
+                    <button type="button" class="msf-auth-tab" data-auth-tab="phone">📱 Phone Login</button>
+                </div>
+
+                <!-- Email Login -->
+                <div class="msf-auth-panel active" id="msf-auth-email">
+                    <div class="form-group">
+                        <label for="msf-email">Email Address</label>
+                        <input type="email" id="msf-email" placeholder="you@example.com" autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="msf-password">Password</label>
+                        <input type="password" id="msf-password" placeholder="Enter your password" autocomplete="current-password">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full msf-login-btn" id="msf-email-login">
+                        <span class="btn-text">Sign In & Continue</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                    <p class="msf-auth-alt">
+                        Don't have an account? <a href="#" id="msf-switch-signup">Create one</a>
+                    </p>
+                    <p class="msf-forgot-link">
+                        <a href="#" id="msf-forgot-trigger">Forgot Password?</a>
+                    </p>
+                </div>
+
+                <!-- Email Signup (hidden by default) -->
+                <div class="msf-auth-panel" id="msf-auth-signup">
+                    <div class="form-group">
+                        <label for="msf-signup-name">Full Name</label>
+                        <input type="text" id="msf-signup-name" placeholder="Enter your full name" autocomplete="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="msf-signup-email">Email Address</label>
+                        <input type="email" id="msf-signup-email" placeholder="you@example.com" autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="msf-signup-password">Create Password</label>
+                        <input type="password" id="msf-signup-password" placeholder="Min 6 characters" minlength="6" autocomplete="new-password">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="msf-signup-btn">
+                        <span class="btn-text">Create Account & Continue</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                    <p class="msf-auth-alt">
+                        Already have an account? <a href="#" id="msf-switch-login">Sign in</a>
+                    </p>
+                </div>
+
+                <!-- Phone Login -->
+                <div class="msf-auth-panel" id="msf-auth-phone">
+                    <div class="form-group">
+                        <label for="msf-phone">Phone Number</label>
+                        <div class="msf-phone-row">
+                            <select class="msf-country-code" id="msf-phone-code">
+                                <option value="+91">🇮🇳 +91</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+61">🇦🇺 +61</option>
+                                <option value="+971">🇦🇪 +971</option>
+                                <option value="+65">🇸🇬 +65</option>
+                                <option value="+60">🇲🇾 +60</option>
+                                <option value="+49">🇩🇪 +49</option>
+                                <option value="+33">🇫🇷 +33</option>
+                                <option value="+81">🇯🇵 +81</option>
+                                <option value="+86">🇨🇳 +86</option>
+                                <option value="+82">🇰🇷 +82</option>
+                                <option value="+55">🇧🇷 +55</option>
+                                <option value="+27">🇿🇦 +27</option>
+                                <option value="+234">🇳🇬 +234</option>
+                                <option value="+254">🇰🇪 +254</option>
+                            </select>
+                            <input type="tel" id="msf-phone" placeholder="Phone number" autocomplete="tel">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="msf-send-otp">
+                        <span class="btn-text">Send OTP</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                    <div class="form-group msf-otp-group hidden" id="msf-otp-group">
+                        <label for="msf-otp">Enter OTP</label>
+                        <input type="text" id="msf-otp" placeholder="6-digit code" maxlength="6" autocomplete="one-time-code">
+                        <button type="button" class="btn btn-primary btn-full" id="msf-verify-otp" style="margin-top:12px;">
+                            <span class="btn-text">Verify & Continue</span>
+                            <span class="btn-loader hidden"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Forgot Password Panel -->
+                <div class="msf-auth-panel" id="msf-auth-forgot">
+                    <div class="msf-step-header" style="margin-bottom:16px;">
+                        <h3 class="msf-step-title" style="font-size:1.1rem;">Reset Your Password</h3>
+                        <p class="msf-step-sub">Enter your email and we'll send a reset link.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="msf-forgot-email">Email Address</label>
+                        <input type="email" id="msf-forgot-email" placeholder="you@example.com">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="msf-forgot-send">
+                        <span class="btn-text">Send Reset Link</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                    <p class="msf-auth-alt" style="margin-top:16px;">
+                        <a href="#" id="msf-back-to-login">← Back to Sign In</a>
+                    </p>
+                </div>
+
+                <!-- Skip button for already-logged-in users -->
+                <div class="msf-skip-auth hidden" id="msf-skip-auth">
+                    <div class="msf-logged-in-msg">
+                        <span class="msf-logged-check">✅</span>
+                        <div>
+                            <strong id="msf-logged-name">You're signed in</strong>
+                            <p style="font-size:0.85rem; color:var(--text-light); margin:0;">Continue to fill in your details</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="msf-skip-btn">Continue →</button>
+                </div>
+            </div>
+
+            <!-- ─── STEP 2: PARENT DETAILS ─── -->
+            <div class="msf-step" id="msf-step-2">
+                <div class="msf-step-header">
+                    <span class="msf-step-badge">Step 2 of 6</span>
+                    <h3 class="msf-step-title">Parent Details</h3>
+                    <p class="msf-step-sub">Tell us about yourself so we can personalise the experience.</p>
+                </div>
+                <div class="form-group">
+                    <label for="msf-parent-name">Parent Full Name <span class="required">*</span></label>
+                    <input type="text" id="msf-parent-name" placeholder="Your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="msf-parent-email">Email Address <span class="required">*</span></label>
+                    <input type="email" id="msf-parent-email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="msf-parent-phone">Phone Number <span class="required">*</span></label>
+                    <div class="msf-phone-row">
+                        <select class="msf-country-code" id="msf-parent-phone-code">
+                            <option value="+91">🇮🇳 +91</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+44">🇬🇧 +44</option>
+                            <option value="+61">🇦🇺 +61</option>
+                            <option value="+971">🇦🇪 +971</option>
+                            <option value="+65">🇸🇬 +65</option>
+                            <option value="+60">🇲🇾 +60</option>
+                            <option value="+49">🇩🇪 +49</option>
+                            <option value="+33">🇫🇷 +33</option>
+                            <option value="+81">🇯🇵 +81</option>
+                        </select>
+                        <input type="tel" id="msf-parent-phone" placeholder="Phone number" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="msf-parent-alt-phone">Alternate Phone <span class="required">*</span></label>
+                    <div class="msf-phone-row">
+                        <select class="msf-country-code" id="msf-parent-alt-code">
+                            <option value="+91">🇮🇳 +91</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+44">🇬🇧 +44</option>
+                            <option value="+61">🇦🇺 +61</option>
+                            <option value="+971">🇦🇪 +971</option>
+                            <option value="+65">🇸🇬 +65</option>
+                            <option value="+60">🇲🇾 +60</option>
+                            <option value="+49">🇩🇪 +49</option>
+                            <option value="+33">🇫🇷 +33</option>
+                            <option value="+81">🇯🇵 +81</option>
+                        </select>
+                        <input type="tel" id="msf-parent-alt-phone" placeholder="Alternate phone" required>
+                    </div>
+                </div>
+                <div class="msf-nav-row">
+                    <button type="button" class="btn btn-outline msf-back-btn" data-goto="1">← Back</button>
+                    <button type="button" class="btn btn-primary msf-next-btn" data-goto="3">Continue →</button>
+                </div>
+            </div>
+
+            <!-- ─── STEP 3: STUDENT DETAILS ─── -->
+            <div class="msf-step" id="msf-step-3">
+                <div class="msf-step-header">
+                    <span class="msf-step-badge">Step 3 of 6</span>
+                    <h3 class="msf-step-title">Student Details</h3>
+                    <p class="msf-step-sub">Tell us about your child.</p>
+                </div>
+                <div class="form-group">
+                    <label for="msf-student-name">Student Name <span class="required">*</span></label>
+                    <input type="text" id="msf-student-name" placeholder="Child's full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="msf-student-grade">Grade / Class <span class="required">*</span></label>
+                    <select id="msf-student-grade" required>
+                        <option value="">Select grade...</option>
+                        <option value="Year 1">Year 1</option>
+                        <option value="Year 2">Year 2</option>
+                        <option value="Year 3">Year 3</option>
+                        <option value="Year 4">Year 4</option>
+                        <option value="Year 5">Year 5</option>
+                        <option value="Year 6">Year 6</option>
+                        <option value="Year 7">Year 7</option>
+                        <option value="Year 8">Year 8</option>
+                        <option value="Year 9">Year 9</option>
+                        <option value="Year 10">Year 10</option>
+                        <option value="Year 11">Year 11</option>
+                        <option value="Year 12">Year 12</option>
+                        <option value="Special Needs">Special Needs Support</option>
+                    </select>
+                </div>
+                <div class="msf-nav-row">
+                    <button type="button" class="btn btn-outline msf-back-btn" data-goto="2">← Back</button>
+                    <button type="button" class="btn btn-primary msf-next-btn" data-goto="4">Continue →</button>
+                </div>
+            </div>
+
+            <!-- ─── STEP 4: CURRICULUM SELECTION ─── -->
+            <div class="msf-step" id="msf-step-4">
+                <div class="msf-step-header">
+                    <span class="msf-step-badge">Step 4 of 6</span>
+                    <h3 class="msf-step-title">Select Curriculum</h3>
+                    <p class="msf-step-sub">Choose the curriculum your child follows. <span class="required">*</span></p>
+                </div>
+                <div class="msf-curriculum-grid" id="msf-curriculum-grid">
+                    <button type="button" class="msf-curriculum-pill" data-curriculum="CBSE">CBSE</button>
+                    <button type="button" class="msf-curriculum-pill" data-curriculum="ICSE">ICSE</button>
+                    <button type="button" class="msf-curriculum-pill" data-curriculum="State Board">State Board</button>
+                    <button type="button" class="msf-curriculum-pill" data-curriculum="IGCSE (Cambridge)">IGCSE (Cambridge)</button>
+                    <button type="button" class="msf-curriculum-pill" data-curriculum="IB (PYP, MYP, DP)">IB (PYP, MYP, DP)</button>
+                    <button type="button" class="msf-curriculum-pill" data-curriculum="British (GCSE, A-Level)">British (GCSE, A-Level)</button>
+                    <button type="button" class="msf-curriculum-pill" data-curriculum="US Common Core">US Common Core</button>
+                    <button type="button" class="msf-curriculum-pill" data-curriculum="Australian (ATAR)">Australian (ATAR)</button>
+                </div>
+                <input type="hidden" id="msf-curriculum-value" value="">
+                <div class="msf-nav-row">
+                    <button type="button" class="btn btn-outline msf-back-btn" data-goto="3">← Back</button>
+                    <button type="button" class="btn btn-primary msf-next-btn" data-goto="5">Continue →</button>
+                </div>
+            </div>
+
+            <!-- ─── STEP 5: SESSION PREFERENCES ─── -->
+            <div class="msf-step" id="msf-step-5">
+                <div class="msf-step-header">
+                    <span class="msf-step-badge">Step 5 of 6</span>
+                    <h3 class="msf-step-title">Session Preferences</h3>
+                    <p class="msf-step-sub">Let us know when works best for your child.</p>
+                </div>
+                <div class="form-group">
+                    <label for="msf-subject">Subject <span class="required">*</span></label>
+                    <input type="text" id="msf-subject" placeholder="e.g. Mathematics, Science" required>
+                </div>
+                <div class="form-group">
+                    <label for="msf-time-slot">Preferred Time Slot <span class="required">*</span></label>
+                    <select id="msf-time-slot" required>
+                        <option value="">Select time slot...</option>
+                        <option value="Morning (9–12 AM)">Morning (9–12 AM)</option>
+                        <option value="Afternoon (12–3 PM)">Afternoon (12–3 PM)</option>
+                        <option value="Evening (3–6 PM)">Evening (3–6 PM)</option>
+                        <option value="Night (6–9 PM)">Night (6–9 PM)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="msf-mode">Mode</label>
+                    <select id="msf-mode">
+                        <option value="Online" selected>Online (Google Meet)</option>
+                        <option value="In-person">In-person (if available)</option>
+                    </select>
+                </div>
+                <div class="msf-nav-row">
+                    <button type="button" class="btn btn-outline msf-back-btn" data-goto="4">← Back</button>
+                    <button type="button" class="btn btn-primary msf-next-btn msf-submit-btn" id="msf-final-submit">
+                        <span class="btn-text">Submit Request 🌸</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ─── STEP 6: CONFIRMATION ─── -->
+            <div class="msf-step" id="msf-step-6">
+                <div class="msf-confirmation">
+                    <div class="msf-confirm-icon">🎉</div>
+                    <h3 class="msf-confirm-title">Session Request Received!</h3>
+                    <p class="msf-confirm-desc">
+                        Your free session request has been received.<br>
+                        <strong>Our team will contact you shortly</strong> to confirm the session details.
+                    </p>
+                    <div class="msf-confirm-details" id="msf-confirm-summary"></div>
+                    <div class="msf-confirm-trust">
+                        <span>✅ No credit card required</span>
+                        <span>✅ 30-min free discovery call</span>
+                        <span>✅ Cancel anytime</span>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="msf-done-btn">Done — Return to Site</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- PROGRAM SELECTION + DISCOVERY CALL MODAL                    -->
+    <!-- Step 1: Program cards → Step 2: Pricing → Step 3: Booking  -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="program-modal">
+        <div class="modal modal-program">
+            <button class="modal-close" id="program-modal-close">&times;</button>
+
+            <!-- PROGRAM STEP 1: Select Program -->
+            <div class="pm-step active" id="pm-step-1">
+                <h3 class="pm-title">Choose a Program</h3>
+                <p class="pm-sub">Select the learning level for your child</p>
+                <div class="pm-cards">
+                    <button class="pm-card" data-program="Foundation Years" data-grades="Grades 1-6" data-price="13">
+                        <span class="pm-card-icon">🌱</span>
+                        <strong>Foundation Years</strong>
+                        <span class="pm-card-grades">Grades 1–6</span>
+                        <span class="pm-card-price">$13/hour</span>
+                        <span class="pm-card-arrow">Select →</span>
+                    </button>
+                    <button class="pm-card" data-program="Middle School" data-grades="Grades 7-10" data-price="20">
+                        <span class="pm-card-icon">🚀</span>
+                        <strong>Middle School</strong>
+                        <span class="pm-card-grades">Grades 7–10</span>
+                        <span class="pm-card-price">$20/hour</span>
+                        <span class="pm-card-arrow">Select →</span>
+                    </button>
+                    <button class="pm-card" data-program="Senior Years" data-grades="Grades 11-12" data-price="27">
+                        <span class="pm-card-icon">🎯</span>
+                        <strong>Senior Years</strong>
+                        <span class="pm-card-grades">Grades 11–12</span>
+                        <span class="pm-card-price">$27/hour</span>
+                        <span class="pm-card-arrow">Select →</span>
+                    </button>
+                    <button class="pm-card pm-card-inclusive" data-program="Inclusive Support" data-grades="Special Needs" data-price="27">
+                        <span class="pm-card-icon">💛</span>
+                        <strong>Inclusive Support</strong>
+                        <span class="pm-card-grades">Special Needs</span>
+                        <span class="pm-card-price">$27/hour</span>
+                        <span class="pm-card-arrow">Select →</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PROGRAM STEP 2: Pricing Details -->
+            <div class="pm-step" id="pm-step-2">
+                <button type="button" class="pm-back-link" id="pm-back-1">← Change Program</button>
+                <div class="pm-pricing-display">
+                    <div class="pm-selected-badge" id="pm-selected-name">Foundation Years</div>
+                    <div class="pm-selected-price"><span id="pm-selected-rate">$13</span>/hour</div>
+                    <ul class="pm-includes">
+                        <li><span class="check gold">✓</span> 3-month structured plan included</li>
+                        <li><span class="check gold">✓</span> Free doubt sessions included</li>
+                        <li><span class="check gold">✓</span> Monthly parent progress reports</li>
+                        <li><span class="check gold">✓</span> Refund for unused sessions</li>
+                    </ul>
+                    <button type="button" class="btn btn-primary btn-full pm-claim-btn" id="pm-claim-btn">🌸 Claim Free Discovery Call</button>
+                </div>
+            </div>
+
+            <!-- PROGRAM STEP 3: Booking Form -->
+            <div class="pm-step" id="pm-step-3">
+                <button type="button" class="pm-back-link" id="pm-back-2">← Back to Plan</button>
+                <h3 class="pm-title" style="margin-top:8px;">Book Your Free Session</h3>
+                <form id="pm-booking-form">
+                    <div class="form-group">
+                        <label for="pm-child-name">Child's Name <span class="required">*</span></label>
+                        <input type="text" id="pm-child-name" placeholder="Child's full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pm-child-age">Child's Age <span class="required">*</span></label>
+                        <input type="number" id="pm-child-age" placeholder="Age" min="4" max="20" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pm-parent-email">Parent's Email <span class="required">*</span></label>
+                        <input type="email" id="pm-parent-email" placeholder="you@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pm-parent-whatsapp">Parent's WhatsApp <span class="required">*</span></label>
+                        <div class="msf-phone-row">
+                            <select class="msf-country-code" id="pm-whatsapp-code">
+                                <option value="+91">🇮🇳 +91</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+61">🇦🇺 +61</option>
+                                <option value="+971">🇦🇪 +971</option>
+                                <option value="+65">🇸🇬 +65</option>
+                            </select>
+                            <input type="tel" id="pm-parent-whatsapp" placeholder="WhatsApp number" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Preferred Time Slot <span class="required">*</span></label>
+                        <div class="pm-slot-grid" id="pm-slot-grid">
+                            <button type="button" class="pm-slot" data-slot="Mon-Fri 9–12 AM">Mon–Fri, 9–12 AM</button>
+                            <button type="button" class="pm-slot" data-slot="Mon-Fri 3–6 PM">Mon–Fri, 3–6 PM</button>
+                            <button type="button" class="pm-slot" data-slot="Sat-Sun 10–1 PM">Sat–Sun, 10–1 PM</button>
+                        </div>
+                        <input type="hidden" id="pm-slot-value" value="">
+                    </div>
+                    <div class="pm-trust-badges">
+                        <span>🔒 No credit card</span>
+                        <span>⏱️ 30-min free</span>
+                        <span>✖️ Cancel anytime</span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="pm-submit-btn">
+                        <span class="btn-text">Confirm Free Session 🌸</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- PROGRAM STEP 4: Success -->
+            <div class="pm-step" id="pm-step-4">
+                <div class="msf-confirmation">
+                    <div class="msf-confirm-icon">🎉</div>
+                    <h3 class="msf-confirm-title">You're All Set!</h3>
+                    <p class="msf-confirm-desc">
+                        Your free discovery session has been booked.<br>
+                        <strong>Check your email for the Google Meet link.</strong>
+                    </p>
+                    <div class="msf-confirm-trust">
+                        <span>✅ No credit card charged</span>
+                        <span>✅ 30-min free session</span>
+                        <span>✅ Cancel anytime</span>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="pm-done-btn">Done — Return to Site</button>
+                </div>
+            </div>
         </div>
     </div>
 
