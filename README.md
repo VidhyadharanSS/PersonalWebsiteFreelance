@@ -6,7 +6,7 @@ World-class online tutoring platform built with HTML, CSS, JavaScript and Supaba
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Structure 2 
 
 ```
 ZenithPranavi/
