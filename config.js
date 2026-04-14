@@ -8,10 +8,9 @@
 // ──────────── SUPABASE CREDENTIALS ────────────
 const SUPABASE_URL = 'https://oqxwvkytyczmldnrqjll.supabase.co';
 
-// ⚠️  IMPORTANT: Replace this with your REAL Supabase anon key from:
-//     Supabase Dashboard → Settings → API → Project API keys → anon (public)
-//     It should start with "eyJ..." (it's a JWT token)
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.REPLACE_WITH_YOUR_REAL_ANON_KEY';
+// Supabase Publishable API Key (anon/public — safe for frontend)
+// Dashboard → Settings → API → Project API keys → publishable
+const SUPABASE_ANON_KEY = 'sb_publishable_nU4ihs42_7R5L5F9Cb4Pew_J_0XYxhe';
 
 // ──────────── SITE URL (for email redirects) ────────────
 const SITE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'

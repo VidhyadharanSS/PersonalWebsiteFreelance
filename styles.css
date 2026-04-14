@@ -446,23 +446,21 @@ img { max-width: 100%; height: auto; }
 }
 
 .emblem-outer {
-    width: 180px;
-    height: 180px;
+    width: 200px;
+    height: 200px;
     border-radius: var(--radius-full);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 70%);
+    background: transparent;
     position: relative;
+    overflow: hidden;
 }
 
+/* hero-logo-img base — overridden by Logo Fix section below */
 .hero-logo-img {
-    width: 160px;
-    height: 160px;
-    border-radius: var(--radius-full);
-    object-fit: cover;
-    border: 1px solid rgba(197, 165, 90, 0.2);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+    border-radius: 0;
+    object-fit: contain;
 }
 
 /* Hero Brand Line */
@@ -719,12 +717,11 @@ img { max-width: 100%; height: auto; }
     width: 100%;
     height: 100%;
     border-radius: var(--radius-full);
-    background: linear-gradient(135deg, rgba(245, 240, 232, 0.9), rgba(255, 255, 255, 0.6));
-    border: 1px solid var(--cream-dark);
+    background: transparent;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.06);
     position: relative;
     overflow: hidden;
 }
@@ -734,7 +731,7 @@ img { max-width: 100%; height: auto; }
     position: absolute;
     inset: -20px;
     border-radius: var(--radius-full);
-    border: 1px solid rgba(197, 165, 90, 0.15);
+    border: 1px solid rgba(197, 165, 90, 0.12);
 }
 
 .why-emblem-circle::after {
@@ -742,14 +739,12 @@ img { max-width: 100%; height: auto; }
     position: absolute;
     inset: -40px;
     border-radius: var(--radius-full);
-    border: 1px solid rgba(197, 165, 90, 0.08);
+    border: 1px solid rgba(197, 165, 90, 0.06);
 }
 
+/* why-logo-img base — overridden by Logo Fix section below */
 .why-logo-img {
-    width: 75%;
-    height: 75%;
-    border-radius: var(--radius-full);
-    object-fit: cover;
+    object-fit: contain;
     position: relative;
     z-index: 1;
 }
@@ -1727,6 +1722,12 @@ img { max-width: 100%; height: auto; }
     outline: none;
 }
 
+/* Override width:100% inside phone rows so flex works correctly */
+.msf-phone-row .msf-country-code,
+.msf-phone-row input {
+    width: auto !important;
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
@@ -2566,8 +2567,7 @@ img { max-width: 100%; height: auto; }
 @media (max-width: 480px) {
     .hero-title { font-size: 2.4rem; }
     .hero-emblem { margin-bottom: 16px; }
-    .emblem-outer { width: 140px; height: 140px; }
-    .hero-logo-img { width: 120px; height: 120px; }
+    .emblem-outer { width: 160px; height: 160px; }
     .btn-lg { padding: 16px 32px; font-size: 0.72rem; }
     .btn-nav { padding: 8px 16px; font-size: 0.65rem; }
     .tutors-grid { grid-template-columns: 1fr; }
@@ -2599,27 +2599,47 @@ img { max-width: 100%; height: auto; }
 
 /* ═══════════════════════════════════════════════════════════
    LOGO FIX — Inner Logo Centering (Second/Inner Logo Only)
+   ═══════════════════════════════════════════════════════════
+   The logo-main.jpeg contains a full circular badge with 
+   "ZENITH PRANAVI" text wrapping the top and inner ZP+lily.
+   The image has built-in whitespace. We use object-fit:contain 
+   to show the full circle, and fine-tune position.
    ═══════════════════════════════════════════════════════════ */
-.why-logo-img {
-    width: 72% !important;
-    height: 72% !important;
-    object-fit: cover;
-    object-position: center center;
-    display: block;
-    margin: auto;
-}
 
-.hero-logo-img {
-    width: 78% !important;
-    height: 78% !important;
-    object-fit: cover;
-    object-position: center center;
-}
-
+/* Hero Emblem — the large circular logo in hero section */
 .emblem-outer {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+}
+
+.hero-logo-img {
+    width: 92% !important;
+    height: 92% !important;
+    object-fit: contain;
+    object-position: center 48%;  /* slight optical lift — badge text is at top */
+    display: block;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    filter: drop-shadow(0 4px 20px rgba(0,0,0,0.06));
+}
+
+/* Why Section Emblem — the circular logo in "Why" section */
+.why-emblem-circle {
+    overflow: hidden;
+}
+
+.why-logo-img {
+    width: 88% !important;
+    height: 88% !important;
+    object-fit: contain;
+    object-position: center 48%;
+    display: block;
+    margin: auto;
+    border-radius: 0 !important;
+    filter: drop-shadow(0 2px 12px rgba(0,0,0,0.05));
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2835,11 +2855,15 @@ img { max-width: 100%; height: auto; }
 /* Phone Row */
 .msf-phone-row {
     display: flex;
+    flex-direction: row;
     gap: 8px;
+    width: 100%;
 }
 
 .msf-country-code {
     width: 110px;
+    min-width: 110px;
+    max-width: 110px;
     padding: 13px 10px;
     font-size: 0.85rem;
     border: 1.5px solid var(--cream-dark);
@@ -2848,6 +2872,14 @@ img { max-width: 100%; height: auto; }
     color: var(--text-dark);
     cursor: pointer;
     flex-shrink: 0;
+    flex-grow: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a7a8a'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px 6px;
+    padding-right: 26px;
 }
 
 .msf-country-code:focus {
@@ -2855,8 +2887,12 @@ img { max-width: 100%; height: auto; }
     outline: none;
 }
 
+.msf-phone-row input[type="tel"],
+.msf-phone-row input[type="text"],
 .msf-phone-row input {
-    flex: 1;
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto !important;
 }
 
 .msf-otp-group {
@@ -3295,11 +3331,25 @@ img { max-width: 100%; height: auto; }
     }
 
     .msf-phone-row {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: nowrap;
     }
 
     .msf-country-code {
-        width: 100%;
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+        padding: 13px 8px;
+        font-size: 0.8rem;
+        padding-right: 22px;
+    }
+
+    .msf-phone-row input[type="tel"],
+    .msf-phone-row input[type="text"],
+    .msf-phone-row input {
+        flex: 1 1 0%;
+        min-width: 0;
+        width: auto !important;
     }
 
     .pm-cards {
