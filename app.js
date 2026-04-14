@@ -79,19 +79,12 @@ function initializeEventListeners() {
     // ── Dashboard Booking Form ──
     document.getElementById('booking-form').addEventListener('submit', handleDashboardBooking);
 
-    // ── Tutor Select → Update Price Display ──
-    document.getElementById('booking-tutor').addEventListener('change', (e) => {
-        const priceLabel = document.getElementById('booking-price-label');
-        if (e.target.value) {
-            const tutorData = JSON.parse(e.target.value);
-            priceLabel.textContent = `$${tutorData.price}/hour`;
-        } else {
-            priceLabel.textContent = '$0/hour';
-        }
-    });
+    // ── Year Selector (Category expand/collapse + Grade select) ──
+    initYearSelector();
 
-    // ── Quick Booking Form (Modal) ──
-    document.getElementById('quick-booking-form').addEventListener('submit', handleQuickBooking);
+    // ── Quick Booking Form (Modal — legacy, kept for compatibility) ──
+    const qbForm = document.getElementById('quick-booking-form');
+    if (qbForm) qbForm.addEventListener('submit', handleQuickBooking);
 
     // ── Contact/Enquiry Form ──
     document.getElementById('enquiry-form').addEventListener('submit', handleEnquiry);
@@ -128,18 +121,17 @@ function initializeEventListeners() {
 async function handleDashboardBooking(e) {
     e.preventDefault();
 
-    const tutorSelect = document.getElementById('booking-tutor');
-    const subject     = document.getElementById('booking-subject').value.trim();
-    const date        = document.getElementById('booking-date').value;
-    const time        = document.getElementById('booking-time').value;
-    const submitBtn   = document.getElementById('booking-submit');
+    const selectedYear  = document.getElementById('booking-year').value;
+    const selectedPrice = document.getElementById('booking-year-price').value;
+    const subject       = document.getElementById('booking-subject').value.trim();
+    const date          = document.getElementById('booking-date').value;
+    const time          = document.getElementById('booking-time').value;
+    const submitBtn     = document.getElementById('booking-submit');
 
-    if (!tutorSelect.value || !subject || !date || !time) {
-        showToast('Please fill in all booking fields.', 'warning');
+    if (!selectedYear || !subject || !date || !time) {
+        showToast('Please fill in all booking fields — including selecting your year.', 'warning');
         return;
     }
-
-    const tutorData = JSON.parse(tutorSelect.value);
 
     if (new Date(date) < new Date(new Date().toDateString())) {
         showToast('Please select a future date.', 'warning');
@@ -149,15 +141,16 @@ async function handleDashboardBooking(e) {
     setButtonLoading(submitBtn, true);
 
     const result = await createBooking({
-        tutorName: tutorData.name,
+        tutorName: selectedYear,
         subject:   subject,
         date:      date,
         time:      time,
-        price:     tutorData.price
+        price:     parseInt(selectedPrice) || 20
     });
 
     if (result) {
         e.target.reset();
+        clearYearSelection();
         document.getElementById('booking-price-label').textContent = '$0/hour';
         await renderBookingsTable();
         document.getElementById('bookings-table').scrollIntoView({ behavior: 'smooth' });
@@ -270,6 +263,84 @@ async function handleCtaForm(e) {
     }
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// YEAR SELECTOR LOGIC
+// ═══════════════════════════════════════════════════════════
+
+function initYearSelector() {
+    const categoryBtns = document.querySelectorAll('.year-category-btn');
+    const gradeBtns    = document.querySelectorAll('.year-grade-btn');
+    const clearBtn     = document.getElementById('clear-year-btn');
+
+    // Category expand/collapse
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const category = btn.dataset.category;
+
+            // "All Grades" — select it directly (no panel)
+            if (category === 'all') {
+                selectYear('All Grades', 20); // default price
+                return;
+            }
+
+            const panelId = `grades-${category}`;
+            const panel   = document.getElementById(panelId);
+
+            // Toggle: close all other panels first
+            document.querySelectorAll('.year-grades-panel').forEach(p => {
+                if (p.id !== panelId) p.classList.remove('open');
+            });
+            categoryBtns.forEach(b => {
+                if (b !== btn) b.classList.remove('active');
+            });
+
+            // Toggle this panel
+            panel.classList.toggle('open');
+            btn.classList.toggle('active');
+        });
+    });
+
+    // Individual grade selection
+    gradeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const year  = btn.dataset.year;
+            const price = btn.dataset.price;
+            selectYear(year, price);
+
+            // Highlight selected grade
+            gradeBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        });
+    });
+
+    // Clear selection
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearYearSelection);
+    }
+}
+
+function selectYear(year, price) {
+    document.getElementById('booking-year').value       = year;
+    document.getElementById('booking-year-price').value  = price;
+    document.getElementById('booking-price-label').textContent = `$${price}/hour`;
+
+    const display = document.getElementById('selected-year-display');
+    const text    = document.getElementById('selected-year-text');
+    text.textContent = `✅ ${year} — $${price}/hr`;
+    display.classList.remove('hidden');
+}
+
+function clearYearSelection() {
+    document.getElementById('booking-year').value       = '';
+    document.getElementById('booking-year-price').value  = '';
+    document.getElementById('booking-price-label').textContent = '$0/hour';
+
+    document.getElementById('selected-year-display').classList.add('hidden');
+    document.querySelectorAll('.year-grade-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.year-category-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.year-grades-panel').forEach(p => p.classList.remove('open'));
+}
 
 // ═══════════════════════════════════════════════════════════
 // UTILITY FUNCTIONS

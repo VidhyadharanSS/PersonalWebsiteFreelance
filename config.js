@@ -7,7 +7,11 @@
 
 // ──────────── SUPABASE CREDENTIALS ────────────
 const SUPABASE_URL = 'https://oqxwvkytyczmldnrqjll.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_nU4ihs42_7R5L5F9Cb4Pew_J_0XYxhe';
+
+// ⚠️  IMPORTANT: Replace this with your REAL Supabase anon key from:
+//     Supabase Dashboard → Settings → API → Project API keys → anon (public)
+//     It should start with "eyJ..." (it's a JWT token)
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.REPLACE_WITH_YOUR_REAL_ANON_KEY';
 
 // ──────────── SITE URL (for email redirects) ────────────
 const SITE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -18,7 +22,14 @@ const SITE_URL = window.location.hostname === 'localhost' || window.location.hos
 // The CDN creates `var supabase` (namespace). We must use `var` again (not const/let)
 // to reassign it to the actual client instance for all scripts to use.
 var _supabaseLib = window.supabase;  // Save reference to CDN namespace
-var supabase = _supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var supabase = _supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,          // Auto-detect email confirmation tokens in URL
+        flowType: 'pkce'                    // Use PKCE flow for secure email confirmation redirects
+    }
+});
 
 // ──────────── PRICING CONFIGURATION ────────────
 const PRICING = {

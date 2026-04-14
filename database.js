@@ -113,27 +113,12 @@ async function loadTutors() {
 }
 
 /**
- * Load tutors into dashboard grid (with book buttons) + populate dropdown
+ * Load tutors into dashboard grid (with book buttons) — kept for future use
  */
 async function loadDashboardTutors() {
-    const tutors = await fetchTutors();
-    renderTutorCards(tutors, 'dash-tutors-grid', true);
-    populateTutorDropdown(tutors);
-}
-
-/**
- * Populate the tutor <select> in the dashboard booking form
- */
-function populateTutorDropdown(tutors) {
-    const select = document.getElementById('booking-tutor');
-    select.innerHTML = '<option value="">Choose a tutor...</option>';
-
-    tutors.forEach(tutor => {
-        const option = document.createElement('option');
-        option.value = JSON.stringify({ name: tutor.name, price: tutor.price_hour });
-        option.textContent = `${tutor.name} — $${tutor.price_hour}/hr (${tutor.subjects.join(', ')})`;
-        select.appendChild(option);
-    });
+    // Dashboard now uses Year selector instead of tutor list
+    // This function is kept for backwards compatibility
+    console.log('ℹ️ Dashboard uses Year selector — tutor list not shown');
 }
 
 
@@ -237,7 +222,7 @@ async function renderBookingsTable() {
 
         return `
             <tr>
-                <td><strong>${booking.tutor_name}</strong></td>
+                <td><strong>${booking.tutor_name || '—'}</strong></td>
                 <td>${booking.subject}</td>
                 <td>${formattedDate}</td>
                 <td>${booking.booking_time}</td>

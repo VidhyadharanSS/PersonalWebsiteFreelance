@@ -541,6 +541,18 @@
         </section>
 
         <!-- ════════════════════════════════════ -->
+        <!-- GET STARTED BANNER (above CTA)       -->
+        <!-- ════════════════════════════════════ -->
+        <section class="get-started-banner" id="get-started-banner">
+            <div class="container">
+                <div class="get-started-inner">
+                    <h2 class="get-started-text">Global Learning. Every Grade. Every Child.</h2>
+                    <button class="btn btn-primary btn-lg get-started-cta-btn" onclick="openAuthModal('signup')">GET STARTED →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════ -->
         <!-- SECTION 9: CTA — YOUR CHILD'S ZENITH -->
         <!-- ════════════════════════════════════ -->
         <section class="section cta-section">
@@ -714,40 +726,101 @@
                 <h2 class="dash-section-title">📖 Book a Session</h2>
                 <div class="booking-form-wrapper">
                     <form id="booking-form" class="booking-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="booking-tutor">Select Tutor</label>
-                                <select id="booking-tutor" required>
-                                    <option value="">Choose a tutor...</option>
-                                </select>
+                        <!-- YEAR CATEGORY SELECTOR -->
+                        <div class="form-group">
+                            <label>Select Your Year</label>
+                            <div class="year-selector" id="year-selector">
+                                <!-- Category: All Grades -->
+                                <button type="button" class="year-category-btn" data-category="all">
+                                    <span class="year-cat-icon">📚</span>
+                                    <span class="year-cat-label">All Grades</span>
+                                    <span class="year-cat-arrow">▸</span>
+                                </button>
+                                <!-- Category: Foundation Years -->
+                                <button type="button" class="year-category-btn" data-category="foundation">
+                                    <span class="year-cat-icon">🌱</span>
+                                    <span class="year-cat-label">Foundation Years</span>
+                                    <span class="year-cat-price">$13/hr</span>
+                                    <span class="year-cat-arrow">▸</span>
+                                </button>
+                                <div class="year-grades-panel" id="grades-foundation">
+                                    <button type="button" class="year-grade-btn" data-year="Year 1" data-price="13">Year 1</button>
+                                    <button type="button" class="year-grade-btn" data-year="Year 2" data-price="13">Year 2</button>
+                                    <button type="button" class="year-grade-btn" data-year="Year 3" data-price="13">Year 3</button>
+                                    <button type="button" class="year-grade-btn" data-year="Year 4" data-price="13">Year 4</button>
+                                    <button type="button" class="year-grade-btn" data-year="Year 5" data-price="13">Year 5</button>
+                                    <button type="button" class="year-grade-btn" data-year="Year 6" data-price="13">Year 6</button>
+                                </div>
+                                <!-- Category: Middle School -->
+                                <button type="button" class="year-category-btn" data-category="middle">
+                                    <span class="year-cat-icon">🚀</span>
+                                    <span class="year-cat-label">Middle School</span>
+                                    <span class="year-cat-price">$20/hr</span>
+                                    <span class="year-cat-arrow">▸</span>
+                                </button>
+                                <div class="year-grades-panel" id="grades-middle">
+                                    <button type="button" class="year-grade-btn" data-year="Year 7" data-price="20">Year 7</button>
+                                    <button type="button" class="year-grade-btn" data-year="Year 8" data-price="20">Year 8</button>
+                                    <button type="button" class="year-grade-btn" data-year="Year 9" data-price="20">Year 9</button>
+                                    <button type="button" class="year-grade-btn" data-year="Year 10" data-price="20">Year 10</button>
+                                </div>
+                                <!-- Category: Senior Years -->
+                                <button type="button" class="year-category-btn" data-category="senior">
+                                    <span class="year-cat-icon">🎯</span>
+                                    <span class="year-cat-label">Senior Years</span>
+                                    <span class="year-cat-price">$27/hr</span>
+                                    <span class="year-cat-arrow">▸</span>
+                                </button>
+                                <div class="year-grades-panel" id="grades-senior">
+                                    <button type="button" class="year-grade-btn" data-year="Year 11" data-price="27">Year 11</button>
+                                    <button type="button" class="year-grade-btn" data-year="Year 12" data-price="27">Year 12</button>
+                                </div>
+                                <!-- Category: Inclusive Support -->
+                                <button type="button" class="year-category-btn" data-category="inclusive">
+                                    <span class="year-cat-icon">💛</span>
+                                    <span class="year-cat-label">Inclusive Support</span>
+                                    <span class="year-cat-price">$27/hr</span>
+                                    <span class="year-cat-arrow">▸</span>
+                                </button>
+                                <div class="year-grades-panel" id="grades-inclusive">
+                                    <button type="button" class="year-grade-btn" data-year="Special Needs" data-price="27">Special Needs Support</button>
+                                </div>
                             </div>
+                            <!-- Hidden inputs to hold selected year & price -->
+                            <input type="hidden" id="booking-year" value="" required>
+                            <input type="hidden" id="booking-year-price" value="">
+                            <div class="selected-year-display hidden" id="selected-year-display">
+                                <span id="selected-year-text"></span>
+                                <button type="button" class="clear-year-btn" id="clear-year-btn">&times;</button>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="booking-subject">Subject</label>
                                 <input type="text" id="booking-subject" placeholder="e.g. Mathematics" required>
                             </div>
-                        </div>
-                        <div class="form-row">
                             <div class="form-group">
                                 <label for="booking-date">Date</label>
                                 <input type="date" id="booking-date" required>
                             </div>
-                            <div class="form-group">
-                                <label for="booking-time">Time</label>
-                                <select id="booking-time" required>
-                                    <option value="">Select time...</option>
-                                    <option value="09:00 AM">09:00 AM</option>
-                                    <option value="10:00 AM">10:00 AM</option>
-                                    <option value="11:00 AM">11:00 AM</option>
-                                    <option value="12:00 PM">12:00 PM</option>
-                                    <option value="01:00 PM">01:00 PM</option>
-                                    <option value="02:00 PM">02:00 PM</option>
-                                    <option value="03:00 PM">03:00 PM</option>
-                                    <option value="04:00 PM">04:00 PM</option>
-                                    <option value="05:00 PM">05:00 PM</option>
-                                    <option value="06:00 PM">06:00 PM</option>
-                                    <option value="07:00 PM">07:00 PM</option>
-                                </select>
-                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="booking-time">Time</label>
+                            <select id="booking-time" required>
+                                <option value="">Select time...</option>
+                                <option value="09:00 AM">09:00 AM</option>
+                                <option value="10:00 AM">10:00 AM</option>
+                                <option value="11:00 AM">11:00 AM</option>
+                                <option value="12:00 PM">12:00 PM</option>
+                                <option value="01:00 PM">01:00 PM</option>
+                                <option value="02:00 PM">02:00 PM</option>
+                                <option value="03:00 PM">03:00 PM</option>
+                                <option value="04:00 PM">04:00 PM</option>
+                                <option value="05:00 PM">05:00 PM</option>
+                                <option value="06:00 PM">06:00 PM</option>
+                                <option value="07:00 PM">07:00 PM</option>
+                            </select>
                         </div>
                         <div class="booking-price-display">
                             <span>Session Price: </span>
@@ -769,7 +842,7 @@
                     <table class="bookings-table" id="bookings-table">
                         <thead>
                             <tr>
-                                <th>Tutor</th>
+                                <th>Year</th>
                                 <th>Subject</th>
                                 <th>Date</th>
                                 <th>Time</th>
@@ -787,18 +860,7 @@
             </div>
         </section>
 
-        <section class="dashboard-section">
-            <div class="container">
-                <h2 class="dash-section-title">🎓 Available Educators</h2>
-                <div class="tutors-grid" id="dash-tutors-grid">
-                    <div class="loading-skeleton">
-                        <div class="skeleton-card"></div>
-                        <div class="skeleton-card"></div>
-                        <div class="skeleton-card"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
+
 
         <footer class="footer">
             <div class="container">
