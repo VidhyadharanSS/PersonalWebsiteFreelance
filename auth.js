@@ -1,16 +1,11 @@
 /* ═══════════════════════════════════════════════════════════
-   ZENITH PRANAVI — Authentication Module
+   ZENITH PRANAVI — Authentication Module (Unified)
    ═══════════════════════════════════════════════════════════
-   Handles: Signup, Login, Logout, Session Persistence
-   Uses: Supabase Auth v2 (async/await)
+   All CTA buttons open the unified registration modal.
+   Flow: Account → Parent+Student Details → Session → Confirm
    ═══════════════════════════════════════════════════════════ */
 
 // ──────────── DOM REFERENCES ────────────
-const authModal      = document.getElementById('auth-modal');
-const loginForm      = document.getElementById('login-form');
-const signupForm     = document.getElementById('signup-form');
-const modalTitle     = document.getElementById('modal-title');
-const modalSubtitle  = document.getElementById('modal-subtitle');
 const authButtons    = document.getElementById('auth-buttons');
 const userMenu       = document.getElementById('user-menu');
 const homepageEl     = document.getElementById('homepage');
@@ -24,51 +19,9 @@ function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-
-    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${message}`;
-
+    toast.textContent = message;
     container.appendChild(toast);
-
-    setTimeout(() => {
-        if (toast.parentNode) toast.remove();
-    }, 4000);
-}
-
-// ═══════════════════════════════════════════════════════════
-// MODAL CONTROLS
-// ═══════════════════════════════════════════════════════════
-
-function openAuthModal(mode = 'login') {
-    authModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-
-    if (mode === 'signup') {
-        showSignupForm();
-    } else {
-        showLoginForm();
-    }
-}
-
-function closeAuthModal() {
-    authModal.classList.remove('active');
-    document.body.style.overflow = '';
-    loginForm.reset();
-    signupForm.reset();
-}
-
-function showLoginForm() {
-    loginForm.classList.remove('hidden');
-    signupForm.classList.add('hidden');
-    modalTitle.textContent = 'Welcome Back';
-    modalSubtitle.textContent = 'Sign in to continue your learning journey';
-}
-
-function showSignupForm() {
-    loginForm.classList.add('hidden');
-    signupForm.classList.remove('hidden');
-    modalTitle.textContent = 'Join Zenith Pranavi';
-    modalSubtitle.textContent = 'Create your account and start learning today';
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -78,7 +31,6 @@ function showSignupForm() {
 function setButtonLoading(button, loading) {
     const btnText   = button.querySelector('.btn-text');
     const btnLoader = button.querySelector('.btn-loader');
-
     if (loading) {
         if (btnText) btnText.classList.add('hidden');
         if (btnLoader) btnLoader.classList.remove('hidden');
@@ -91,128 +43,310 @@ function setButtonLoading(button, loading) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// SIGN UP
+// UNIFIED REGISTRATION MODAL
 // ═══════════════════════════════════════════════════════════
 
-async function handleSignup(e) {
-    e.preventDefault();
+const regModal = document.getElementById('register-modal');
+let regCurrentStep = 1;
+const REG_TOTAL_STEPS = 4;
 
-    const name      = document.getElementById('signup-name').value.trim();
-    const email     = document.getElementById('signup-email').value.trim();
-    const password  = document.getElementById('signup-password').value;
-    const submitBtn = document.getElementById('signup-submit');
+// Collected data
+let regData = {
+    parentName: '', parentEmail: '', parentPhone: '', whatsapp: '',
+    studentName: '', studentGrade: '', curriculum: '',
+    subject: '', timeSlot: '', mode: 'Online'
+};
 
-    if (!name || !email || !password) {
-        showToast('Please fill in all fields', 'warning');
-        return;
-    }
+/**
+ * Open the unified registration modal
+ * @param {string} mode - 'signup' or 'signin'
+ * @param {string} prefilledEmail - optional email from CTA
+ */
+function openRegisterModal(mode = 'signup', prefilledEmail = '') {
+    regCurrentStep = 1;
+    checkRegAuthState();
 
-    if (password.length < 6) {
-        showToast('Password must be at least 6 characters', 'warning');
-        return;
-    }
-
-    setButtonLoading(submitBtn, true);
-
-    try {
-        const { data, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: {
-                    name: name,
-                    full_name: name
-                },
-                emailRedirectTo: SITE_URL
-            }
+    // Pre-fill email if provided
+    if (prefilledEmail) {
+        const fields = ['reg-email', 'reg-signin-email', 'reg-parent-email'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = prefilledEmail;
         });
+    }
 
-        if (error) throw error;
+    // Show correct tab
+    if (mode === 'signin') {
+        switchRegTab('signin');
+    } else {
+        switchRegTab('create');
+    }
 
-        if (data.user) {
-            showToast(`Welcome to Zenith Pranavi, ${name}! 🎉`, 'success');
-            closeAuthModal();
+    goToRegStep(1);
+    regModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
 
-            if (data.session) {
-                handleAuthStateChange(data.user);
-            } else {
-                showToast('Please check your email to verify your account.', 'info');
-            }
-        }
-    } catch (error) {
-        console.error('Signup error:', error);
-        if (error.message && error.message.includes('already registered')) {
-            showToast('This email is already registered. Please sign in.', 'error');
+function closeRegisterModal() {
+    regModal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function switchRegTab(tab) {
+    document.querySelectorAll('.reg-auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.reg-auth-panel').forEach(p => p.classList.remove('active'));
+
+    const tabBtn = document.querySelector(`.reg-auth-tab[data-tab="${tab}"]`);
+    if (tabBtn) tabBtn.classList.add('active');
+
+    const panel = document.getElementById(`reg-panel-${tab}`);
+    if (panel) panel.classList.add('active');
+
+    // Show tabs
+    const tabs = document.getElementById('reg-auth-tabs');
+    if (tabs) tabs.style.display = '';
+}
+
+function goToRegStep(step) {
+    regCurrentStep = step;
+    document.querySelectorAll('.reg-step').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById(`reg-step-${step}`);
+    if (target) target.classList.add('active');
+
+    // Update progress
+    const bar = document.getElementById('reg-progress-bar');
+    bar.style.width = `${(step / REG_TOTAL_STEPS) * 100}%`;
+
+    document.querySelectorAll('.reg-step-dot').forEach(dot => {
+        const ds = parseInt(dot.dataset.step);
+        dot.classList.remove('active', 'completed');
+        if (ds === step) dot.classList.add('active');
+        else if (ds < step) dot.classList.add('completed');
+    });
+}
+
+async function checkRegAuthState() {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const loggedPanel = document.getElementById('reg-panel-loggedin');
+        const createPanel = document.getElementById('reg-panel-create');
+        const tabs = document.getElementById('reg-auth-tabs');
+
+        if (session?.user) {
+            const name = session.user.user_metadata?.name ||
+                        session.user.user_metadata?.full_name ||
+                        session.user.email?.split('@')[0] || 'User';
+            document.getElementById('reg-logged-name').textContent = `Signed in as ${name}`;
+            document.getElementById('reg-parent-name').value = name;
+            document.getElementById('reg-parent-email').value = session.user.email || '';
+
+            // Show logged-in panel, hide tabs
+            document.querySelectorAll('.reg-auth-panel').forEach(p => p.classList.remove('active'));
+            loggedPanel.classList.add('active');
+            if (tabs) tabs.style.display = 'none';
         } else {
-            showToast(error.message || 'Signup failed. Please try again.', 'error');
+            loggedPanel.classList.remove('active');
+            createPanel.classList.add('active');
+            if (tabs) tabs.style.display = '';
         }
-    } finally {
-        setButtonLoading(submitBtn, false);
+    } catch (e) {
+        console.error('Reg auth check error:', e);
     }
 }
 
-// ═══════════════════════════════════════════════════════════
-// LOGIN
-// ═══════════════════════════════════════════════════════════
+function validateRegStep(step) {
+    switch (step) {
+        case 2: {
+            const parentName = document.getElementById('reg-parent-name').value.trim();
+            const parentEmail = document.getElementById('reg-parent-email').value.trim();
+            const parentPhone = document.getElementById('reg-parent-phone').value.trim();
+            const whatsapp = document.getElementById('reg-whatsapp').value.trim();
+            const studentName = document.getElementById('reg-student-name').value.trim();
+            const grade = document.getElementById('reg-student-grade').value;
+            const curriculum = document.getElementById('reg-student-curriculum').value;
 
-async function handleLogin(e) {
-    e.preventDefault();
+            if (!parentName || !parentEmail || !parentPhone || !whatsapp || !studentName || !grade || !curriculum) {
+                showToast('Please fill in all required fields.', 'warning');
+                return false;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(parentEmail)) {
+                showToast('Please enter a valid email address.', 'warning');
+                return false;
+            }
 
-    const email     = document.getElementById('login-email').value.trim();
-    const password  = document.getElementById('login-password').value;
-    const submitBtn = document.getElementById('login-submit');
-
-    if (!email || !password) {
-        showToast('Please enter email and password', 'warning');
-        return;
+            const phoneCode = document.getElementById('reg-parent-phone-code').value;
+            const waCode = document.getElementById('reg-whatsapp-code').value;
+            regData.parentName = parentName;
+            regData.parentEmail = parentEmail;
+            regData.parentPhone = phoneCode + ' ' + parentPhone;
+            regData.whatsapp = waCode + ' ' + whatsapp;
+            regData.studentName = studentName;
+            regData.studentGrade = grade;
+            regData.curriculum = curriculum;
+            return true;
+        }
+        case 3: {
+            const subject = document.getElementById('reg-subject').value.trim();
+            const timeSlot = document.getElementById('reg-time-slot').value;
+            if (!subject || !timeSlot) {
+                showToast('Please fill in subject and preferred time slot.', 'warning');
+                return false;
+            }
+            regData.subject = subject;
+            regData.timeSlot = timeSlot;
+            regData.mode = document.getElementById('reg-mode').value;
+            return true;
+        }
+        default:
+            return true;
     }
+}
 
-    setButtonLoading(submitBtn, true);
+function initRegisterModal() {
+    if (!regModal) return;
 
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
+    // Close
+    document.getElementById('register-modal-close').addEventListener('click', closeRegisterModal);
+    regModal.addEventListener('click', (e) => { if (e.target === regModal) closeRegisterModal(); });
 
-        if (error) throw error;
+    // Auth tabs
+    document.querySelectorAll('.reg-auth-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchRegTab(tab.dataset.tab));
+    });
 
-        if (data.user) {
-            const userName = data.user.user_metadata?.name ||
-                           data.user.user_metadata?.full_name ||
-                           email.split('@')[0];
+    // Forgot password
+    document.getElementById('reg-forgot-trigger').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.reg-auth-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('reg-panel-forgot').classList.add('active');
+        document.getElementById('reg-auth-tabs').style.display = 'none';
+    });
 
-            showToast(`Welcome back, ${userName}! 🎉`, 'success');
-            closeAuthModal();
+    // Back to sign in
+    document.getElementById('reg-back-to-signin').addEventListener('click', (e) => {
+        e.preventDefault();
+        switchRegTab('signin');
+    });
+
+    // Create Account
+    document.getElementById('reg-create-btn').addEventListener('click', async () => {
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const btn = document.getElementById('reg-create-btn');
+
+        if (!name || !email || !password) { showToast('Please fill in all fields.', 'warning'); return; }
+        if (password.length < 6) { showToast('Password must be at least 6 characters.', 'warning'); return; }
+
+        setButtonLoading(btn, true);
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email, password,
+                options: { data: { name, full_name: name }, emailRedirectTo: SITE_URL }
+            });
+            if (error) throw error;
+            showToast(`Account created! Welcome, ${name}!`, 'success');
+            document.getElementById('reg-parent-name').value = name;
+            document.getElementById('reg-parent-email').value = email;
+            if (data.session) handleAuthStateChange(data.user);
+            goToRegStep(2);
+        } catch (error) {
+            showToast(error.message || 'Signup failed.', 'error');
+        } finally { setButtonLoading(btn, false); }
+    });
+
+    // Sign In
+    document.getElementById('reg-signin-btn').addEventListener('click', async () => {
+        const email = document.getElementById('reg-signin-email').value.trim();
+        const password = document.getElementById('reg-signin-password').value;
+        const btn = document.getElementById('reg-signin-btn');
+
+        if (!email || !password) { showToast('Please enter email and password.', 'warning'); return; }
+
+        setButtonLoading(btn, true);
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            const name = data.user?.user_metadata?.name || email.split('@')[0];
+            showToast(`Welcome back, ${name}!`, 'success');
+            document.getElementById('reg-parent-name').value = name;
+            document.getElementById('reg-parent-email').value = email;
             handleAuthStateChange(data.user);
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        if (error.message && error.message.includes('Invalid login')) {
-            showToast('Invalid email or password. Please try again.', 'error');
-        } else {
-            showToast(error.message || 'Login failed. Please try again.', 'error');
-        }
-    } finally {
-        setButtonLoading(submitBtn, false);
-    }
-}
+            goToRegStep(2);
+        } catch (error) {
+            showToast(error.message || 'Login failed.', 'error');
+        } finally { setButtonLoading(btn, false); }
+    });
 
-// ═══════════════════════════════════════════════════════════
-// LOGOUT
-// ═══════════════════════════════════════════════════════════
+    // Forgot password
+    document.getElementById('reg-forgot-btn').addEventListener('click', async () => {
+        const email = document.getElementById('reg-forgot-email').value.trim();
+        const btn = document.getElementById('reg-forgot-btn');
+        if (!email) { showToast('Please enter your email.', 'warning'); return; }
+        setButtonLoading(btn, true);
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: SITE_URL });
+            if (error) throw error;
+            showToast('Password reset link sent! Check your email.', 'success');
+        } catch (error) {
+            showToast(error.message || 'Failed to send reset link.', 'error');
+        } finally { setButtonLoading(btn, false); }
+    });
 
-async function handleLogout() {
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+    // Skip (already logged in)
+    document.getElementById('reg-skip-btn').addEventListener('click', () => goToRegStep(2));
 
-        showToast('Logged out successfully. See you soon! 👋', 'info');
-        showHomepage();
-    } catch (error) {
-        console.error('Logout error:', error);
-        showToast('Logout failed. Please try again.', 'error');
-    }
+    // Back / Next navigation
+    document.querySelectorAll('.reg-back-btn').forEach(btn => {
+        btn.addEventListener('click', () => goToRegStep(parseInt(btn.dataset.goto)));
+    });
+    document.querySelectorAll('.reg-next-btn:not(.reg-submit-btn)').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const goto = parseInt(btn.dataset.goto);
+            if (validateRegStep(goto - 1)) goToRegStep(goto);
+        });
+    });
+
+    // Final Submit
+    document.getElementById('reg-submit-btn').addEventListener('click', async () => {
+        if (!validateRegStep(3)) return;
+        const btn = document.getElementById('reg-submit-btn');
+        setButtonLoading(btn, true);
+
+        try {
+            const message = `FREE SESSION REQUEST
+Parent: ${regData.parentName}
+Email: ${regData.parentEmail}
+Phone: ${regData.parentPhone}
+WhatsApp: ${regData.whatsapp}
+Student: ${regData.studentName}
+Grade: ${regData.studentGrade}
+Curriculum: ${regData.curriculum}
+Subject: ${regData.subject}
+Time: ${regData.timeSlot}
+Mode: ${regData.mode}`;
+
+            await submitEnquiry({ name: regData.parentName, email: regData.parentEmail, message });
+
+            // Show confirmation summary
+            document.getElementById('reg-confirm-summary').innerHTML = `
+                <strong>Student:</strong> ${regData.studentName} (${regData.studentGrade})<br>
+                <strong>Curriculum:</strong> ${regData.curriculum}<br>
+                <strong>Subject:</strong> ${regData.subject}<br>
+                <strong>Time:</strong> ${regData.timeSlot} (${regData.mode})<br>
+                <strong>Contact:</strong> ${regData.parentEmail}
+            `;
+            goToRegStep(4);
+        } catch (error) {
+            showToast('Something went wrong. Please try again.', 'error');
+        } finally { setButtonLoading(btn, false); }
+    });
+
+    // Done
+    document.getElementById('reg-done-btn').addEventListener('click', () => {
+        closeRegisterModal();
+        regData = { parentName: '', parentEmail: '', parentPhone: '', whatsapp: '', studentName: '', studentGrade: '', curriculum: '', subject: '', timeSlot: '', mode: 'Online' };
+    });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -221,112 +355,79 @@ async function handleLogout() {
 
 function handleAuthStateChange(user) {
     if (user) {
-        const userName = user.user_metadata?.name ||
-                        user.user_metadata?.full_name ||
-                        user.email?.split('@')[0] ||
-                        'Student';
+        const userName = user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student';
         const initial = userName.charAt(0).toUpperCase();
-
         document.getElementById('user-initial').textContent = initial;
         document.getElementById('user-display-name').textContent = userName;
         document.getElementById('dash-user-name').textContent = userName;
-
         authButtons.classList.add('hidden');
         userMenu.classList.remove('hidden');
-
-        showDashboard();
-
-        if (typeof loadDashboardData === 'function') {
-            loadDashboardData(user);
-        }
-    } else {
-        showHomepage();
     }
 }
 
 function showDashboard() {
     homepageEl.classList.add('hidden');
     dashboardEl.classList.remove('hidden');
-
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-    });
-
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showHomepage() {
     dashboardEl.classList.add('hidden');
     homepageEl.classList.remove('hidden');
-
     authButtons.classList.remove('hidden');
     userMenu.classList.add('hidden');
-
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function handleLogout() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        showToast('Logged out successfully.', 'info');
+        showHomepage();
+    } catch (error) {
+        showToast('Logout failed.', 'error');
+    }
 }
 
 // ═══════════════════════════════════════════════════════════
 // EMAIL CONFIRMATION HANDLER
 // ═══════════════════════════════════════════════════════════
-// When user clicks the email confirmation link, Supabase redirects to
-// SITE_URL#access_token=...&type=signup  (or uses query params).
-// We need to detect this and let Supabase client exchange the token.
 
 async function handleEmailConfirmationRedirect() {
     const hash = window.location.hash;
     const params = new URLSearchParams(window.location.search);
-
-    // Check for token in URL hash (Supabase PKCE / implicit flow)
     const hasHashToken = hash && (hash.includes('access_token') || hash.includes('type=signup') || hash.includes('type=recovery') || hash.includes('type=email'));
-    // Check for auth code in query params (Supabase PKCE flow)
     const hasCodeParam = params.has('code');
 
     if (hasHashToken || hasCodeParam) {
-        console.log('🔐 Email confirmation redirect detected — processing...');
-
         try {
-            // If using PKCE code exchange flow
             if (hasCodeParam) {
                 const code = params.get('code');
                 const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                 if (error) throw error;
                 if (data?.session?.user) {
-                    const userName = data.session.user.user_metadata?.name ||
-                                   data.session.user.user_metadata?.full_name ||
-                                   data.session.user.email?.split('@')[0] || 'Student';
-                    showToast(`Email confirmed! Welcome, ${userName}! 🎉`, 'success');
+                    const name = data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || 'Student';
+                    showToast(`Email confirmed! Welcome, ${name}!`, 'success');
                 }
             } else {
-                // Hash-based flow: Supabase client auto-detects and sets session
-                // We just need to wait a moment for it to process
                 const { data: { session }, error } = await supabase.auth.getSession();
                 if (error) throw error;
                 if (session?.user) {
-                    const userName = session.user.user_metadata?.name ||
-                                   session.user.user_metadata?.full_name ||
-                                   session.user.email?.split('@')[0] || 'Student';
-                    showToast(`Email confirmed! Welcome, ${userName}! 🎉`, 'success');
+                    const name = session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Student';
+                    showToast(`Email confirmed! Welcome, ${name}!`, 'success');
                 }
             }
-
-            // Clean the URL (remove hash/query tokens for clean UX)
-            if (window.history.replaceState) {
-                window.history.replaceState(null, '', window.location.pathname);
-            }
-
-            return true; // Confirmation was handled
+            if (window.history.replaceState) window.history.replaceState(null, '', window.location.pathname);
+            return true;
         } catch (error) {
-            console.error('Email confirmation error:', error);
             showToast('Email confirmation failed. Please try signing in.', 'error');
-            // Clean URL even on error
-            if (window.history.replaceState) {
-                window.history.replaceState(null, '', window.location.pathname);
-            }
+            if (window.history.replaceState) window.history.replaceState(null, '', window.location.pathname);
             return false;
         }
     }
-
-    return false; // No confirmation redirect detected
+    return false;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -335,83 +436,69 @@ async function handleEmailConfirmationRedirect() {
 
 async function checkExistingSession() {
     try {
-        // First: check if this is an email confirmation redirect
-        const wasConfirmation = await handleEmailConfirmationRedirect();
-
+        await handleEmailConfirmationRedirect();
         const { data: { session }, error } = await supabase.auth.getSession();
-
         if (error) throw error;
-
         if (session?.user) {
-            console.log('✅ Active session found — auto-login');
             handleAuthStateChange(session.user);
+            showDashboard();
+            if (typeof loadDashboardData === 'function') loadDashboardData(session.user);
         } else {
-            console.log('ℹ️ No active session — showing homepage');
             showHomepage();
         }
     } catch (error) {
-        console.error('Session check error:', error);
         showHomepage();
     }
 }
 
-// ═══════════════════════════════════════════════════════════
-// AUTH STATE LISTENER
-// ═══════════════════════════════════════════════════════════
-
+// Auth state listener
 supabase.auth.onAuthStateChange((event, session) => {
-    console.log('🔐 Auth event:', event);
-
-    if (event === 'SIGNED_IN' && session?.user) {
-        handleAuthStateChange(session.user);
-    } else if (event === 'SIGNED_OUT') {
-        showHomepage();
-    } else if (event === 'TOKEN_REFRESHED') {
-        console.log('🔄 Session token refreshed');
-    }
+    if (event === 'SIGNED_IN' && session?.user) handleAuthStateChange(session.user);
+    else if (event === 'SIGNED_OUT') showHomepage();
 });
 
 // ═══════════════════════════════════════════════════════════
 // EVENT LISTENERS
 // ═══════════════════════════════════════════════════════════
 
-// Modal open/close
-document.getElementById('signin-btn').addEventListener('click', () => openAuthModal('login'));
-document.getElementById('getstarted-btn').addEventListener('click', () => openAuthModal('signup'));
-document.getElementById('modal-close').addEventListener('click', closeAuthModal);
+// Nav buttons → open unified modal
+document.getElementById('signin-btn').addEventListener('click', () => openRegisterModal('signin'));
+document.getElementById('getstarted-btn').addEventListener('click', () => openRegisterModal('signup'));
 
-// Close modal on overlay click
-authModal.addEventListener('click', (e) => {
-    if (e.target === authModal) closeAuthModal();
+// Close on Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeRegisterModal();
 });
 
-// Close modals on Escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeAuthModal();
-        if (typeof closeBookingModal === 'function') closeBookingModal();
-        if (typeof closeMultiStepModal === 'function') closeMultiStepModal();
-        if (typeof closeProgramModal === 'function') closeProgramModal();
+// Logout & Dashboard
+document.getElementById('logout-btn').addEventListener('click', handleLogout);
+document.getElementById('dashboard-btn').addEventListener('click', () => {
+    showDashboard();
+    if (typeof loadDashboardData === 'function') {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) loadDashboardData(user);
+        });
     }
 });
 
-// Toggle between login/signup forms
-document.getElementById('switch-to-signup').addEventListener('click', (e) => {
-    e.preventDefault();
-    showSignupForm();
-});
+// ═══════════════════════════════════════════════════════════
+// THEME TOGGLE
+// ═══════════════════════════════════════════════════════════
 
-document.getElementById('switch-to-login').addEventListener('click', (e) => {
-    e.preventDefault();
-    showLoginForm();
-});
+function initThemeToggle() {
+    const toggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
 
-// Form submissions
-loginForm.addEventListener('submit', handleLogin);
-signupForm.addEventListener('submit', handleSignup);
+    // Load saved theme
+    const saved = localStorage.getItem('zp-theme');
+    if (saved) html.setAttribute('data-theme', saved);
 
-// Logout & Dashboard buttons
-document.getElementById('logout-btn').addEventListener('click', handleLogout);
-document.getElementById('dashboard-btn').addEventListener('click', showDashboard);
+    toggle.addEventListener('click', () => {
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('zp-theme', next);
+    });
+}
 
-console.log('✅ Auth module loaded');
+console.log('Auth module loaded');

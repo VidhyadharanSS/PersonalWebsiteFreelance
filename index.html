@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,10 +34,17 @@
                 <li><a href="#contact" class="nav-link" data-section="contact">Contact</a></li>
             </ul>
             <div class="nav-actions">
+                <!-- Theme Toggle -->
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <span class="theme-toggle-icon" id="theme-icon">
+                        <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </span>
+                </button>
                 <!-- Logged-out state -->
                 <div id="auth-buttons">
                     <button class="btn btn-outline btn-nav" id="signin-btn">SIGN IN</button>
-                    <button class="btn btn-primary btn-nav" id="getstarted-btn">GET STARTED →</button>
+                    <button class="btn btn-primary btn-nav" id="getstarted-btn">GET STARTED</button>
                 </div>
                 <!-- Logged-in state -->
                 <div id="user-menu" class="hidden">
@@ -56,58 +63,267 @@
     </nav>
 
     <!-- ═══════════════════════════════════════ -->
-    <!-- AUTH MODAL                               -->
+    <!-- UNIFIED REGISTRATION MODAL              -->
+    <!-- All CTA buttons open this modal          -->
     <!-- ═══════════════════════════════════════ -->
-    <div class="modal-overlay" id="auth-modal">
-        <div class="modal">
-            <button class="modal-close" id="modal-close">&times;</button>
-            <div class="modal-brand">
-                <img src="logo-icon.jpeg" alt="ZP" class="modal-logo-img">
-                <h2 class="modal-title" id="modal-title">Welcome Back</h2>
-                <p class="modal-subtitle" id="modal-subtitle">Sign in to continue your learning journey</p>
+    <div class="modal-overlay" id="register-modal">
+        <div class="modal modal-register">
+            <button class="modal-close" id="register-modal-close">&times;</button>
+
+            <!-- Progress Bar -->
+            <div class="reg-progress">
+                <div class="reg-progress-bar" id="reg-progress-bar" style="width:25%"></div>
+            </div>
+            <div class="reg-step-indicator" id="reg-step-indicator">
+                <span class="reg-step-dot active" data-step="1">1</span>
+                <span class="reg-step-dot" data-step="2">2</span>
+                <span class="reg-step-dot" data-step="3">3</span>
+                <span class="reg-step-dot" data-step="4">4</span>
             </div>
 
-            <!-- LOGIN FORM -->
-            <form id="login-form" class="auth-form">
-                <div class="form-group">
-                    <label for="login-email">Email Address</label>
-                    <input type="email" id="login-email" placeholder="you@example.com" required autocomplete="email">
+            <!-- STEP 1: Account -->
+            <div class="reg-step active" id="reg-step-1">
+                <div class="reg-step-header">
+                    <img src="logo-icon.jpeg" alt="ZP" class="reg-logo">
+                    <h3 class="reg-step-title">Create Your Account</h3>
+                    <p class="reg-step-sub">Join Zenith Pranavi and book your free session</p>
                 </div>
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn btn-primary btn-full" id="login-submit">
-                    <span class="btn-text">Sign In</span>
-                    <span class="btn-loader hidden"></span>
-                </button>
-                <p class="auth-switch">
-                    Don't have an account? <a href="#" id="switch-to-signup">Create one</a>
-                </p>
-            </form>
 
-            <!-- SIGNUP FORM -->
-            <form id="signup-form" class="auth-form hidden">
+                <!-- Tabs: Create / Sign In -->
+                <div class="reg-auth-tabs" id="reg-auth-tabs">
+                    <button type="button" class="reg-auth-tab active" data-tab="create">Create Account</button>
+                    <button type="button" class="reg-auth-tab" data-tab="signin">Sign In</button>
+                </div>
+
+                <!-- Create Account Panel -->
+                <div class="reg-auth-panel active" id="reg-panel-create">
+                    <div class="form-group">
+                        <label for="reg-name">Full Name</label>
+                        <input type="text" id="reg-name" placeholder="Your full name" autocomplete="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email">Email Address</label>
+                        <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" placeholder="Min 6 characters" minlength="6" autocomplete="new-password">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="reg-create-btn">
+                        <span class="btn-text">Create Account & Continue</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                </div>
+
+                <!-- Sign In Panel -->
+                <div class="reg-auth-panel" id="reg-panel-signin">
+                    <div class="form-group">
+                        <label for="reg-signin-email">Email Address</label>
+                        <input type="email" id="reg-signin-email" placeholder="you@example.com" autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-signin-password">Password</label>
+                        <input type="password" id="reg-signin-password" placeholder="Enter your password" autocomplete="current-password">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="reg-signin-btn">
+                        <span class="btn-text">Sign In & Continue</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                    <p class="reg-forgot-link">
+                        <a href="#" id="reg-forgot-trigger">Forgot Password?</a>
+                    </p>
+                </div>
+
+                <!-- Forgot Password Panel -->
+                <div class="reg-auth-panel" id="reg-panel-forgot">
+                    <div class="form-group">
+                        <label for="reg-forgot-email">Email Address</label>
+                        <input type="email" id="reg-forgot-email" placeholder="you@example.com">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="reg-forgot-btn">
+                        <span class="btn-text">Send Reset Link</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                    <p class="reg-back-link"><a href="#" id="reg-back-to-signin">Back to Sign In</a></p>
+                </div>
+
+                <!-- Already Logged In -->
+                <div class="reg-auth-panel" id="reg-panel-loggedin">
+                    <div class="reg-logged-msg">
+                        <div class="reg-logged-check">&#10003;</div>
+                        <div>
+                            <strong id="reg-logged-name">You're signed in</strong>
+                            <p>Continue to fill in your details</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="reg-skip-btn">Continue</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Parent + Student Details -->
+            <div class="reg-step" id="reg-step-2">
+                <div class="reg-step-header">
+                    <h3 class="reg-step-title">Parent & Student Details</h3>
+                    <p class="reg-step-sub">Help us personalise the learning experience</p>
+                </div>
+
+                <div class="reg-section-label">Parent Information</div>
                 <div class="form-group">
-                    <label for="signup-name">Full Name</label>
-                    <input type="text" id="signup-name" placeholder="Enter your full name" required autocomplete="name">
+                    <label for="reg-parent-name">Parent Full Name <span class="required">*</span></label>
+                    <input type="text" id="reg-parent-name" placeholder="Parent's full name" required>
                 </div>
                 <div class="form-group">
-                    <label for="signup-email">Email Address</label>
-                    <input type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email">
+                    <label for="reg-parent-email">Email Address <span class="required">*</span></label>
+                    <input type="email" id="reg-parent-email" placeholder="you@example.com" required>
                 </div>
                 <div class="form-group">
-                    <label for="signup-password">Password</label>
-                    <input type="password" id="signup-password" placeholder="Min 6 characters" required minlength="6" autocomplete="new-password">
+                    <label for="reg-parent-phone">Phone Number <span class="required">*</span></label>
+                    <div class="phone-input-row">
+                        <select class="phone-country-code" id="reg-parent-phone-code">
+                            <option value="+91">IN +91</option>
+                            <option value="+1">US +1</option>
+                            <option value="+44">UK +44</option>
+                            <option value="+61">AU +61</option>
+                            <option value="+971">AE +971</option>
+                            <option value="+65">SG +65</option>
+                            <option value="+60">MY +60</option>
+                            <option value="+49">DE +49</option>
+                            <option value="+33">FR +33</option>
+                            <option value="+81">JP +81</option>
+                            <option value="+86">CN +86</option>
+                            <option value="+82">KR +82</option>
+                            <option value="+55">BR +55</option>
+                            <option value="+27">ZA +27</option>
+                            <option value="+234">NG +234</option>
+                            <option value="+254">KE +254</option>
+                        </select>
+                        <input type="tel" id="reg-parent-phone" placeholder="Phone number" required>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-full" id="signup-submit">
-                    <span class="btn-text">Create Account</span>
-                    <span class="btn-loader hidden"></span>
-                </button>
-                <p class="auth-switch">
-                    Already have an account? <a href="#" id="switch-to-login">Sign in</a>
-                </p>
-            </form>
+                <div class="form-group">
+                    <label for="reg-whatsapp">WhatsApp Number <span class="required">*</span></label>
+                    <div class="phone-input-row">
+                        <select class="phone-country-code" id="reg-whatsapp-code">
+                            <option value="+91">IN +91</option>
+                            <option value="+1">US +1</option>
+                            <option value="+44">UK +44</option>
+                            <option value="+61">AU +61</option>
+                            <option value="+971">AE +971</option>
+                            <option value="+65">SG +65</option>
+                            <option value="+60">MY +60</option>
+                            <option value="+49">DE +49</option>
+                            <option value="+33">FR +33</option>
+                            <option value="+81">JP +81</option>
+                        </select>
+                        <input type="tel" id="reg-whatsapp" placeholder="WhatsApp number" required>
+                    </div>
+                </div>
+
+                <div class="reg-section-label" style="margin-top:28px;">Student Information</div>
+                <div class="form-group">
+                    <label for="reg-student-name">Student Name <span class="required">*</span></label>
+                    <input type="text" id="reg-student-name" placeholder="Child's full name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="reg-student-grade">Grade / Class <span class="required">*</span></label>
+                        <select id="reg-student-grade" required>
+                            <option value="">Select grade...</option>
+                            <option value="Year 1">Year 1</option>
+                            <option value="Year 2">Year 2</option>
+                            <option value="Year 3">Year 3</option>
+                            <option value="Year 4">Year 4</option>
+                            <option value="Year 5">Year 5</option>
+                            <option value="Year 6">Year 6</option>
+                            <option value="Year 7">Year 7</option>
+                            <option value="Year 8">Year 8</option>
+                            <option value="Year 9">Year 9</option>
+                            <option value="Year 10">Year 10</option>
+                            <option value="Year 11">Year 11</option>
+                            <option value="Year 12">Year 12</option>
+                            <option value="Special Needs">Special Needs</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-student-curriculum">Curriculum <span class="required">*</span></label>
+                        <select id="reg-student-curriculum" required>
+                            <option value="">Select curriculum...</option>
+                            <option value="CBSE">CBSE</option>
+                            <option value="ICSE">ICSE</option>
+                            <option value="State Board">State Board</option>
+                            <option value="IGCSE (Cambridge)">IGCSE (Cambridge)</option>
+                            <option value="IB (PYP, MYP, DP)">IB (PYP, MYP, DP)</option>
+                            <option value="British (GCSE, A-Level)">British (GCSE, A-Level)</option>
+                            <option value="US Common Core">US Common Core</option>
+                            <option value="Australian (ATAR)">Australian (ATAR)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="reg-nav-row">
+                    <button type="button" class="btn btn-outline reg-back-btn" data-goto="1">Back</button>
+                    <button type="button" class="btn btn-primary reg-next-btn" data-goto="3">Continue</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Session Preferences -->
+            <div class="reg-step" id="reg-step-3">
+                <div class="reg-step-header">
+                    <h3 class="reg-step-title">Session Preferences</h3>
+                    <p class="reg-step-sub">Tell us when and what works best</p>
+                </div>
+                <div class="form-group">
+                    <label for="reg-subject">Subject <span class="required">*</span></label>
+                    <input type="text" id="reg-subject" placeholder="e.g. Mathematics, Science" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-time-slot">Preferred Time Slot <span class="required">*</span></label>
+                    <select id="reg-time-slot" required>
+                        <option value="">Select time slot...</option>
+                        <option value="Morning (9 AM – 12 PM)">Morning (9 AM – 12 PM)</option>
+                        <option value="Afternoon (12 – 3 PM)">Afternoon (12 – 3 PM)</option>
+                        <option value="Evening (3 – 6 PM)">Evening (3 – 6 PM)</option>
+                        <option value="Night (6 – 9 PM)">Night (6 – 9 PM)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reg-mode">Mode</label>
+                    <select id="reg-mode">
+                        <option value="Online" selected>Online (Google Meet)</option>
+                        <option value="In-person">In-person (if available)</option>
+                    </select>
+                </div>
+
+                <div class="reg-nav-row">
+                    <button type="button" class="btn btn-outline reg-back-btn" data-goto="2">Back</button>
+                    <button type="button" class="btn btn-primary reg-next-btn reg-submit-btn" id="reg-submit-btn">
+                        <span class="btn-text">Book Free Session</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 4: Confirmation -->
+            <div class="reg-step" id="reg-step-4">
+                <div class="reg-confirmation">
+                    <div class="reg-confirm-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <h3 class="reg-confirm-title">Session Request Received</h3>
+                    <p class="reg-confirm-desc">
+                        Your free session request has been received.<br>
+                        <strong>Our team will contact you shortly</strong> to confirm details.
+                    </p>
+                    <div class="reg-confirm-details" id="reg-confirm-summary"></div>
+                    <div class="reg-confirm-trust">
+                        <span>No credit card required</span>
+                        <span>30-min free discovery call</span>
+                        <span>Cancel anytime</span>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-full" id="reg-done-btn">Done — Return to Site</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -121,9 +337,9 @@
         <!-- ════════════════════════════════════ -->
         <section class="hero" id="home">
             <div class="hero-content">
-                <p class="hero-badge">🌸 &nbsp;Global eLearning &nbsp;· &nbsp;Every Grade &nbsp;· &nbsp;Every Child</p>
+                <p class="hero-badge">Global eLearning &middot; Every Grade &middot; Every Child</p>
                 
-                <!-- Decorative Emblem using main logo (circular ZENITH PRANAVI) -->
+                <!-- Decorative Emblem using main logo -->
                 <div class="hero-emblem">
                     <div class="emblem-outer">
                         <img src="logo-main.jpeg" alt="Zenith Pranavi" class="hero-logo-img">
@@ -163,7 +379,7 @@
                 <!-- Discover scroll indicator -->
                 <div class="scroll-indicator">
                     <span>Discover</span>
-                    <div class="scroll-arrow">↓</div>
+                    <div class="scroll-arrow">&#8595;</div>
                 </div>
             </div>
         </section>
@@ -174,7 +390,6 @@
         <section class="section why-section" id="why">
             <div class="container">
                 <div class="why-grid">
-                    <!-- Left: Logo Emblem (main circular logo) -->
                     <div class="why-emblem-col">
                         <div class="why-emblem-wrapper">
                             <div class="why-emblem-circle">
@@ -182,8 +397,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Right: Content -->
                     <div class="why-content-col">
                         <p class="section-badge-left">Why Zenith Pranavi</p>
                         <h2 class="section-title-left">Learning That <em>Sees</em><br><strong>Every Child</strong></h2>
@@ -196,28 +409,28 @@
 
                         <div class="why-features">
                             <div class="why-feature-card">
-                                <div class="why-feature-icon">🌍</div>
+                                <div class="why-feature-icon-wrap"><span class="why-feature-icon-text">G</span></div>
                                 <div>
                                     <strong>Global Curricula</strong>
                                     <span><strong>CBSE, IGCSE, IB, US Common Core</strong> — every major curriculum worldwide.</span>
                                 </div>
                             </div>
                             <div class="why-feature-card">
-                                <div class="why-feature-icon">🧠</div>
+                                <div class="why-feature-icon-wrap"><span class="why-feature-icon-text">I</span></div>
                                 <div>
                                     <strong>Inclusive by Design</strong>
                                     <span><strong>Autism, ADHD, dyslexia</strong> support — not as an afterthought, as a <strong>foundation</strong>.</span>
                                 </div>
                             </div>
                             <div class="why-feature-card">
-                                <div class="why-feature-icon">💰</div>
+                                <div class="why-feature-icon-wrap"><span class="why-feature-icon-text">F</span></div>
                                 <div>
                                     <strong>Fair Global Pricing</strong>
                                     <span>Fees modulated by country. <strong>Quality education</strong> is not a privilege of geography.</span>
                                 </div>
                             </div>
                             <div class="why-feature-card">
-                                <div class="why-feature-icon">🌸</div>
+                                <div class="why-feature-icon-wrap"><span class="why-feature-icon-text">L</span></div>
                                 <div>
                                     <strong>The Lily Promise</strong>
                                     <span>Like the lily that blooms anywhere — we nurture <strong>every child</strong> to blossom.</span>
@@ -241,7 +454,7 @@
                 <div class="programs-grid">
                     <div class="program-card">
                         <div class="program-number">01</div>
-                        <div class="program-icon">📚</div>
+                        <div class="program-icon-wrap"><span class="program-icon-letter">F</span></div>
                         <h3 class="program-name">Foundation Learning</h3>
                         <p class="program-desc">Grades 1–5. Building the <strong>unshakeable foundation</strong> through curiosity, play and wonder.</p>
                         <div class="program-age">Ages 6–11</div>
@@ -249,7 +462,7 @@
 
                     <div class="program-card">
                         <div class="program-number">02</div>
-                        <div class="program-icon">🚀</div>
+                        <div class="program-icon-wrap"><span class="program-icon-letter">A</span></div>
                         <h3 class="program-name">Accelerated Track</h3>
                         <p class="program-desc">Grades 6–10. <strong>Fast-paced</strong> deep-dive learning for students who hunger for more.</p>
                         <div class="program-age">Ages 11–16</div>
@@ -257,7 +470,7 @@
 
                     <div class="program-card">
                         <div class="program-number">03</div>
-                        <div class="program-icon">🎯</div>
+                        <div class="program-icon-wrap"><span class="program-icon-letter">E</span></div>
                         <h3 class="program-name">Exam Mastery</h3>
                         <p class="program-desc"><strong>IGCSE, IB, SAT, JEE, NEET</strong> — targeted preparation with expert coaches.</p>
                         <div class="program-age">Ages 14–18</div>
@@ -265,7 +478,7 @@
 
                     <div class="program-card">
                         <div class="program-number">04</div>
-                        <div class="program-icon">💛</div>
+                        <div class="program-icon-wrap"><span class="program-icon-letter">I</span></div>
                         <h3 class="program-name">Inclusive Learning</h3>
                         <p class="program-desc">Specialists for <strong>autism, ADHD, dyslexia</strong> and all neurodiverse learning profiles.</p>
                         <div class="program-age">All Ages</div>
@@ -273,7 +486,7 @@
 
                     <div class="program-card">
                         <div class="program-number">05</div>
-                        <div class="program-icon">🌐</div>
+                        <div class="program-icon-wrap"><span class="program-icon-letter">L</span></div>
                         <h3 class="program-name">Language & Literacy</h3>
                         <p class="program-desc">English, Hindi, regional languages — learning in <strong>your language</strong> is learning freely.</p>
                         <div class="program-age">All Grades</div>
@@ -281,7 +494,7 @@
 
                     <div class="program-card">
                         <div class="program-number">06</div>
-                        <div class="program-icon">⭐</div>
+                        <div class="program-icon-wrap"><span class="program-icon-letter">G</span></div>
                         <h3 class="program-name">Gifted & Talented</h3>
                         <p class="program-desc">For children who think <strong>three steps ahead</strong>. Advanced projects and mentorship.</p>
                         <div class="program-age">Selective</div>
@@ -301,41 +514,38 @@
                 <p class="pricing-sub">Every price below is <strong>per hour, one-on-one</strong>, with a fully qualified tutor. Adjusted fairly by country and curriculum level.</p>
 
                 <div class="pricing-grid">
-                    <!-- Card 1: Year 1–6 -->
                     <div class="pricing-card">
                         <div class="pricing-badge pricing-badge-pink">Foundation Years</div>
                         <div class="pricing-amount pricing-amount-gold">$13<span class="pricing-per">/ hour</span></div>
                         <div class="pricing-year">Year 1 – 6</div>
                         <div class="pricing-divider"></div>
                         <ul class="pricing-features">
-                            <li><span class="check gold">✓</span> Live one-on-one sessions</li>
-                            <li><span class="check gold">✓</span> 3-month structured plan</li>
-                            <li><span class="check gold">✓</span> Doubt sessions included</li>
-                            <li><span class="check gold">✓</span> Monthly parent meetings</li>
-                            <li><span class="check gold">✓</span> Refund for unused classes</li>
+                            <li><span class="check gold">&#10003;</span> Live one-on-one sessions</li>
+                            <li><span class="check gold">&#10003;</span> 3-month structured plan</li>
+                            <li><span class="check gold">&#10003;</span> Doubt sessions included</li>
+                            <li><span class="check gold">&#10003;</span> Monthly parent meetings</li>
+                            <li><span class="check gold">&#10003;</span> Refund for unused classes</li>
                         </ul>
                         <p class="pricing-terms">Terms apply for refund policy</p>
-                        <button class="btn pricing-btn pricing-btn-navy" onclick="openProgramModal()">Start Year 1–6</button>
+                        <button class="btn pricing-btn pricing-btn-navy" data-cta="pricing">Start Year 1–6</button>
                     </div>
 
-                    <!-- Card 2: Year 7–10 -->
                     <div class="pricing-card">
                         <div class="pricing-badge pricing-badge-navy">Middle School</div>
                         <div class="pricing-amount pricing-amount-navy">$20<span class="pricing-per">/ hour</span></div>
                         <div class="pricing-year">Year 7 – 10</div>
                         <div class="pricing-divider"></div>
                         <ul class="pricing-features">
-                            <li><span class="check gold">✓</span> Live one-on-one sessions</li>
-                            <li><span class="check gold">✓</span> 3-month structured plan</li>
-                            <li><span class="check gold">✓</span> Doubt sessions included</li>
-                            <li><span class="check gold">✓</span> Monthly parent meetings</li>
-                            <li><span class="check gold">✓</span> Refund for unused classes</li>
+                            <li><span class="check gold">&#10003;</span> Live one-on-one sessions</li>
+                            <li><span class="check gold">&#10003;</span> 3-month structured plan</li>
+                            <li><span class="check gold">&#10003;</span> Doubt sessions included</li>
+                            <li><span class="check gold">&#10003;</span> Monthly parent meetings</li>
+                            <li><span class="check gold">&#10003;</span> Refund for unused classes</li>
                         </ul>
                         <p class="pricing-terms">Terms apply for refund policy</p>
-                        <button class="btn pricing-btn pricing-btn-navy" onclick="openProgramModal()">Start Year 7–10</button>
+                        <button class="btn pricing-btn pricing-btn-navy" data-cta="pricing">Start Year 7–10</button>
                     </div>
 
-                    <!-- Card 3: Year 11–12 (MOST POPULAR) -->
                     <div class="pricing-card pricing-card-popular">
                         <div class="popular-ribbon">Most Popular</div>
                         <div class="pricing-badge pricing-badge-gold">Senior Years</div>
@@ -343,47 +553,46 @@
                         <div class="pricing-year">Year 11 – 12</div>
                         <div class="pricing-divider"></div>
                         <ul class="pricing-features">
-                            <li><span class="check gold">✓</span> Live one-on-one sessions</li>
-                            <li><span class="check gold">✓</span> 3-month structured plan</li>
-                            <li><span class="check gold">✓</span> Doubt sessions included</li>
-                            <li><span class="check gold">✓</span> Monthly parent meetings</li>
-                            <li><span class="check gold">✓</span> Refund for unused classes</li>
+                            <li><span class="check gold">&#10003;</span> Live one-on-one sessions</li>
+                            <li><span class="check gold">&#10003;</span> 3-month structured plan</li>
+                            <li><span class="check gold">&#10003;</span> Doubt sessions included</li>
+                            <li><span class="check gold">&#10003;</span> Monthly parent meetings</li>
+                            <li><span class="check gold">&#10003;</span> Refund for unused classes</li>
                         </ul>
                         <p class="pricing-terms">Terms apply for refund policy</p>
-                        <button class="btn pricing-btn pricing-btn-gold" onclick="openProgramModal()">Start Year 11–12</button>
+                        <button class="btn pricing-btn pricing-btn-gold" data-cta="pricing">Start Year 11–12</button>
                     </div>
 
-                    <!-- Card 4: Special Needs -->
                     <div class="pricing-card pricing-card-inclusive">
                         <div class="pricing-badge pricing-badge-pink-deep">Inclusive Support</div>
                         <div class="pricing-amount pricing-amount-pink">$27<span class="pricing-per">/ hour</span></div>
                         <div class="pricing-year">Special Needs Support</div>
                         <div class="pricing-divider"></div>
                         <ul class="pricing-features pricing-features-pink">
-                            <li><span class="check pink-deep">✓</span> Specialist trained educators</li>
-                            <li><span class="check pink-deep">✓</span> Personalised learning plan</li>
-                            <li><span class="check pink-deep">✓</span> 3-month structured plan</li>
-                            <li><span class="check pink-deep">✓</span> Doubt sessions included</li>
-                            <li><span class="check pink-deep">✓</span> Monthly parent meetings</li>
-                            <li><span class="check pink-deep">✓</span> Refund for unused classes</li>
+                            <li><span class="check pink-deep">&#10003;</span> Specialist trained educators</li>
+                            <li><span class="check pink-deep">&#10003;</span> Personalised learning plan</li>
+                            <li><span class="check pink-deep">&#10003;</span> 3-month structured plan</li>
+                            <li><span class="check pink-deep">&#10003;</span> Doubt sessions included</li>
+                            <li><span class="check pink-deep">&#10003;</span> Monthly parent meetings</li>
+                            <li><span class="check pink-deep">&#10003;</span> Refund for unused classes</li>
                         </ul>
                         <p class="pricing-terms">Terms apply for refund policy</p>
-                        <button class="btn pricing-btn pricing-btn-pink" onclick="openProgramModal()">Start Inclusive Plan</button>
+                        <button class="btn pricing-btn pricing-btn-pink" data-cta="pricing">Start Inclusive Plan</button>
                     </div>
                 </div>
 
                 <!-- Trust Strip -->
                 <div class="pricing-trust-strip">
                     <div class="trust-pill">
-                        <span class="trust-icon">📅</span>
+                        <span class="trust-icon-letter">S</span>
                         <span class="trust-text"><strong>Structured 3-Month Plans</strong> — clear goals every week</span>
                     </div>
                     <div class="trust-pill">
-                        <span class="trust-icon">❓</span>
+                        <span class="trust-icon-letter">D</span>
                         <span class="trust-text"><strong>Doubt Sessions Included</strong> — never leave a question unanswered</span>
                     </div>
                     <div class="trust-pill">
-                        <span class="trust-icon">🤝</span>
+                        <span class="trust-icon-letter">P</span>
                         <span class="trust-text"><strong>Parent Meetings Included</strong> — you are part of every step</span>
                     </div>
                 </div>
@@ -402,33 +611,22 @@
 
                 <div class="experience-grid">
                     <div class="experience-card">
-                        <div class="exp-icon-wrap">
-                            <span class="exp-icon">🎙️</span>
-                        </div>
+                        <div class="exp-icon-wrap"><span class="exp-icon-letter">L</span></div>
                         <h3 class="exp-card-title">Live Interaction</h3>
                         <p class="exp-card-desc">Every session is <strong>fully live</strong>, face to face with a qualified tutor. No recorded videos. No passive watching. Your child speaks, asks, answers, and thinks <strong>in real time</strong>.</p>
                     </div>
-
                     <div class="experience-card">
-                        <div class="exp-icon-wrap">
-                            <span class="exp-icon">💡</span>
-                        </div>
+                        <div class="exp-icon-wrap"><span class="exp-icon-letter">D</span></div>
                         <h3 class="exp-card-title">Real-Time Doubt Solving</h3>
                         <p class="exp-card-desc">The moment your child does not understand something, we <strong>stop and solve it</strong> right there. No child leaves a session carrying an <strong>unanswered question</strong> forward.</p>
                     </div>
-
                     <div class="experience-card">
-                        <div class="exp-icon-wrap">
-                            <span class="exp-icon">🎯</span>
-                        </div>
+                        <div class="exp-icon-wrap"><span class="exp-icon-letter">F</span></div>
                         <h3 class="exp-card-title">Focused Attention</h3>
                         <p class="exp-card-desc"><strong>One tutor. One child. Zero distractions.</strong> The session is built entirely around your child's pace, their confusion, their confidence, and their curiosity.</p>
                     </div>
-
                     <div class="experience-card">
-                        <div class="exp-icon-wrap">
-                            <span class="exp-icon">📈</span>
-                        </div>
+                        <div class="exp-icon-wrap"><span class="exp-icon-letter">P</span></div>
                         <h3 class="exp-card-title">Progress Tracking</h3>
                         <p class="exp-card-desc">Parents receive <strong>monthly reports</strong> showing exactly what was covered, what improved, what still needs work, and what the next 30 days will focus on. <strong>Full transparency</strong> always.</p>
                     </div>
@@ -446,7 +644,7 @@
                     help every child discover the <span class="underline-text">kind of smart they already are</span>. At 
                     Zenith Pranavi, that is not a philosophy. It is our daily practice."
                 </blockquote>
-                <p class="quote-attribution">— Zenith Pranavi Education &nbsp;🌸&nbsp; ZPed.org</p>
+                <p class="quote-attribution">— Zenith Pranavi Education &middot; ZPed.org</p>
             </div>
         </section>
 
@@ -466,7 +664,7 @@
                         <p class="step-desc"><strong>30 minutes</strong> understanding your child — strengths, challenges, curriculum, and dreams. No forms. No pressure. Just a <strong>real conversation</strong>.</p>
                         <div class="step-tags">
                             <span class="step-tag">30 Minutes</span>
-                            <span class="step-tag-dot">·</span>
+                            <span class="step-tag-dot">&middot;</span>
                             <span class="step-tag">Free</span>
                         </div>
                     </div>
@@ -477,7 +675,7 @@
                         <p class="step-desc">Our educators design a <strong>personalised path</strong> — not a template, a bespoke map drawn specifically for your child's <strong>unique mind</strong> and goals.</p>
                         <div class="step-tags">
                             <span class="step-tag">Personalised</span>
-                            <span class="step-tag-dot">·</span>
+                            <span class="step-tag-dot">&middot;</span>
                             <span class="step-tag">48hrs</span>
                         </div>
                     </div>
@@ -497,9 +695,9 @@
                         <p class="step-desc"><strong>Live online sessions</strong>, flexible scheduling, parent progress reports, and monthly reviews. Education that <strong>moves with your child</strong>.</p>
                         <div class="step-tags">
                             <span class="step-tag">Live</span>
-                            <span class="step-tag-dot">·</span>
+                            <span class="step-tag-dot">&middot;</span>
                             <span class="step-tag">Flexible</span>
-                            <span class="step-tag-dot">·</span>
+                            <span class="step-tag-dot">&middot;</span>
                             <span class="step-tag">Adaptive</span>
                         </div>
                     </div>
@@ -541,13 +739,13 @@
         </section>
 
         <!-- ════════════════════════════════════ -->
-        <!-- GET STARTED BANNER (above CTA)       -->
+        <!-- GET STARTED BANNER                   -->
         <!-- ════════════════════════════════════ -->
         <section class="get-started-banner" id="get-started-banner">
             <div class="container">
                 <div class="get-started-inner">
                     <h2 class="get-started-text">Global Learning. Every Grade. Every Child.</h2>
-                    <button class="btn btn-primary btn-lg get-started-cta-btn" onclick="openAuthModal('signup')">GET STARTED →</button>
+                    <button class="btn btn-primary btn-lg get-started-cta-btn" data-cta="banner">GET STARTED</button>
                 </div>
             </div>
         </section>
@@ -566,17 +764,16 @@
                         Join <strong>thousands of families</strong> worldwide who trust Zenith Pranavi. Your first session is <strong>completely free</strong>.
                     </p>
                     <form class="cta-form" id="cta-form">
-                        <input type="email" class="cta-input" id="cta-email" placeholder="Enter your email address" required>
-                        <button type="submit" class="btn btn-primary cta-btn">CLAIM FREE SESSION →</button>
+                        <input type="email" class="cta-input" id="cta-email" placeholder="Enter your email address">
+                        <button type="submit" class="btn btn-primary cta-btn">CLAIM FREE SESSION</button>
                     </form>
-                    <p class="cta-note">No credit card · No commitment · Just learning 🌸</p>
+                    <p class="cta-note">No credit card &middot; No commitment &middot; Just learning</p>
                 </div>
             </div>
         </section>
 
         <!-- ════════════════════════════════════════════════════ -->
-        <!-- SECTION 9B: FINAL CTA (Before Footer — Duplicate)   -->
-        <!-- High-conversion CTA with multi-step booking flow     -->
+        <!-- SECTION 9B: FINAL CTA (Before Footer)               -->
         <!-- ════════════════════════════════════════════════════ -->
         <section class="section cta-section cta-section-final" id="final-cta">
             <div class="container">
@@ -591,9 +788,9 @@
                     </p>
                     <form class="cta-form" id="final-cta-form">
                         <input type="email" class="cta-input" id="final-cta-email" placeholder="Enter your email address">
-                        <button type="submit" class="btn btn-primary cta-btn">CLAIM FREE SESSION →</button>
+                        <button type="submit" class="btn btn-primary cta-btn">CLAIM FREE SESSION</button>
                     </form>
-                    <p class="cta-note">No credit card · No commitment · Just learning 🌸</p>
+                    <p class="cta-note">No credit card &middot; No commitment &middot; Just learning</p>
                 </div>
             </div>
         </section>
@@ -603,7 +800,7 @@
         <!-- ════════════════════════════════════ -->
         <section class="section contact-section" id="contact">
             <div class="container">
-                <p class="section-badge">✦ &nbsp;GET IN TOUCH</p>
+                <p class="section-badge">GET IN TOUCH</p>
                 <h2 class="section-title">Talk To Us</h2>
                 <p class="section-desc">Have questions? We'd <strong>love to hear from you</strong>. Send us a message and we'll respond promptly.</p>
 
@@ -628,21 +825,21 @@
                     </form>
                     <div class="contact-info">
                         <div class="contact-info-card">
-                            <div class="contact-icon">📧</div>
+                            <div class="contact-icon-wrap"><span class="contact-icon-letter">E</span></div>
                             <div>
                                 <h3>Email Us</h3>
                                 <p>hello@zped.org</p>
                             </div>
                         </div>
                         <div class="contact-info-card">
-                            <div class="contact-icon">🌐</div>
+                            <div class="contact-icon-wrap"><span class="contact-icon-letter">W</span></div>
                             <div>
                                 <h3>Website</h3>
                                 <p>www.zped.org</p>
                             </div>
                         </div>
                         <div class="contact-info-card">
-                            <div class="contact-icon">🕐</div>
+                            <div class="contact-icon-wrap"><span class="contact-icon-letter">H</span></div>
                             <div>
                                 <h3>Hours</h3>
                                 <p>Mon–Sat, 9 AM – 8 PM</p>
@@ -659,7 +856,6 @@
         <footer class="footer">
             <div class="container">
                 <div class="footer-grid">
-                    <!-- Brand Column -->
                     <div class="footer-brand-col">
                         <div class="footer-brand-row">
                             <img src="logo-icon.jpeg" alt="Zenith Pranavi" class="footer-logo-img">
@@ -667,8 +863,6 @@
                         </div>
                         <p class="footer-tagline">Where every child finds their path and walks it — <strong>boldly, joyfully</strong>, all the way to their zenith.</p>
                     </div>
-
-                    <!-- Programs Column -->
                     <div class="footer-col">
                         <h4 class="footer-col-title">Programs</h4>
                         <ul class="footer-col-links">
@@ -678,8 +872,6 @@
                             <li><a href="#programs">Inclusive Learning</a></li>
                         </ul>
                     </div>
-
-                    <!-- Company Column -->
                     <div class="footer-col">
                         <h4 class="footer-col-title">Company</h4>
                         <ul class="footer-col-links">
@@ -689,8 +881,6 @@
                             <li><a href="#">Careers</a></li>
                         </ul>
                     </div>
-
-                    <!-- Account Column -->
                     <div class="footer-col">
                         <h4 class="footer-col-title">Account</h4>
                         <ul class="footer-col-links">
@@ -700,10 +890,9 @@
                         </ul>
                     </div>
                 </div>
-
                 <div class="footer-bottom">
-                    <p>&copy; 2025 Zenith Pranavi Education · hello@zped.org · All Rights Reserved</p>
-                    <p class="footer-bottom-brand">ZPed.org 🌸</p>
+                    <p>&copy; 2025 Zenith Pranavi Education &middot; hello@zped.org &middot; All Rights Reserved</p>
+                    <p class="footer-bottom-brand">ZPed.org</p>
                 </div>
             </div>
         </footer>
@@ -713,11 +902,10 @@
     <!--                    DASHBOARD                            -->
     <!-- ═══════════════════════════════════════════════════════ -->
     <main id="dashboard" class="hidden">
-        
         <section class="dashboard-hero">
             <div class="container">
                 <div class="dashboard-welcome">
-                    <h1>Welcome back, <span id="dash-user-name">Student</span> 👋</h1>
+                    <h1>Welcome back, <span id="dash-user-name">Student</span></h1>
                     <p>Your learning dashboard — manage bookings, explore programs, and track your progress.</p>
                 </div>
             </div>
@@ -727,17 +915,14 @@
             <div class="container">
                 <div class="dashboard-stats">
                     <div class="dash-stat-card">
-                        <div class="dash-stat-icon">📚</div>
                         <div class="dash-stat-number" id="total-bookings-count">0</div>
                         <div class="dash-stat-label">Total Bookings</div>
                     </div>
                     <div class="dash-stat-card">
-                        <div class="dash-stat-icon">✅</div>
                         <div class="dash-stat-number" id="confirmed-bookings-count">0</div>
                         <div class="dash-stat-label">Confirmed</div>
                     </div>
                     <div class="dash-stat-card">
-                        <div class="dash-stat-icon">⏳</div>
                         <div class="dash-stat-number" id="pending-bookings-count">0</div>
                         <div class="dash-stat-label">Pending</div>
                     </div>
@@ -747,25 +932,20 @@
 
         <section class="dashboard-section" id="book-section">
             <div class="container">
-                <h2 class="dash-section-title">📖 Book a Session</h2>
+                <h2 class="dash-section-title">Book a Session</h2>
                 <div class="booking-form-wrapper">
                     <form id="booking-form" class="booking-form">
-                        <!-- YEAR CATEGORY SELECTOR -->
                         <div class="form-group">
                             <label>Select Your Year</label>
                             <div class="year-selector" id="year-selector">
-                                <!-- Category: All Grades -->
                                 <button type="button" class="year-category-btn" data-category="all">
-                                    <span class="year-cat-icon">📚</span>
                                     <span class="year-cat-label">All Grades</span>
-                                    <span class="year-cat-arrow">▸</span>
+                                    <span class="year-cat-arrow">&#9656;</span>
                                 </button>
-                                <!-- Category: Foundation Years -->
                                 <button type="button" class="year-category-btn" data-category="foundation">
-                                    <span class="year-cat-icon">🌱</span>
                                     <span class="year-cat-label">Foundation Years</span>
                                     <span class="year-cat-price">$13/hr</span>
-                                    <span class="year-cat-arrow">▸</span>
+                                    <span class="year-cat-arrow">&#9656;</span>
                                 </button>
                                 <div class="year-grades-panel" id="grades-foundation">
                                     <button type="button" class="year-grade-btn" data-year="Year 1" data-price="13">Year 1</button>
@@ -775,12 +955,10 @@
                                     <button type="button" class="year-grade-btn" data-year="Year 5" data-price="13">Year 5</button>
                                     <button type="button" class="year-grade-btn" data-year="Year 6" data-price="13">Year 6</button>
                                 </div>
-                                <!-- Category: Middle School -->
                                 <button type="button" class="year-category-btn" data-category="middle">
-                                    <span class="year-cat-icon">🚀</span>
                                     <span class="year-cat-label">Middle School</span>
                                     <span class="year-cat-price">$20/hr</span>
-                                    <span class="year-cat-arrow">▸</span>
+                                    <span class="year-cat-arrow">&#9656;</span>
                                 </button>
                                 <div class="year-grades-panel" id="grades-middle">
                                     <button type="button" class="year-grade-btn" data-year="Year 7" data-price="20">Year 7</button>
@@ -788,29 +966,24 @@
                                     <button type="button" class="year-grade-btn" data-year="Year 9" data-price="20">Year 9</button>
                                     <button type="button" class="year-grade-btn" data-year="Year 10" data-price="20">Year 10</button>
                                 </div>
-                                <!-- Category: Senior Years -->
                                 <button type="button" class="year-category-btn" data-category="senior">
-                                    <span class="year-cat-icon">🎯</span>
                                     <span class="year-cat-label">Senior Years</span>
                                     <span class="year-cat-price">$27/hr</span>
-                                    <span class="year-cat-arrow">▸</span>
+                                    <span class="year-cat-arrow">&#9656;</span>
                                 </button>
                                 <div class="year-grades-panel" id="grades-senior">
                                     <button type="button" class="year-grade-btn" data-year="Year 11" data-price="27">Year 11</button>
                                     <button type="button" class="year-grade-btn" data-year="Year 12" data-price="27">Year 12</button>
                                 </div>
-                                <!-- Category: Inclusive Support -->
                                 <button type="button" class="year-category-btn" data-category="inclusive">
-                                    <span class="year-cat-icon">💛</span>
                                     <span class="year-cat-label">Inclusive Support</span>
                                     <span class="year-cat-price">$27/hr</span>
-                                    <span class="year-cat-arrow">▸</span>
+                                    <span class="year-cat-arrow">&#9656;</span>
                                 </button>
                                 <div class="year-grades-panel" id="grades-inclusive">
                                     <button type="button" class="year-grade-btn" data-year="Special Needs" data-price="27">Special Needs Support</button>
                                 </div>
                             </div>
-                            <!-- Hidden inputs to hold selected year & price -->
                             <input type="hidden" id="booking-year" value="" required>
                             <input type="hidden" id="booking-year-price" value="">
                             <div class="selected-year-display hidden" id="selected-year-display">
@@ -861,7 +1034,7 @@
 
         <section class="dashboard-section">
             <div class="container">
-                <h2 class="dash-section-title">📋 My Bookings</h2>
+                <h2 class="dash-section-title">My Bookings</h2>
                 <div class="bookings-table-wrapper">
                     <table class="bookings-table" id="bookings-table">
                         <thead>
@@ -884,521 +1057,15 @@
             </div>
         </section>
 
-
-
         <footer class="footer">
             <div class="container">
                 <div class="footer-bottom">
-                    <p>&copy; 2025 Zenith Pranavi Education · hello@zped.org · All Rights Reserved</p>
-                    <p class="footer-bottom-brand">ZPed.org 🌸</p>
+                    <p>&copy; 2025 Zenith Pranavi Education &middot; hello@zped.org &middot; All Rights Reserved</p>
+                    <p class="footer-bottom-brand">ZPed.org</p>
                 </div>
             </div>
         </footer>
     </main>
-
-    <!-- BOOKING MODAL (legacy — kept for dashboard) -->
-    <div class="modal-overlay" id="booking-modal">
-        <div class="modal modal-booking">
-            <button class="modal-close" id="booking-modal-close">&times;</button>
-            <h2 class="modal-title">Book a Session</h2>
-            <p class="modal-subtitle" id="booking-modal-tutor-info">with Tutor Name — $XX/hour</p>
-            <form id="quick-booking-form" class="auth-form">
-                <div class="form-group">
-                    <label for="qb-subject">Subject</label>
-                    <input type="text" id="qb-subject" placeholder="e.g. Mathematics" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="qb-date">Date</label>
-                        <input type="date" id="qb-date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="qb-time">Time</label>
-                        <select id="qb-time" required>
-                            <option value="">Select time...</option>
-                            <option value="09:00 AM">09:00 AM</option>
-                            <option value="10:00 AM">10:00 AM</option>
-                            <option value="11:00 AM">11:00 AM</option>
-                            <option value="12:00 PM">12:00 PM</option>
-                            <option value="01:00 PM">01:00 PM</option>
-                            <option value="02:00 PM">02:00 PM</option>
-                            <option value="03:00 PM">03:00 PM</option>
-                            <option value="04:00 PM">04:00 PM</option>
-                            <option value="05:00 PM">05:00 PM</option>
-                            <option value="06:00 PM">06:00 PM</option>
-                            <option value="07:00 PM">07:00 PM</option>
-                        </select>
-                    </div>
-                </div>
-                <input type="hidden" id="qb-tutor-name" value="">
-                <input type="hidden" id="qb-tutor-price" value="">
-                <button type="submit" class="btn btn-primary btn-full" id="qb-submit">
-                    <span class="btn-text">Confirm Booking</span>
-                    <span class="btn-loader hidden"></span>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- MULTI-STEP BOOKING FLOW MODAL (High-Conversion)            -->
-    <!-- Triggered by "CLAIM FREE SESSION" CTA buttons              -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <div class="modal-overlay" id="msf-modal">
-        <div class="modal modal-multistep">
-            <button class="modal-close" id="msf-close">&times;</button>
-
-            <!-- Progress Bar -->
-            <div class="msf-progress">
-                <div class="msf-progress-bar" id="msf-progress-bar" style="width:16.66%"></div>
-            </div>
-            <div class="msf-step-indicator">
-                <span class="msf-step-dot active" data-step="1">1</span>
-                <span class="msf-step-dot" data-step="2">2</span>
-                <span class="msf-step-dot" data-step="3">3</span>
-                <span class="msf-step-dot" data-step="4">4</span>
-                <span class="msf-step-dot" data-step="5">5</span>
-                <span class="msf-step-dot" data-step="6">6</span>
-            </div>
-
-            <!-- ─── STEP 1: LOGIN / SIGN IN ─── -->
-            <div class="msf-step active" id="msf-step-1">
-                <div class="msf-step-header">
-                    <span class="msf-step-badge">Step 1 of 6</span>
-                    <h3 class="msf-step-title">Sign In or Create Account</h3>
-                    <p class="msf-step-sub">To book your free session, let's start with your account.</p>
-                </div>
-
-                <!-- Auth Tabs -->
-                <div class="msf-auth-tabs">
-                    <button type="button" class="msf-auth-tab active" data-auth-tab="email">📧 Email Login</button>
-                    <button type="button" class="msf-auth-tab" data-auth-tab="phone">📱 Phone Login</button>
-                </div>
-
-                <!-- Email Login -->
-                <div class="msf-auth-panel active" id="msf-auth-email">
-                    <div class="form-group">
-                        <label for="msf-email">Email Address</label>
-                        <input type="email" id="msf-email" placeholder="you@example.com" autocomplete="email">
-                    </div>
-                    <div class="form-group">
-                        <label for="msf-password">Password</label>
-                        <input type="password" id="msf-password" placeholder="Enter your password" autocomplete="current-password">
-                    </div>
-                    <button type="button" class="btn btn-primary btn-full msf-login-btn" id="msf-email-login">
-                        <span class="btn-text">Sign In & Continue</span>
-                        <span class="btn-loader hidden"></span>
-                    </button>
-                    <p class="msf-auth-alt">
-                        Don't have an account? <a href="#" id="msf-switch-signup">Create one</a>
-                    </p>
-                    <p class="msf-forgot-link">
-                        <a href="#" id="msf-forgot-trigger">Forgot Password?</a>
-                    </p>
-                </div>
-
-                <!-- Email Signup (hidden by default) -->
-                <div class="msf-auth-panel" id="msf-auth-signup">
-                    <div class="form-group">
-                        <label for="msf-signup-name">Full Name</label>
-                        <input type="text" id="msf-signup-name" placeholder="Enter your full name" autocomplete="name">
-                    </div>
-                    <div class="form-group">
-                        <label for="msf-signup-email">Email Address</label>
-                        <input type="email" id="msf-signup-email" placeholder="you@example.com" autocomplete="email">
-                    </div>
-                    <div class="form-group">
-                        <label for="msf-signup-password">Create Password</label>
-                        <input type="password" id="msf-signup-password" placeholder="Min 6 characters" minlength="6" autocomplete="new-password">
-                    </div>
-                    <button type="button" class="btn btn-primary btn-full" id="msf-signup-btn">
-                        <span class="btn-text">Create Account & Continue</span>
-                        <span class="btn-loader hidden"></span>
-                    </button>
-                    <p class="msf-auth-alt">
-                        Already have an account? <a href="#" id="msf-switch-login">Sign in</a>
-                    </p>
-                </div>
-
-                <!-- Phone Login -->
-                <div class="msf-auth-panel" id="msf-auth-phone">
-                    <div class="form-group">
-                        <label for="msf-phone">Phone Number</label>
-                        <div class="msf-phone-row">
-                            <select class="msf-country-code" id="msf-phone-code">
-                                <option value="+91">🇮🇳 +91</option>
-                                <option value="+1">🇺🇸 +1</option>
-                                <option value="+44">🇬🇧 +44</option>
-                                <option value="+61">🇦🇺 +61</option>
-                                <option value="+971">🇦🇪 +971</option>
-                                <option value="+65">🇸🇬 +65</option>
-                                <option value="+60">🇲🇾 +60</option>
-                                <option value="+49">🇩🇪 +49</option>
-                                <option value="+33">🇫🇷 +33</option>
-                                <option value="+81">🇯🇵 +81</option>
-                                <option value="+86">🇨🇳 +86</option>
-                                <option value="+82">🇰🇷 +82</option>
-                                <option value="+55">🇧🇷 +55</option>
-                                <option value="+27">🇿🇦 +27</option>
-                                <option value="+234">🇳🇬 +234</option>
-                                <option value="+254">🇰🇪 +254</option>
-                            </select>
-                            <input type="tel" id="msf-phone" placeholder="Phone number" autocomplete="tel">
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-full" id="msf-send-otp">
-                        <span class="btn-text">Send OTP</span>
-                        <span class="btn-loader hidden"></span>
-                    </button>
-                    <div class="form-group msf-otp-group hidden" id="msf-otp-group">
-                        <label for="msf-otp">Enter OTP</label>
-                        <input type="text" id="msf-otp" placeholder="6-digit code" maxlength="6" autocomplete="one-time-code">
-                        <button type="button" class="btn btn-primary btn-full" id="msf-verify-otp" style="margin-top:12px;">
-                            <span class="btn-text">Verify & Continue</span>
-                            <span class="btn-loader hidden"></span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Forgot Password Panel -->
-                <div class="msf-auth-panel" id="msf-auth-forgot">
-                    <div class="msf-step-header" style="margin-bottom:16px;">
-                        <h3 class="msf-step-title" style="font-size:1.1rem;">Reset Your Password</h3>
-                        <p class="msf-step-sub">Enter your email and we'll send a reset link.</p>
-                    </div>
-                    <div class="form-group">
-                        <label for="msf-forgot-email">Email Address</label>
-                        <input type="email" id="msf-forgot-email" placeholder="you@example.com">
-                    </div>
-                    <button type="button" class="btn btn-primary btn-full" id="msf-forgot-send">
-                        <span class="btn-text">Send Reset Link</span>
-                        <span class="btn-loader hidden"></span>
-                    </button>
-                    <p class="msf-auth-alt" style="margin-top:16px;">
-                        <a href="#" id="msf-back-to-login">← Back to Sign In</a>
-                    </p>
-                </div>
-
-                <!-- Skip button for already-logged-in users -->
-                <div class="msf-skip-auth hidden" id="msf-skip-auth">
-                    <div class="msf-logged-in-msg">
-                        <span class="msf-logged-check">✅</span>
-                        <div>
-                            <strong id="msf-logged-name">You're signed in</strong>
-                            <p style="font-size:0.85rem; color:var(--text-light); margin:0;">Continue to fill in your details</p>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-full" id="msf-skip-btn">Continue →</button>
-                </div>
-            </div>
-
-            <!-- ─── STEP 2: PARENT DETAILS ─── -->
-            <div class="msf-step" id="msf-step-2">
-                <div class="msf-step-header">
-                    <span class="msf-step-badge">Step 2 of 6</span>
-                    <h3 class="msf-step-title">Parent Details</h3>
-                    <p class="msf-step-sub">Tell us about yourself so we can personalise the experience.</p>
-                </div>
-                <div class="form-group">
-                    <label for="msf-parent-name">Parent Full Name <span class="required">*</span></label>
-                    <input type="text" id="msf-parent-name" placeholder="Your full name" required>
-                </div>
-                <div class="form-group">
-                    <label for="msf-parent-email">Email Address <span class="required">*</span></label>
-                    <input type="email" id="msf-parent-email" placeholder="you@example.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="msf-parent-phone">Phone Number <span class="required">*</span></label>
-                    <div class="msf-phone-row">
-                        <select class="msf-country-code" id="msf-parent-phone-code">
-                            <option value="+91">🇮🇳 +91</option>
-                            <option value="+1">🇺🇸 +1</option>
-                            <option value="+44">🇬🇧 +44</option>
-                            <option value="+61">🇦🇺 +61</option>
-                            <option value="+971">🇦🇪 +971</option>
-                            <option value="+65">🇸🇬 +65</option>
-                            <option value="+60">🇲🇾 +60</option>
-                            <option value="+49">🇩🇪 +49</option>
-                            <option value="+33">🇫🇷 +33</option>
-                            <option value="+81">🇯🇵 +81</option>
-                        </select>
-                        <input type="tel" id="msf-parent-phone" placeholder="Phone number" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="msf-parent-alt-phone">Alternate Phone <span class="required">*</span></label>
-                    <div class="msf-phone-row">
-                        <select class="msf-country-code" id="msf-parent-alt-code">
-                            <option value="+91">🇮🇳 +91</option>
-                            <option value="+1">🇺🇸 +1</option>
-                            <option value="+44">🇬🇧 +44</option>
-                            <option value="+61">🇦🇺 +61</option>
-                            <option value="+971">🇦🇪 +971</option>
-                            <option value="+65">🇸🇬 +65</option>
-                            <option value="+60">🇲🇾 +60</option>
-                            <option value="+49">🇩🇪 +49</option>
-                            <option value="+33">🇫🇷 +33</option>
-                            <option value="+81">🇯🇵 +81</option>
-                        </select>
-                        <input type="tel" id="msf-parent-alt-phone" placeholder="Alternate phone" required>
-                    </div>
-                </div>
-                <div class="msf-nav-row">
-                    <button type="button" class="btn btn-outline msf-back-btn" data-goto="1">← Back</button>
-                    <button type="button" class="btn btn-primary msf-next-btn" data-goto="3">Continue →</button>
-                </div>
-            </div>
-
-            <!-- ─── STEP 3: STUDENT DETAILS ─── -->
-            <div class="msf-step" id="msf-step-3">
-                <div class="msf-step-header">
-                    <span class="msf-step-badge">Step 3 of 6</span>
-                    <h3 class="msf-step-title">Student Details</h3>
-                    <p class="msf-step-sub">Tell us about your child.</p>
-                </div>
-                <div class="form-group">
-                    <label for="msf-student-name">Student Name <span class="required">*</span></label>
-                    <input type="text" id="msf-student-name" placeholder="Child's full name" required>
-                </div>
-                <div class="form-group">
-                    <label for="msf-student-grade">Grade / Class <span class="required">*</span></label>
-                    <select id="msf-student-grade" required>
-                        <option value="">Select grade...</option>
-                        <option value="Year 1">Year 1</option>
-                        <option value="Year 2">Year 2</option>
-                        <option value="Year 3">Year 3</option>
-                        <option value="Year 4">Year 4</option>
-                        <option value="Year 5">Year 5</option>
-                        <option value="Year 6">Year 6</option>
-                        <option value="Year 7">Year 7</option>
-                        <option value="Year 8">Year 8</option>
-                        <option value="Year 9">Year 9</option>
-                        <option value="Year 10">Year 10</option>
-                        <option value="Year 11">Year 11</option>
-                        <option value="Year 12">Year 12</option>
-                        <option value="Special Needs">Special Needs Support</option>
-                    </select>
-                </div>
-                <div class="msf-nav-row">
-                    <button type="button" class="btn btn-outline msf-back-btn" data-goto="2">← Back</button>
-                    <button type="button" class="btn btn-primary msf-next-btn" data-goto="4">Continue →</button>
-                </div>
-            </div>
-
-            <!-- ─── STEP 4: CURRICULUM SELECTION ─── -->
-            <div class="msf-step" id="msf-step-4">
-                <div class="msf-step-header">
-                    <span class="msf-step-badge">Step 4 of 6</span>
-                    <h3 class="msf-step-title">Select Curriculum</h3>
-                    <p class="msf-step-sub">Choose the curriculum your child follows. <span class="required">*</span></p>
-                </div>
-                <div class="msf-curriculum-grid" id="msf-curriculum-grid">
-                    <button type="button" class="msf-curriculum-pill" data-curriculum="CBSE">CBSE</button>
-                    <button type="button" class="msf-curriculum-pill" data-curriculum="ICSE">ICSE</button>
-                    <button type="button" class="msf-curriculum-pill" data-curriculum="State Board">State Board</button>
-                    <button type="button" class="msf-curriculum-pill" data-curriculum="IGCSE (Cambridge)">IGCSE (Cambridge)</button>
-                    <button type="button" class="msf-curriculum-pill" data-curriculum="IB (PYP, MYP, DP)">IB (PYP, MYP, DP)</button>
-                    <button type="button" class="msf-curriculum-pill" data-curriculum="British (GCSE, A-Level)">British (GCSE, A-Level)</button>
-                    <button type="button" class="msf-curriculum-pill" data-curriculum="US Common Core">US Common Core</button>
-                    <button type="button" class="msf-curriculum-pill" data-curriculum="Australian (ATAR)">Australian (ATAR)</button>
-                </div>
-                <input type="hidden" id="msf-curriculum-value" value="">
-                <div class="msf-nav-row">
-                    <button type="button" class="btn btn-outline msf-back-btn" data-goto="3">← Back</button>
-                    <button type="button" class="btn btn-primary msf-next-btn" data-goto="5">Continue →</button>
-                </div>
-            </div>
-
-            <!-- ─── STEP 5: SESSION PREFERENCES ─── -->
-            <div class="msf-step" id="msf-step-5">
-                <div class="msf-step-header">
-                    <span class="msf-step-badge">Step 5 of 6</span>
-                    <h3 class="msf-step-title">Session Preferences</h3>
-                    <p class="msf-step-sub">Let us know when works best for your child.</p>
-                </div>
-                <div class="form-group">
-                    <label for="msf-subject">Subject <span class="required">*</span></label>
-                    <input type="text" id="msf-subject" placeholder="e.g. Mathematics, Science" required>
-                </div>
-                <div class="form-group">
-                    <label for="msf-time-slot">Preferred Time Slot <span class="required">*</span></label>
-                    <select id="msf-time-slot" required>
-                        <option value="">Select time slot...</option>
-                        <option value="Morning (9–12 AM)">Morning (9–12 AM)</option>
-                        <option value="Afternoon (12–3 PM)">Afternoon (12–3 PM)</option>
-                        <option value="Evening (3–6 PM)">Evening (3–6 PM)</option>
-                        <option value="Night (6–9 PM)">Night (6–9 PM)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="msf-mode">Mode</label>
-                    <select id="msf-mode">
-                        <option value="Online" selected>Online (Google Meet)</option>
-                        <option value="In-person">In-person (if available)</option>
-                    </select>
-                </div>
-                <div class="msf-nav-row">
-                    <button type="button" class="btn btn-outline msf-back-btn" data-goto="4">← Back</button>
-                    <button type="button" class="btn btn-primary msf-next-btn msf-submit-btn" id="msf-final-submit">
-                        <span class="btn-text">Submit Request 🌸</span>
-                        <span class="btn-loader hidden"></span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- ─── STEP 6: CONFIRMATION ─── -->
-            <div class="msf-step" id="msf-step-6">
-                <div class="msf-confirmation">
-                    <div class="msf-confirm-icon">🎉</div>
-                    <h3 class="msf-confirm-title">Session Request Received!</h3>
-                    <p class="msf-confirm-desc">
-                        Your free session request has been received.<br>
-                        <strong>Our team will contact you shortly</strong> to confirm the session details.
-                    </p>
-                    <div class="msf-confirm-details" id="msf-confirm-summary"></div>
-                    <div class="msf-confirm-trust">
-                        <span>✅ No credit card required</span>
-                        <span>✅ 30-min free discovery call</span>
-                        <span>✅ Cancel anytime</span>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-full" id="msf-done-btn">Done — Return to Site</button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- PROGRAM SELECTION + DISCOVERY CALL MODAL                    -->
-    <!-- Step 1: Program cards → Step 2: Pricing → Step 3: Booking  -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <div class="modal-overlay" id="program-modal">
-        <div class="modal modal-program">
-            <button class="modal-close" id="program-modal-close">&times;</button>
-
-            <!-- PROGRAM STEP 1: Select Program -->
-            <div class="pm-step active" id="pm-step-1">
-                <h3 class="pm-title">Choose a Program</h3>
-                <p class="pm-sub">Select the learning level for your child</p>
-                <div class="pm-cards">
-                    <button class="pm-card" data-program="Foundation Years" data-grades="Grades 1-6" data-price="13">
-                        <span class="pm-card-icon">🌱</span>
-                        <strong>Foundation Years</strong>
-                        <span class="pm-card-grades">Grades 1–6</span>
-                        <span class="pm-card-price">$13/hour</span>
-                        <span class="pm-card-arrow">Select →</span>
-                    </button>
-                    <button class="pm-card" data-program="Middle School" data-grades="Grades 7-10" data-price="20">
-                        <span class="pm-card-icon">🚀</span>
-                        <strong>Middle School</strong>
-                        <span class="pm-card-grades">Grades 7–10</span>
-                        <span class="pm-card-price">$20/hour</span>
-                        <span class="pm-card-arrow">Select →</span>
-                    </button>
-                    <button class="pm-card" data-program="Senior Years" data-grades="Grades 11-12" data-price="27">
-                        <span class="pm-card-icon">🎯</span>
-                        <strong>Senior Years</strong>
-                        <span class="pm-card-grades">Grades 11–12</span>
-                        <span class="pm-card-price">$27/hour</span>
-                        <span class="pm-card-arrow">Select →</span>
-                    </button>
-                    <button class="pm-card pm-card-inclusive" data-program="Inclusive Support" data-grades="Special Needs" data-price="27">
-                        <span class="pm-card-icon">💛</span>
-                        <strong>Inclusive Support</strong>
-                        <span class="pm-card-grades">Special Needs</span>
-                        <span class="pm-card-price">$27/hour</span>
-                        <span class="pm-card-arrow">Select →</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- PROGRAM STEP 2: Pricing Details -->
-            <div class="pm-step" id="pm-step-2">
-                <button type="button" class="pm-back-link" id="pm-back-1">← Change Program</button>
-                <div class="pm-pricing-display">
-                    <div class="pm-selected-badge" id="pm-selected-name">Foundation Years</div>
-                    <div class="pm-selected-price"><span id="pm-selected-rate">$13</span>/hour</div>
-                    <ul class="pm-includes">
-                        <li><span class="check gold">✓</span> 3-month structured plan included</li>
-                        <li><span class="check gold">✓</span> Free doubt sessions included</li>
-                        <li><span class="check gold">✓</span> Monthly parent progress reports</li>
-                        <li><span class="check gold">✓</span> Refund for unused sessions</li>
-                    </ul>
-                    <button type="button" class="btn btn-primary btn-full pm-claim-btn" id="pm-claim-btn">🌸 Claim Free Discovery Call</button>
-                </div>
-            </div>
-
-            <!-- PROGRAM STEP 3: Booking Form -->
-            <div class="pm-step" id="pm-step-3">
-                <button type="button" class="pm-back-link" id="pm-back-2">← Back to Plan</button>
-                <h3 class="pm-title" style="margin-top:8px;">Book Your Free Session</h3>
-                <form id="pm-booking-form">
-                    <div class="form-group">
-                        <label for="pm-child-name">Child's Name <span class="required">*</span></label>
-                        <input type="text" id="pm-child-name" placeholder="Child's full name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="pm-child-age">Child's Age <span class="required">*</span></label>
-                        <input type="number" id="pm-child-age" placeholder="Age" min="4" max="20" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="pm-parent-email">Parent's Email <span class="required">*</span></label>
-                        <input type="email" id="pm-parent-email" placeholder="you@example.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="pm-parent-whatsapp">Parent's WhatsApp <span class="required">*</span></label>
-                        <div class="msf-phone-row">
-                            <select class="msf-country-code" id="pm-whatsapp-code">
-                                <option value="+91">🇮🇳 +91</option>
-                                <option value="+1">🇺🇸 +1</option>
-                                <option value="+44">🇬🇧 +44</option>
-                                <option value="+61">🇦🇺 +61</option>
-                                <option value="+971">🇦🇪 +971</option>
-                                <option value="+65">🇸🇬 +65</option>
-                            </select>
-                            <input type="tel" id="pm-parent-whatsapp" placeholder="WhatsApp number" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Preferred Time Slot <span class="required">*</span></label>
-                        <div class="pm-slot-grid" id="pm-slot-grid">
-                            <button type="button" class="pm-slot" data-slot="Mon-Fri 9–12 AM">Mon–Fri, 9–12 AM</button>
-                            <button type="button" class="pm-slot" data-slot="Mon-Fri 3–6 PM">Mon–Fri, 3–6 PM</button>
-                            <button type="button" class="pm-slot" data-slot="Sat-Sun 10–1 PM">Sat–Sun, 10–1 PM</button>
-                        </div>
-                        <input type="hidden" id="pm-slot-value" value="">
-                    </div>
-                    <div class="pm-trust-badges">
-                        <span>🔒 No credit card</span>
-                        <span>⏱️ 30-min free</span>
-                        <span>✖️ Cancel anytime</span>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-full" id="pm-submit-btn">
-                        <span class="btn-text">Confirm Free Session 🌸</span>
-                        <span class="btn-loader hidden"></span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- PROGRAM STEP 4: Success -->
-            <div class="pm-step" id="pm-step-4">
-                <div class="msf-confirmation">
-                    <div class="msf-confirm-icon">🎉</div>
-                    <h3 class="msf-confirm-title">You're All Set!</h3>
-                    <p class="msf-confirm-desc">
-                        Your free discovery session has been booked.<br>
-                        <strong>Check your email for the Google Meet link.</strong>
-                    </p>
-                    <div class="msf-confirm-trust">
-                        <span>✅ No credit card charged</span>
-                        <span>✅ 30-min free session</span>
-                        <span>✅ Cancel anytime</span>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-full" id="pm-done-btn">Done — Return to Site</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
