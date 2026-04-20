@@ -1,8 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    ZENITH PRANAVI — Database Module
-   ═══════════════════════════════════════════════════════════
-   Handles: Bookings (CRUD), Enquiries, Dashboard Data
-   Tables:  bookings, enquiries
+   Handles: Bookings, Enquiries, Dashboard Data
    ═══════════════════════════════════════════════════════════ */
 
 // ═══════════════════════════════════════════════════════════
@@ -17,7 +15,9 @@ async function createBooking(bookingData) {
             openRegisterModal('signin');
             return null;
         }
-        const userName = user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student';
+        const userName = user.user_metadata?.name ||
+                        user.user_metadata?.full_name ||
+                        user.email?.split('@')[0] || 'Student';
         const booking = {
             user_id: user.id,
             student_name: userName,
@@ -41,7 +41,10 @@ async function createBooking(bookingData) {
 
 async function fetchUserBookings() {
     try {
-        const { data, error } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .order('created_at', { ascending: false });
         if (error) throw error;
         return data || [];
     } catch (error) {
@@ -53,26 +56,33 @@ async function fetchUserBookings() {
 async function renderBookingsTable() {
     const bookings = await fetchUserBookings();
     const tbody = document.getElementById('bookings-tbody');
+    const totalEl = document.getElementById('total-bookings-count');
+    const confirmedEl = document.getElementById('confirmed-bookings-count');
+    const pendingEl = document.getElementById('pending-bookings-count');
 
-    document.getElementById('total-bookings-count').textContent = bookings.length;
-    document.getElementById('confirmed-bookings-count').textContent = bookings.filter(b => b.status === 'confirmed').length;
-    document.getElementById('pending-bookings-count').textContent = bookings.filter(b => b.status === 'pending').length;
+    if (totalEl) totalEl.textContent = bookings.length;
+    if (confirmedEl) confirmedEl.textContent = bookings.filter(b => b.status === 'confirmed').length;
+    if (pendingEl) pendingEl.textContent = bookings.filter(b => b.status === 'pending').length;
+
+    if (!tbody) return;
 
     if (bookings.length === 0) {
-        tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No bookings yet. Book your first session above!</td></tr>`;
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No sessions yet. Book your first session above.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = bookings.map(booking => {
-        const formattedDate = new Date(booking.booking_date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-        return `<tr>
-            <td><strong>${booking.tutor_name || '—'}</strong></td>
-            <td>${booking.subject}</td>
-            <td>${formattedDate}</td>
-            <td>${booking.booking_time}</td>
-            <td>$${booking.price}</td>
-            <td><span class="status-badge ${booking.status}">${booking.status}</span></td>
-        </tr>`;
+    tbody.innerHTML = bookings.map(function(booking) {
+        var formattedDate = new Date(booking.booking_date).toLocaleDateString('en-AU', {
+            day: 'numeric', month: 'short', year: 'numeric'
+        });
+        return '<tr>' +
+            '<td><strong>' + (booking.tutor_name || '-') + '</strong></td>' +
+            '<td>' + booking.subject + '</td>' +
+            '<td>' + formattedDate + '</td>' +
+            '<td>' + booking.booking_time + '</td>' +
+            '<td>$' + booking.price + '</td>' +
+            '<td><span class="status-badge ' + booking.status + '">' + booking.status + '</span></td>' +
+        '</tr>';
     }).join('');
 }
 
@@ -106,5 +116,3 @@ async function submitEnquiry(enquiryData) {
 async function loadDashboardData(user) {
     await renderBookingsTable();
 }
-
-console.log('Database module loaded');

@@ -1,51 +1,36 @@
 /* ═══════════════════════════════════════════════════════════
    ZENITH PRANAVI — Supabase Configuration
-   ═══════════════════════════════════════════════════════════
-   Project: ZPranavi
-   Account: VidhyadharanSS
+   Project: ZPranavi | Account: VidhyadharanSS
    ═══════════════════════════════════════════════════════════ */
 
-// ──────────── SUPABASE CREDENTIALS ────────────
+// Supabase Credentials
 const SUPABASE_URL = 'https://oqxwvkytyczmldnrqjll.supabase.co';
-
-// Supabase Publishable API Key (anon/public — safe for frontend)
-// Dashboard → Settings → API → Project API keys → publishable
 const SUPABASE_ANON_KEY = 'sb_publishable_nU4ihs42_7R5L5F9Cb4Pew_J_0XYxhe';
 
-// ──────────── SITE URL (for email redirects) ────────────
-const SITE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+// Site URL for email redirects
+const SITE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? window.location.origin
     : 'https://zenith-pranavi.vercel.app';
 
-// ──────────── INITIALIZE SUPABASE CLIENT ────────────
-// The CDN creates `var supabase` (namespace). We must use `var` again (not const/let)
-// to reassign it to the actual client instance for all scripts to use.
-var _supabaseLib = window.supabase;  // Save reference to CDN namespace
+// Initialize Supabase Client
+var _supabaseLib = window.supabase;
 var supabase = _supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: true,          // Auto-detect email confirmation tokens in URL
-        flowType: 'pkce'                    // Use PKCE flow for secure email confirmation redirects
+        detectSessionInUrl: true,
+        flowType: 'pkce'
     }
 });
 
-// ──────────── PRICING CONFIGURATION ────────────
+// Pricing
 const PRICING = {
-    'Year 1-6':       13,   // Foundation
-    'Year 7-10':      20,   // Intermediate
-    'Year 11-12':     27,   // Advanced
-    'Special Needs':  27,   // Inclusive
+    'Year 1-6': 13,
+    'Year 7-10': 20,
+    'Year 11-12': 27,
+    'Special Needs': 27
 };
 
-/**
- * Get price by year group string
- * @param {string} yearGroup - e.g. "Year 1-6", "Year 7-10", etc.
- * @returns {number} Price per hour in USD
- */
 function getPriceForYear(yearGroup) {
     return PRICING[yearGroup] || 20;
 }
-
-console.log('✅ Supabase client initialized — Project: ZPranavi');
-console.log('🔍 Client check — .from():', typeof supabase.from, '| .auth:', typeof supabase.auth);
