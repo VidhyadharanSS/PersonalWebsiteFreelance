@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Sun, Moon, LogIn, LogOut, LayoutDashboard, ShieldCheck, Home, Menu, X } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Sun, Moon, LogIn, LogOut, LayoutDashboard, ShieldCheck, Home, Menu, X, ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
@@ -9,6 +9,8 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('')
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef(null)
 
   useEffect(() => {
     const onScroll = () => {
@@ -25,17 +27,34 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
     return () => window.removeEventListener('scroll', onScroll)
   }, [view])
 
+  // Close mobile drawer on view change
   useEffect(() => { setMobileOpen(false) }, [view])
 
+  // Close mobile drawer on outside click
   useEffect(() => {
     if (!mobileOpen) return
     const handle = (e) => {
-      if (!e.target.closest('.mobile-drawer')) setMobileOpen(false)
+      if (!e.target.closest('.mobile-drawer') && !e.target.closest('.mobile-toggle')) {
+        setMobileOpen(false)
+      }
     }
     document.addEventListener('click', handle)
     return () => document.removeEventListener('click', handle)
   }, [mobileOpen])
 
+  // Close user dropdown on outside click
+  useEffect(() => {
+    if (!userMenuOpen) return
+    const handle = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('click', handle)
+    return () => document.removeEventListener('click', handle)
+  }, [userMenuOpen])
+
+  // Lock body scroll when drawer is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -43,6 +62,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
 
   const scrollTo = (id) => {
     setMobileOpen(false)
+    setUserMenuOpen(false)
     if (view !== 'home') {
       onHome()
       setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), 300)
@@ -62,6 +82,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
 
   const handleLogout = async () => {
     setMobileOpen(false)
+    setUserMenuOpen(false)
     try {
       await signOut()
       onHome()
@@ -102,13 +123,52 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
             </button>
 
             {user ? (
-              <div className="nav-user-group">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="" className="nav-user-avatar-img" />
-                ) : (
-                  <div className="nav-user-avatar">{getUserName().charAt(0).toUpperCase()}</div>
+              <div className="nav-user-group" ref={userMenuRef}>
+                {/* User avatar + dropdown trigger */}
+                <button
+                  className="nav-user-trigger"
+                  onClick={(e) => { e.stopPropagation(); setUserMenuOpen(!userMenuOpen) }}
+                >
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="nav-user-avatar-img" />
+                  ) : (
+                    <div className="nav-user-avatar">{getUserName().charAt(0).toUpperCase()}</div>
+                  )}
+                  <span className="nav-user-name">{getUserName()}</span>
+                  <ChevronDown size={14} className={`nav-chevron${userMenuOpen ? ' open' : ''}`} />
+                </button>
+
+                {/* User dropdown menu */}
+                {userMenuOpen && (
+                  <div className="nav-user-dropdown">
+                    <div className="nav-dropdown-user-info">
+                      <strong>{getUserName()}</strong>
+                      <span>{user.email}</span>
+                    </div>
+                    <div className="nav-dropdown-divider" />
+                    {view !== 'home' && (
+                      <button className="nav-dropdown-item" onClick={() => { setUserMenuOpen(false); onHome() }}>
+                        <Home size={16} /> Home
+                      </button>
+                    )}
+                    {view !== 'dashboard' && (
+                      <button className="nav-dropdown-item" onClick={() => { setUserMenuOpen(false); onDashboard() }}>
+                        <LayoutDashboard size={16} /> Dashboard
+                      </button>
+                    )}
+                    {isAdmin && view !== 'admin' && (
+                      <button className="nav-dropdown-item nav-dropdown-admin" onClick={() => { setUserMenuOpen(false); onAdmin() }}>
+                        <ShieldCheck size={16} /> Admin Panel
+                      </button>
+                    )}
+                    <div className="nav-dropdown-divider" />
+                    <button className="nav-dropdown-item nav-dropdown-signout" onClick={handleLogout}>
+                      <LogOut size={16} /> Sign Out
+                    </button>
+                  </div>
                 )}
-                <span className="nav-user-name">{getUserName()}</span>
+
+                {/* Quick action buttons visible on desktop */}
                 {view !== 'dashboard' && (
                   <button className="btn btn-outline btn-nav btn-sm" onClick={onDashboard}>
                     <LayoutDashboard size={14} /> Dashboard
@@ -124,16 +184,13 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                     <Home size={14} /> Home
                   </button>
                 )}
-                <button className="btn btn-ghost btn-sm" onClick={handleLogout}>
-                  <LogOut size={14} /> Sign Out
-                </button>
               </div>
             ) : (
               <div className="nav-auth-group">
                 <button className="btn btn-outline btn-nav btn-sm" onClick={onSignIn}>
                   <LogIn size={14} /> Sign In
                 </button>
-                <button className="btn btn-primary btn-nav btn-cta-nav" onClick={() => { onCTA('hero') }}>
+                <button className="btn btn-primary btn-nav btn-cta-nav" onClick={() => onCTA('hero')}>
                   <span className="btn-text-full">Free Discovery Call</span>
                   <span className="btn-text-short">Book Call</span>
                 </button>
@@ -216,6 +273,9 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                   <Home size={18} /> Home
                 </button>
               )}
+              <button className="btn btn-primary btn-full mobile-cta-btn" onClick={() => { setMobileOpen(false); onCTA('hero') }}>
+                Book Free Discovery Call
+              </button>
               <div className="mobile-drawer-divider" />
               <button className="mobile-action-btn mobile-action-danger" onClick={handleLogout}>
                 <LogOut size={18} /> Sign Out
@@ -227,7 +287,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                 <LogIn size={18} /> Sign In / Sign Up
               </button>
               <button className="btn btn-primary btn-full mobile-cta-btn" onClick={() => { setMobileOpen(false); onCTA('hero') }}>
-                Free Discovery Call
+                Book Free Discovery Call
               </button>
             </>
           )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
+import { Eye, EyeOff } from 'lucide-react'
 
 function GoogleIcon() {
   return (
@@ -22,6 +23,7 @@ export default function AuthModal({ open, onClose }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [showPw, setShowPw] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -29,6 +31,7 @@ export default function AuthModal({ open, onClose }) {
       setEmail('')
       setPassword('')
       setName('')
+      setShowPw(false)
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
@@ -45,7 +48,7 @@ export default function AuthModal({ open, onClose }) {
     setGoogleLoading(true)
     try {
       await signInWithGoogle()
-      // Redirect happens automatically, no need to close
+      // Redirect happens automatically — modal will close on page return
     } catch (err) {
       toast(err.message || 'Google sign in failed.', 'error')
       setGoogleLoading(false)
@@ -62,7 +65,7 @@ export default function AuthModal({ open, onClose }) {
       toast(`Welcome back, ${userName}!`, 'success')
       onClose()
     } catch (err) {
-      toast(err.message || 'Sign in failed.', 'error')
+      toast(err.message || 'Sign in failed. Check your email and password.', 'error')
     } finally { setLoading(false) }
   }
 
@@ -132,7 +135,7 @@ export default function AuthModal({ open, onClose }) {
             </button>
 
             <div className="auth-divider">
-              <span>or</span>
+              <span>or use email</span>
             </div>
           </>
         )}
@@ -158,7 +161,17 @@ export default function AuthModal({ open, onClose }) {
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} />
+              <div className="password-input-wrap">
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+                <button type="button" className="pw-toggle" onClick={() => setShowPw(!showPw)} tabIndex={-1}>
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
               {loading ? <span className="btn-loader" /> : 'Sign In'}
@@ -181,7 +194,17 @@ export default function AuthModal({ open, onClose }) {
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" placeholder="Min 6 characters" value={password} onChange={e => setPassword(e.target.value)} />
+              <div className="password-input-wrap">
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  placeholder="Min 6 characters"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+                <button type="button" className="pw-toggle" onClick={() => setShowPw(!showPw)} tabIndex={-1}>
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
               {loading ? <span className="btn-loader" /> : 'Create Account'}
@@ -199,7 +222,7 @@ export default function AuthModal({ open, onClose }) {
               {loading ? <span className="btn-loader" /> : 'Send Reset Link'}
             </button>
             <p className="auth-link-row">
-              <a href="#" onClick={e => { e.preventDefault(); setMode('signin') }}>Back to Sign In</a>
+              <a href="#" onClick={e => { e.preventDefault(); setMode('signin') }}>← Back to Sign In</a>
             </p>
           </form>
         )}

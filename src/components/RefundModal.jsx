@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Shield, Mail, Clock, Calculator, AlertTriangle } from 'lucide-react'
+import { Shield, Mail, Clock, Calculator, AlertTriangle, X } from 'lucide-react'
 
 export default function RefundModal({ open, onClose }) {
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function RefundModal({ open, onClose }) {
   return (
     <div className="modal-overlay active" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal modal-refund" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>&times;</button>
+        <button className="modal-close" onClick={onClose}><X size={20} /></button>
 
         <div className="refund-modal-header">
           <div className="refund-modal-icon">
