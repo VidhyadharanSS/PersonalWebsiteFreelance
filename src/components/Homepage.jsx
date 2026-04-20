@@ -6,10 +6,9 @@ import {
   BookOpen, Rocket, Award, Users, Languages, Star,
   Video, HelpCircle, Focus, BarChart3,
   Lock, MessageCircle, UserCheck,
-  Mail, Clock, GraduationCap
+  Mail, Clock
 } from 'lucide-react'
 
-/* ── Section wrapper with scroll animation ── */
 function FadeIn({ children, className = '', delay = 0 }) {
   const ref = useRef()
   const [visible, setVisible] = useState(false)
@@ -27,7 +26,6 @@ function FadeIn({ children, className = '', delay = 0 }) {
   )
 }
 
-/* ── Icon wrapper for Why Us / Programs / Experience ── */
 function IconCircle({ icon: Icon, size = 40, iconSize = 18, className = '' }) {
   return (
     <div className={`icon-circle ${className}`} style={{ width: size, height: size, minWidth: size }}>
@@ -58,17 +56,15 @@ export default function Homepage({ onCTA }) {
     } finally { setEnquiryLoading(false) }
   }
 
-  /* ── Programs data with real icons ── */
   const programs = [
-    { num: '01', icon: BookOpen, name: 'Foundation Learning', desc: <>Grades 1&ndash;5. Building the <strong>unshakeable foundation</strong> through curiosity, play and wonder.</>, age: 'Ages 6–11' },
-    { num: '02', icon: Rocket, name: 'Accelerated Track', desc: <>Grades 6&ndash;10. <strong>Fast-paced</strong> deep-dive learning for students who hunger for more.</>, age: 'Ages 11–16' },
-    { num: '03', icon: Award, name: 'Exam Mastery', desc: <><strong>IGCSE, IB, SAT, JEE, NEET</strong> &mdash; targeted preparation with expert coaches.</>, age: 'Ages 14–18' },
+    { num: '01', icon: BookOpen, name: 'Foundation Learning', desc: <>Grades 1&ndash;5. Building the <strong>unshakeable foundation</strong> through curiosity, play and wonder.</>, age: 'Ages 6-11' },
+    { num: '02', icon: Rocket, name: 'Accelerated Track', desc: <>Grades 6&ndash;10. <strong>Fast-paced</strong> deep-dive learning for students who hunger for more.</>, age: 'Ages 11-16' },
+    { num: '03', icon: Award, name: 'Exam Mastery', desc: <><strong>IGCSE, IB, SAT, JEE, NEET</strong> &mdash; targeted preparation with expert coaches.</>, age: 'Ages 14-18' },
     { num: '04', icon: Heart, name: 'Inclusive Learning', desc: <>Specialists for <strong>autism, ADHD, dyslexia</strong> and all neurodiverse learning profiles.</>, age: 'All Ages' },
     { num: '05', icon: Languages, name: 'Language & Literacy', desc: <>English, Hindi, regional languages &mdash; learning in <strong>your language</strong> is learning freely.</>, age: 'All Grades' },
     { num: '06', icon: Star, name: 'Gifted & Talented', desc: <>For children who think <strong>three steps ahead</strong>. Advanced projects and mentorship.</>, age: 'Selective' }
   ]
 
-  /* ── Why Us features with real icons ── */
   const whyFeatures = [
     { icon: Globe, title: 'Global Curricula', desc: <><strong>CBSE, IGCSE, IB, US Common Core</strong> &mdash; every major curriculum worldwide.</> },
     { icon: Users, title: 'Inclusive by Design', desc: <><strong>Autism, ADHD, dyslexia</strong> support &mdash; not as an afterthought, as a <strong>foundation</strong>.</> },
@@ -76,7 +72,6 @@ export default function Homepage({ onCTA }) {
     { icon: Flower2, title: 'The Lily Promise', desc: <>Like the lily that blooms anywhere &mdash; we nurture <strong>every child</strong> to blossom.</> }
   ]
 
-  /* ── Experience cards ── */
   const experiences = [
     { icon: Video, title: 'Live Interaction', desc: <>Every session is <strong>fully live</strong>, face to face with a qualified tutor. No recorded videos.</> },
     { icon: HelpCircle, title: 'Real-Time Doubt Solving', desc: <>The moment your child does not understand, we <strong>stop and solve it</strong> right there.</> },
@@ -84,11 +79,10 @@ export default function Homepage({ onCTA }) {
     { icon: BarChart3, title: 'Progress Tracking', desc: <>Parents receive <strong>monthly reports</strong> showing exactly what was covered and improved.</> }
   ]
 
-  /* ── Pricing cards ── */
   const pricingCards = [
-    { badge: 'Foundation Years', badgeClass: 'pricing-badge-pink', amount: 13, amountClass: 'pricing-amount-gold', year: 'Year 1 – 6', btnClass: 'pricing-btn-navy', btnLabel: 'Start Year 1–6' },
-    { badge: 'Middle School', badgeClass: 'pricing-badge-navy', amount: 20, amountClass: 'pricing-amount-navy', year: 'Year 7 – 10', btnClass: 'pricing-btn-navy', btnLabel: 'Start Year 7–10' },
-    { badge: 'Senior Years', badgeClass: 'pricing-badge-gold', amount: 27, amountClass: 'pricing-amount-gold', year: 'Year 11 – 12', btnClass: 'pricing-btn-gold', btnLabel: 'Start Year 11–12', popular: true },
+    { badge: 'Foundation Years', badgeClass: 'pricing-badge-pink', amount: 13, amountClass: 'pricing-amount-gold', year: 'Year 1 - 6', btnClass: 'pricing-btn-navy', btnLabel: 'Start Year 1-6' },
+    { badge: 'Middle School', badgeClass: 'pricing-badge-navy', amount: 20, amountClass: 'pricing-amount-navy', year: 'Year 7 - 10', btnClass: 'pricing-btn-navy', btnLabel: 'Start Year 7-10' },
+    { badge: 'Senior Years', badgeClass: 'pricing-badge-gold', amount: 27, amountClass: 'pricing-amount-gold', year: 'Year 11 - 12', btnClass: 'pricing-btn-gold', btnLabel: 'Start Year 11-12', popular: true },
     { badge: 'Inclusive Support', badgeClass: 'pricing-badge-pink-deep', amount: 27, amountClass: 'pricing-amount-pink', year: 'Special Needs Support', btnClass: 'pricing-btn-pink', btnLabel: 'Start Inclusive Plan', inclusive: true,
       features: ['Specialist trained educators','Personalised learning plan','3-month structured plan','Doubt sessions included','Monthly parent meetings','Refund for unused classes'] }
   ]
@@ -97,7 +91,7 @@ export default function Homepage({ onCTA }) {
   return (
     <main id="homepage">
 
-      {/* ════ HERO ════ */}
+      {/* HERO */}
       <section className="hero" id="home">
         <div className="hero-content">
           <div className="hero-emblem">
@@ -112,8 +106,11 @@ export default function Homepage({ onCTA }) {
           </p>
           <p className="hero-quote">&ldquo;We don&rsquo;t refund moods. We refund mistakes.&rdquo;</p>
           <div className="hero-cta-row">
-            <button className="btn btn-primary btn-lg" onClick={() => onCTA('hero')}>SCHEDULE FREE DISCOVERY CALL</button>
-            <a href="#programs" className="btn btn-outline btn-lg hero-learn-btn" onClick={e => { e.preventDefault(); document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' }) }}>LEARN MORE</a>
+            <button className="btn btn-primary btn-lg hero-primary-btn" onClick={() => onCTA('hero')}>
+              <span className="btn-text-full">Schedule Free Discovery Call</span>
+              <span className="btn-text-short">Free Discovery Call</span>
+            </button>
+            <a href="#programs" className="btn btn-outline btn-lg hero-learn-btn" onClick={e => { e.preventDefault(); document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' }) }}>Learn More</a>
           </div>
           <div className="hero-stats">
             <div className="stat"><span className="stat-number gold">50+</span><span className="stat-label">Countries</span></div>
@@ -125,7 +122,7 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ WHY US ════ */}
+      {/* WHY US */}
       <section className="section why-section" id="why">
         <div className="container">
           <div className="why-grid">
@@ -163,7 +160,7 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ PROGRAMS ════ */}
+      {/* PROGRAMS */}
       <section className="section programs-section" id="programs">
         <div className="container">
           <p className="section-badge">Our Programs</p>
@@ -185,7 +182,7 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ PRICING ════ */}
+      {/* PRICING */}
       <section className="section pricing-section" id="pricing">
         <div className="container">
           <p className="pricing-label">SIMPLE, HONEST PRICING</p>
@@ -218,7 +215,6 @@ export default function Homepage({ onCTA }) {
             ))}
           </div>
 
-          {/* Trust Strip */}
           <div className="pricing-trust-strip">
             <FadeIn><div className="trust-pill"><IconCircle icon={Lock} size={32} iconSize={14} className="trust-icon" /><span className="trust-text"><strong>100% Secure Payments</strong> &mdash; SSL encrypted. Your information is protected.</span></div></FadeIn>
             <FadeIn delay={0.08}><div className="trust-pill"><IconCircle icon={MessageCircle} size={32} iconSize={14} className="trust-icon" /><span className="trust-text"><strong>Doubt Sessions Included</strong> &mdash; never leave a question unanswered</span></div></FadeIn>
@@ -227,7 +223,7 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ EXPERIENCE ════ */}
+      {/* EXPERIENCE */}
       <section className="section experience-section" id="experience">
         <div className="container">
           <p className="experience-label">THE LEARNING EXPERIENCE</p>
@@ -248,7 +244,7 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ QUOTE ════ */}
+      {/* QUOTE */}
       <section className="quote-section">
         <div className="container">
           <blockquote className="philosophy-quote">
@@ -260,7 +256,7 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ PROCESS ════ */}
+      {/* PROCESS */}
       <section className="section process-section" id="how-it-works">
         <div className="container">
           <p className="section-badge">The Process</p>
@@ -289,12 +285,12 @@ export default function Homepage({ onCTA }) {
           </div>
           <div className="process-cta">
             <p className="process-cta-text">To book a session, schedule your free discovery call first.</p>
-            <button className="btn btn-primary btn-lg" onClick={() => onCTA('process')}>SCHEDULE FREE CALL</button>
+            <button className="btn btn-primary btn-lg" onClick={() => onCTA('process')}>Schedule Free Call</button>
           </div>
         </div>
       </section>
 
-      {/* ════ IMPACT ════ */}
+      {/* IMPACT */}
       <section className="section impact-section">
         <div className="container">
           <p className="section-badge">Our Impact</p>
@@ -318,17 +314,17 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ BANNER ════ */}
+      {/* BANNER */}
       <section className="get-started-banner">
         <div className="container">
           <div className="get-started-inner">
             <h2 className="get-started-text">Global Learning. Every Grade. Every Child.</h2>
-            <button className="btn btn-primary btn-lg get-started-cta-btn" onClick={() => onCTA('banner')}>SCHEDULE FREE CALL</button>
+            <button className="btn btn-primary btn-lg get-started-cta-btn" onClick={() => onCTA('banner')}>Schedule Free Call</button>
           </div>
         </div>
       </section>
 
-      {/* ════ FINAL CTA (one only) ════ */}
+      {/* FINAL CTA */}
       <section className="section cta-section" id="final-cta">
         <div className="container">
           <FadeIn>
@@ -336,7 +332,7 @@ export default function Homepage({ onCTA }) {
               <h2 className="cta-title">Your Child&rsquo;s Zenith<br /><span className="cta-title-accent">Starts Here</span></h2>
               <p className="cta-desc">Join <strong>thousands of families</strong> worldwide who trust Zenith Pranavi. Your first session is <strong>completely free</strong>.</p>
               <div className="cta-btn-row">
-                <button className="btn btn-primary btn-lg" onClick={() => onCTA('final')}>CLAIM FREE SESSION</button>
+                <button className="btn btn-primary btn-lg" onClick={() => onCTA('final')}>Claim Free Session</button>
               </div>
               <p className="cta-note">No credit card &middot; No commitment &middot; Just learning</p>
             </div>
@@ -344,7 +340,7 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ CONTACT ════ */}
+      {/* CONTACT */}
       <section className="section contact-section" id="contact">
         <div className="container">
           <p className="section-badge">GET IN TOUCH</p>
@@ -386,7 +382,7 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ REFUND POLICY ════ */}
+      {/* REFUND POLICY */}
       <section className="section refund-section" id="refund-policy">
         <div className="container">
           <div className="refund-card">
@@ -433,7 +429,7 @@ export default function Homepage({ onCTA }) {
         </div>
       </section>
 
-      {/* ════ FOOTER ════ */}
+      {/* FOOTER */}
       <footer className="footer">
         <div className="container">
           <div className="footer-grid">

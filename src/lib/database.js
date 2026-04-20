@@ -30,3 +30,28 @@ export async function submitEnquiry({ name, email, message }) {
   if (error) throw error
   return true
 }
+
+// Admin functions
+export async function fetchAllBookings() {
+  const { data, error } = await supabase.from('bookings').select('*').order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export async function fetchAllEnquiries() {
+  const { data, error } = await supabase.from('enquiries').select('*').order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export async function updateBookingStatus(id, status) {
+  const { data, error } = await supabase.from('bookings').update({ status }).eq('id', id).select()
+  if (error) throw error
+  return data?.[0] || null
+}
+
+export async function deleteEnquiry(id) {
+  const { error } = await supabase.from('enquiries').delete().eq('id', id)
+  if (error) throw error
+  return true
+}
