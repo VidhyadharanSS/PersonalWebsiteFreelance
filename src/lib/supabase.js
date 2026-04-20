@@ -27,6 +27,7 @@ export const PRICING = {
 
 export const ADMIN_EMAILS = [
   'zenithpranavi786@gmail.com',
+  'v72653666@gmail.com',
   'admin@zped.org',
   'vidhyadharanss@gmail.com'
 ]
