@@ -1,11 +1,55 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { supabase } from '../lib/supabase'
 import {
   Calendar, Mail, Clock, Search, Video, Link2,
-  RefreshCw, CheckCircle, XCircle, Filter, DollarSign
+  RefreshCw, CheckCircle, XCircle, Filter, DollarSign,
+  CalendarPlus, ChevronLeft, ChevronRight
 } from 'lucide-react'
+
+// ── Google Calendar URL builder with Google Meet conferencing ──
+function buildGoogleCalendarUrl(booking) {
+  const base = 'https://calendar.google.com/calendar/render'
+  const params = new URLSearchParams()
+  params.set('action', 'TEMPLATE')
+  params.set('text', `Zenith Pranavi — ${booking.subject} (${booking.tutor_name || 'Session'})`)
+
+  // Build start/end datetime in UTC-ish format YYYYMMDDTHHMMSS
+  if (booking.booking_date && booking.booking_time) {
+    const dateStr = booking.booking_date // "YYYY-MM-DD"
+    const timeStr = booking.booking_time  // "09:00 AM"
+    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
+    if (match) {
+      let hours = parseInt(match[1], 10)
+      const mins = parseInt(match[2], 10)
+      const ampm = match[3].toUpperCase()
+      if (ampm === 'PM' && hours !== 12) hours += 12
+      if (ampm === 'AM' && hours === 12) hours = 0
+      const startDt = new Date(`${dateStr}T${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:00`)
+      const endDt = new Date(startDt.getTime() + 60 * 60 * 1000) // 1 hour session
+      const fmt = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+      params.set('dates', `${fmt(startDt)}/${fmt(endDt)}`)
+    }
+  }
+
+  params.set('details', [
+    `Student: ${booking.student_name || 'N/A'}`,
+    `Year Group: ${booking.tutor_name || 'N/A'}`,
+    `Subject: ${booking.subject}`,
+    `Price: $${booking.price}/hr`,
+    '',
+    'This event was created by Zenith Pranavi Education.',
+    'A Google Meet link will be auto-attached to this event.'
+  ].join('\n'))
+
+  params.set('location', 'Google Meet (auto-generated)')
+  // Request Google Meet conferencing
+  params.set('crm', 'AVAILABLE')
+  params.set('add', booking.student_email || '')
+
+  return `${base}?${params.toString()}`
+}
 
 export default function AdminPanel() {
   const { getUserName } = useAuth()
@@ -22,6 +66,12 @@ export default function AdminPanel() {
   const [updatingId, setUpdatingId] = useState(null)
   const [meetLinkInputs, setMeetLinkInputs] = useState({})
   const [showMeetInput, setShowMeetInput] = useState(null)
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), 1)
+  })
+  const [sortField, setSortField] = useState('created_at')
+  const [sortDir, setSortDir] = useState('desc')
 
   useEffect(() => {
     loadBookings()
@@ -93,6 +143,27 @@ export default function AdminPanel() {
     } finally { setUpdatingId(null) }
   }
 
+  // ── Create Google Calendar event + sync Meet link ──
+  const createCalendarEvent = (booking) => {
+    const url = buildGoogleCalendarUrl(booking)
+    window.open(url, '_blank', 'noopener,noreferrer')
+    toast('Google Calendar opened — save the event to auto-generate a Meet link. Then paste the Meet link back here.', 'info')
+    setShowMeetInput(booking.id)
+  }
+
+  // ── Bulk: open calendar events for all pending Meet requests ──
+  const bulkCreateCalendarEvents = () => {
+    const pendingMeet = bookings.filter(b => b.google_meet && !b.meet_link && (b.status === 'pending' || b.status === 'confirmed'))
+    if (pendingMeet.length === 0) return toast('No pending Meet requests to sync.', 'info')
+    if (!window.confirm(`Open Google Calendar for ${pendingMeet.length} booking(s)? Each will open in a new tab.`)) return
+    pendingMeet.forEach((b, i) => {
+      setTimeout(() => {
+        window.open(buildGoogleCalendarUrl(b), '_blank', 'noopener,noreferrer')
+      }, i * 600) // stagger to avoid popup blocker
+    })
+    toast(`Opened ${pendingMeet.length} calendar event(s). Save each to generate Meet links.`, 'success')
+  }
+
   const deleteEnquiry = async (id) => {
     if (!window.confirm('Delete this enquiry?')) return
     try {
@@ -115,19 +186,48 @@ export default function AdminPanel() {
     return new Date(d).toLocaleString('en-AU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 
-  // Filter & search bookings
-  const filteredBookings = bookings.filter(b => {
-    if (filterStatus !== 'all' && b.status !== filterStatus) return false
-    if (searchBookings) {
-      const q = searchBookings.toLowerCase()
-      return (
-        (b.student_name || '').toLowerCase().includes(q) ||
-        (b.subject || '').toLowerCase().includes(q) ||
-        (b.tutor_name || '').toLowerCase().includes(q)
-      )
+  // ── Sorting ──
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDir('asc')
     }
-    return true
-  })
+  }
+
+  // Filter & search bookings
+  const filteredBookings = useMemo(() => {
+    let result = bookings.filter(b => {
+      if (filterStatus !== 'all' && b.status !== filterStatus) return false
+      if (searchBookings) {
+        const q = searchBookings.toLowerCase()
+        return (
+          (b.student_name || '').toLowerCase().includes(q) ||
+          (b.subject || '').toLowerCase().includes(q) ||
+          (b.tutor_name || '').toLowerCase().includes(q)
+        )
+      }
+      return true
+    })
+    // Sort
+    result.sort((a, b) => {
+      let aVal, bVal
+      if (sortField === 'booking_date') {
+        aVal = a.booking_date || ''; bVal = b.booking_date || ''
+      } else if (sortField === 'price') {
+        aVal = a.price || 0; bVal = b.price || 0
+      } else if (sortField === 'student_name') {
+        aVal = (a.student_name || '').toLowerCase(); bVal = (b.student_name || '').toLowerCase()
+      } else {
+        aVal = a.created_at || ''; bVal = b.created_at || ''
+      }
+      if (aVal < bVal) return sortDir === 'asc' ? -1 : 1
+      if (aVal > bVal) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+    return result
+  }, [bookings, filterStatus, searchBookings, sortField, sortDir])
 
   // Filter & search enquiries
   const filteredEnquiries = enquiries.filter(e => {
@@ -150,6 +250,41 @@ export default function AdminPanel() {
     .filter(b => b.status === 'confirmed' || b.status === 'completed')
     .reduce((sum, b) => sum + (b.price || 0), 0)
   const meetRequests = bookings.filter(b => b.google_meet && !b.meet_link).length
+  const meetLinked = bookings.filter(b => b.google_meet && b.meet_link).length
+
+  // ── Calendar view data ──
+  const calendarDays = useMemo(() => {
+    const year = calendarMonth.getFullYear()
+    const month = calendarMonth.getMonth()
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const days = []
+    // padding
+    for (let i = 0; i < firstDay; i++) days.push(null)
+    for (let d = 1; d <= daysInMonth; d++) days.push(d)
+    return days
+  }, [calendarMonth])
+
+  const bookingsByDate = useMemo(() => {
+    const map = {}
+    bookings.forEach(b => {
+      if (!b.booking_date) return
+      const key = b.booking_date.slice(0, 10) // "YYYY-MM-DD"
+      if (!map[key]) map[key] = []
+      map[key].push(b)
+    })
+    return map
+  }, [bookings])
+
+  const calendarMonthStr = calendarMonth.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+  const prevMonth = () => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))
+  const nextMonth = () => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))
+  const todayStr = new Date().toISOString().slice(0, 10)
+
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return null
+    return <span style={{ fontSize: '0.6rem', marginLeft: 3 }}>{sortDir === 'asc' ? '▲' : '▼'}</span>
+  }
 
   return (
     <main id="admin-panel">
@@ -157,7 +292,7 @@ export default function AdminPanel() {
         <div className="container">
           <div className="admin-hero-content">
             <h1>Admin Dashboard</h1>
-            <p>Welcome, <strong>{getUserName()}</strong>. Manage bookings, enquiries, and Google Meet links.</p>
+            <p>Welcome, <strong>{getUserName()}</strong>. Manage bookings, Google Calendar sync, enquiries, and Meet links.</p>
           </div>
         </div>
       </section>
@@ -190,8 +325,8 @@ export default function AdminPanel() {
             <div className="admin-stat-card">
               <div className="admin-stat-icon admin-stat-icon-purple"><Video size={22} /></div>
               <div>
-                <div className="admin-stat-number">{meetRequests}</div>
-                <div className="admin-stat-label">Meet Requests</div>
+                <div className="admin-stat-number">{meetLinked} / {meetLinked + meetRequests}</div>
+                <div className="admin-stat-label">Meet Linked</div>
               </div>
             </div>
             <div className="admin-stat-card">
@@ -218,6 +353,9 @@ export default function AdminPanel() {
           <div className="admin-tabs">
             <button className={`admin-tab${activeTab === 'bookings' ? ' active' : ''}`} onClick={() => setActiveTab('bookings')}>
               <Calendar size={16} /> Bookings ({bookings.length})
+            </button>
+            <button className={`admin-tab${activeTab === 'calendar' ? ' active' : ''}`} onClick={() => setActiveTab('calendar')}>
+              <CalendarPlus size={16} /> Calendar Sync
             </button>
             <button className={`admin-tab${activeTab === 'enquiries' ? ' active' : ''}`} onClick={() => setActiveTab('enquiries')}>
               <Mail size={16} /> Enquiries ({enquiries.length})
@@ -248,6 +386,11 @@ export default function AdminPanel() {
                       <option value="cancelled">Cancelled</option>
                     </select>
                   </div>
+                  {meetRequests > 0 && (
+                    <button className="admin-gcal-bulk-btn" onClick={bulkCreateCalendarEvents} title="Sync all pending Meet requests to Google Calendar">
+                      <CalendarPlus size={14} /> Sync All ({meetRequests})
+                    </button>
+                  )}
                   <button className="admin-refresh-btn" onClick={loadBookings} title="Refresh">
                     <RefreshCw size={16} />
                   </button>
@@ -270,13 +413,13 @@ export default function AdminPanel() {
                   <table className="admin-table">
                     <thead>
                       <tr>
-                        <th>Student</th>
+                        <th className="admin-th-sortable" onClick={() => handleSort('student_name')}>Student <SortIcon field="student_name" /></th>
                         <th>Year</th>
                         <th>Subject</th>
-                        <th>Date</th>
+                        <th className="admin-th-sortable" onClick={() => handleSort('booking_date')}>Date <SortIcon field="booking_date" /></th>
                         <th>Time</th>
-                        <th>Price</th>
-                        <th>Meet</th>
+                        <th className="admin-th-sortable" onClick={() => handleSort('price')}>Price <SortIcon field="price" /></th>
+                        <th>Meet / Calendar</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </tr>
@@ -291,41 +434,52 @@ export default function AdminPanel() {
                           <td>{b.booking_time}</td>
                           <td className="admin-price">${b.price}</td>
                           <td>
-                            {b.google_meet ? (
-                              b.meet_link ? (
-                                <a href={b.meet_link} target="_blank" rel="noopener noreferrer" className="admin-meet-link">
-                                  <Video size={13} /> Link
-                                </a>
+                            <div className="admin-meet-cell">
+                              {b.google_meet ? (
+                                b.meet_link ? (
+                                  <a href={b.meet_link} target="_blank" rel="noopener noreferrer" className="admin-meet-link">
+                                    <Video size={13} /> Join Meet
+                                  </a>
+                                ) : (
+                                  <div className="admin-meet-actions-col">
+                                    <button
+                                      className="admin-gcal-btn"
+                                      onClick={() => createCalendarEvent(b)}
+                                      title="Create Google Calendar event with Meet"
+                                    >
+                                      <CalendarPlus size={13} /> Calendar + Meet
+                                    </button>
+                                    <button
+                                      className="admin-meet-add-btn"
+                                      onClick={() => setShowMeetInput(showMeetInput === b.id ? null : b.id)}
+                                      title="Paste Meet link manually"
+                                    >
+                                      <Link2 size={13} /> Paste Link
+                                    </button>
+                                  </div>
+                                )
                               ) : (
-                                <button
-                                  className="admin-meet-add-btn"
-                                  onClick={() => setShowMeetInput(showMeetInput === b.id ? null : b.id)}
-                                  title="Add Google Meet Link"
-                                >
-                                  <Link2 size={13} /> Add
-                                </button>
-                              )
-                            ) : (
-                              <span className="meet-none">—</span>
-                            )}
-                            {showMeetInput === b.id && (
-                              <div className="admin-meet-input-row">
-                                <input
-                                  type="url"
-                                  placeholder="meet.google.com/..."
-                                  value={meetLinkInputs[b.id] || ''}
-                                  onChange={e => setMeetLinkInputs(prev => ({ ...prev, [b.id]: e.target.value }))}
-                                  className="admin-meet-input"
-                                />
-                                <button
-                                  className="admin-meet-save"
-                                  onClick={() => addMeetLink(b.id)}
-                                  disabled={updatingId === b.id}
-                                >
-                                  Save
-                                </button>
-                              </div>
-                            )}
+                                <span className="meet-none">—</span>
+                              )}
+                              {showMeetInput === b.id && (
+                                <div className="admin-meet-input-row">
+                                  <input
+                                    type="url"
+                                    placeholder="meet.google.com/..."
+                                    value={meetLinkInputs[b.id] || ''}
+                                    onChange={e => setMeetLinkInputs(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                    className="admin-meet-input"
+                                  />
+                                  <button
+                                    className="admin-meet-save"
+                                    onClick={() => addMeetLink(b.id)}
+                                    disabled={updatingId === b.id}
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td><span className={`status-badge ${b.status}`}>{b.status}</span></td>
                           <td>
@@ -369,6 +523,96 @@ export default function AdminPanel() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Calendar Sync Tab */}
+          {activeTab === 'calendar' && (
+            <div className="admin-tab-content">
+              <div className="admin-calendar-header">
+                <div className="admin-calendar-nav">
+                  <button className="admin-cal-nav-btn" onClick={prevMonth}><ChevronLeft size={18} /></button>
+                  <h3 className="admin-cal-month">{calendarMonthStr}</h3>
+                  <button className="admin-cal-nav-btn" onClick={nextMonth}><ChevronRight size={18} /></button>
+                </div>
+                <div className="admin-calendar-actions">
+                  {meetRequests > 0 && (
+                    <button className="admin-gcal-bulk-btn" onClick={bulkCreateCalendarEvents}>
+                      <CalendarPlus size={14} /> Sync All Pending ({meetRequests})
+                    </button>
+                  )}
+                  <button className="admin-refresh-btn" onClick={loadBookings} title="Refresh">
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="admin-calendar-grid">
+                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+                  <div key={d} className="admin-cal-day-header">{d}</div>
+                ))}
+                {calendarDays.map((day, i) => {
+                  if (day === null) return <div key={`empty-${i}`} className="admin-cal-cell admin-cal-cell-empty" />
+                  const dateKey = `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+                  const dayBookings = bookingsByDate[dateKey] || []
+                  const isToday = dateKey === todayStr
+                  return (
+                    <div key={dateKey} className={`admin-cal-cell${isToday ? ' admin-cal-today' : ''}${dayBookings.length ? ' admin-cal-has-bookings' : ''}`}>
+                      <div className="admin-cal-day-num">{day}</div>
+                      {dayBookings.slice(0, 3).map(b => (
+                        <div key={b.id} className={`admin-cal-event admin-cal-event-${b.status}`}>
+                          <span className="admin-cal-event-time">{b.booking_time?.replace(':00 ', '')}</span>
+                          <span className="admin-cal-event-name">{b.student_name?.split(' ')[0] || 'Student'}</span>
+                          {b.google_meet && !b.meet_link && (
+                            <button className="admin-cal-event-sync" onClick={() => createCalendarEvent(b)} title="Sync to Google Calendar">
+                              <CalendarPlus size={10} />
+                            </button>
+                          )}
+                          {b.google_meet && b.meet_link && (
+                            <a href={b.meet_link} target="_blank" rel="noopener noreferrer" className="admin-cal-event-meet" title="Join Meet">
+                              <Video size={10} />
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                      {dayBookings.length > 3 && (
+                        <div className="admin-cal-more">+{dayBookings.length - 3} more</div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Pending Meet requests summary */}
+              {meetRequests > 0 && (
+                <div className="admin-meet-pending-summary">
+                  <div className="admin-meet-pending-header">
+                    <Video size={18} />
+                    <h4>{meetRequests} Booking{meetRequests > 1 ? 's' : ''} Awaiting Google Meet Link</h4>
+                  </div>
+                  <div className="admin-meet-pending-list">
+                    {bookings.filter(b => b.google_meet && !b.meet_link).map(b => (
+                      <div key={b.id} className="admin-meet-pending-item">
+                        <div className="admin-meet-pending-info">
+                          <strong>{b.student_name || 'Student'}</strong>
+                          <span>{b.subject} — {formatDate(b.booking_date)} at {b.booking_time}</span>
+                        </div>
+                        <div className="admin-meet-pending-actions">
+                          <button className="admin-gcal-btn" onClick={() => createCalendarEvent(b)}>
+                            <CalendarPlus size={13} /> Calendar + Meet
+                          </button>
+                          <button
+                            className="admin-meet-add-btn"
+                            onClick={() => { setActiveTab('bookings'); setShowMeetInput(b.id) }}
+                          >
+                            <Link2 size={13} /> Paste Link
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
