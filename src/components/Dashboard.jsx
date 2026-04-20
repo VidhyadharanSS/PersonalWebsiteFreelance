@@ -2,19 +2,20 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { createBooking, fetchUserBookings } from '../lib/database'
+import { Video, Calendar, Clock, CheckCircle, BookOpen } from 'lucide-react'
 
 export default function Dashboard() {
-  const { getUserName } = useAuth()
+  const { getUserName, getUserAvatar } = useAuth()
   const toast = useToast()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(false)
-
   // Form state
   const [subject, setSubject] = useState('')
   const [yearGroup, setYearGroup] = useState('')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [displayPrice, setDisplayPrice] = useState(null)
+  const [requestGoogleMeet, setRequestGoogleMeet] = useState(true)
 
   useEffect(() => { loadBookings() }, [])
 
@@ -64,8 +65,20 @@ export default function Dashboard() {
 
     setLoading(true)
     try {
-      await createBooking({ tutorName: yearGroup, subject, date, time, price: getPrice(yearGroup) })
-      toast('Session booked successfully!', 'success')
+      await createBooking({
+        tutorName: yearGroup,
+        subject,
+        date,
+        time,
+        price: getPrice(yearGroup),
+        googleMeet: requestGoogleMeet
+      })
+      toast(
+        requestGoogleMeet
+          ? 'Session booked! Google Meet link will be shared via email.'
+          : 'Session booked successfully!',
+        'success'
+      )
       setSubject(''); setYearGroup(''); setDate(''); setTime(''); setDisplayPrice(null)
       await loadBookings()
     } catch {
@@ -77,12 +90,16 @@ export default function Dashboard() {
   const total = bookings.length
   const confirmed = bookings.filter(b => b.status === 'confirmed').length
   const pending = bookings.filter(b => b.status === 'pending').length
+  const completed = bookings.filter(b => b.status === 'completed').length
+
+  const avatarUrl = getUserAvatar()
 
   return (
     <main id="dashboard">
       <section className="dashboard-hero">
         <div className="container">
           <div className="dashboard-welcome">
+            {avatarUrl && <img src={avatarUrl} alt="" className="dashboard-avatar" />}
             <h1>Welcome back, <span>{getUserName()}</span></h1>
             <p>Your learning dashboard &mdash; manage bookings and track your progress.</p>
           </div>
@@ -92,9 +109,22 @@ export default function Dashboard() {
       <section className="dashboard-section">
         <div className="container">
           <div className="dashboard-stats">
-            <div className="dash-stat-card"><div className="dash-stat-number">{total}</div><div className="dash-stat-label">Total Sessions</div></div>
-            <div className="dash-stat-card"><div className="dash-stat-number">{confirmed}</div><div className="dash-stat-label">Confirmed</div></div>
-            <div className="dash-stat-card"><div className="dash-stat-number">{pending}</div><div className="dash-stat-label">Pending</div></div>
+            <div className="dash-stat-card">
+              <div className="dash-stat-icon"><Calendar size={20} /></div>
+              <div><div className="dash-stat-number">{total}</div><div className="dash-stat-label">Total Sessions</div></div>
+            </div>
+            <div className="dash-stat-card">
+              <div className="dash-stat-icon dash-stat-icon-green"><CheckCircle size={20} /></div>
+              <div><div className="dash-stat-number">{confirmed}</div><div className="dash-stat-label">Confirmed</div></div>
+            </div>
+            <div className="dash-stat-card">
+              <div className="dash-stat-icon dash-stat-icon-amber"><Clock size={20} /></div>
+              <div><div className="dash-stat-number">{pending}</div><div className="dash-stat-label">Pending</div></div>
+            </div>
+            <div className="dash-stat-card">
+              <div className="dash-stat-icon dash-stat-icon-blue"><BookOpen size={20} /></div>
+              <div><div className="dash-stat-number">{completed}</div><div className="dash-stat-label">Completed</div></div>
+            </div>
           </div>
         </div>
       </section>
@@ -132,13 +162,36 @@ export default function Dashboard() {
                   {times.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
+
+              {/* Google Meet Toggle */}
+              <div className="google-meet-toggle">
+                <label className="meet-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={requestGoogleMeet}
+                    onChange={e => setRequestGoogleMeet(e.target.checked)}
+                    className="meet-checkbox"
+                  />
+                  <Video size={18} className="meet-icon" />
+                  <span>Request Google Meet link for this session</span>
+                </label>
+                {requestGoogleMeet && (
+                  <p className="meet-note">A Google Meet link will be shared to your email before the session.</p>
+                )}
+              </div>
+
               {displayPrice !== null && (
                 <div className="booking-price-display">
                   <span>Session Price: </span><strong>${displayPrice}/hour</strong>
                 </div>
               )}
               <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-                {loading ? <span className="btn-loader" /> : 'Confirm Booking'}
+                {loading ? <span className="btn-loader" /> : (
+                  <>
+                    {requestGoogleMeet && <Video size={16} />}
+                    Confirm Booking
+                  </>
+                )}
               </button>
             </form>
           </div>
@@ -151,11 +204,11 @@ export default function Dashboard() {
           <div className="bookings-table-wrapper">
             <table className="bookings-table">
               <thead>
-                <tr><th>Year</th><th>Subject</th><th>Date</th><th>Time</th><th>Price</th><th>Status</th></tr>
+                <tr><th>Year</th><th>Subject</th><th>Date</th><th>Time</th><th>Price</th><th>Meet</th><th>Status</th></tr>
               </thead>
               <tbody>
                 {bookings.length === 0 ? (
-                  <tr className="empty-row"><td colSpan="6">No sessions yet. Book your first session above.</td></tr>
+                  <tr className="empty-row"><td colSpan="7">No sessions yet. Book your first session above.</td></tr>
                 ) : bookings.map(b => (
                   <tr key={b.id}>
                     <td><strong>{b.tutor_name || '-'}</strong></td>
@@ -163,6 +216,19 @@ export default function Dashboard() {
                     <td>{new Date(b.booking_date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     <td>{b.booking_time}</td>
                     <td>${b.price}</td>
+                    <td>
+                      {b.google_meet ? (
+                        b.meet_link ? (
+                          <a href={b.meet_link} target="_blank" rel="noopener noreferrer" className="meet-link-btn">
+                            <Video size={14} /> Join
+                          </a>
+                        ) : (
+                          <span className="meet-pending"><Video size={14} /> Pending</span>
+                        )
+                      ) : (
+                        <span className="meet-none">—</span>
+                      )}
+                    </td>
                     <td><span className={`status-badge ${b.status}`}>{b.status}</span></td>
                   </tr>
                 ))}

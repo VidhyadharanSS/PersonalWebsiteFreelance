@@ -2,7 +2,18 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { submitEnquiry } from '../lib/database'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Video } from 'lucide-react'
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+  )
+}
 
 const COUNTRY_CODES = [
   { code: '+91', label: 'IN +91' }, { code: '+1', label: 'US +1' },
@@ -20,11 +31,12 @@ const CURRICULA = ['CBSE','ICSE','State Board','IGCSE (Cambridge)','IB (PYP, MYP
 const TIME_SLOTS = ['Morning (9 AM - 12 PM)','Afternoon (12 - 3 PM)','Evening (3 - 6 PM)','Night (6 - 9 PM)']
 
 export default function RegisterModal({ open, onClose }) {
-  const { user, signUp, signIn, resetPassword, getUserName } = useAuth()
+  const { user, signUp, signIn, signInWithGoogle, resetPassword, getUserName } = useAuth()
   const toast = useToast()
   const [step, setStep] = useState(1)
-  const [authMode, setAuthMode] = useState('create') // create | signin | forgot
+  const [authMode, setAuthMode] = useState('create')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   // Step 1 fields
   const [fullName, setFullName] = useState('')
@@ -48,7 +60,8 @@ export default function RegisterModal({ open, onClose }) {
   // Step 3 fields
   const [subject, setSubject] = useState('')
   const [timeSlot, setTimeSlot] = useState('')
-  const [mode, setMode] = useState('Online')
+  const [mode, setMode] = useState('Online (Google Meet)')
+  const [requestMeet, setRequestMeet] = useState(true)
 
   // Summary
   const [summary, setSummary] = useState(null)
@@ -73,6 +86,16 @@ export default function RegisterModal({ open, onClose }) {
   }, [onClose])
 
   const goTo = (s) => setStep(s)
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true)
+    try {
+      await signInWithGoogle()
+    } catch (err) {
+      toast(err.message || 'Google sign in failed.', 'error')
+      setGoogleLoading(false)
+    }
+  }
 
   const handleCreate = async () => {
     if (!fullName || !email || !password) return toast('Please fill in all fields.', 'warning')
@@ -147,11 +170,12 @@ export default function RegisterModal({ open, onClose }) {
         `Curriculum: ${curriculum}`,
         `Subject: ${subject}`,
         `Time: ${timeSlot}`,
-        `Mode: ${mode}`
+        `Mode: ${mode}`,
+        `Google Meet Requested: ${requestMeet ? 'Yes' : 'No'}`
       ].join('\n')
 
       await submitEnquiry({ name: parentName, email: parentEmail, message })
-      setSummary({ studentName, grade, curriculum, subject, timeSlot, mode, parentEmail })
+      setSummary({ studentName, grade, curriculum, subject, timeSlot, mode, parentEmail, requestMeet })
       goTo(4)
     } catch {
       toast('Something went wrong. Please try again.', 'error')
@@ -164,7 +188,7 @@ export default function RegisterModal({ open, onClose }) {
     setSigninEmail(''); setSigninPassword('')
     setPhone(''); setWhatsapp(''); setStudentName('')
     setGrade(''); setCurriculum(''); setSubject('')
-    setTimeSlot(''); setMode('Online'); setSummary(null)
+    setTimeSlot(''); setMode('Online (Google Meet)'); setRequestMeet(true); setSummary(null)
     onClose()
   }
 
@@ -206,6 +230,27 @@ export default function RegisterModal({ open, onClose }) {
               </div>
             ) : (
               <>
+                {/* Google Sign In */}
+                {authMode !== 'forgot' && (
+                  <>
+                    <button
+                      className="btn-google-signin"
+                      onClick={handleGoogleSignIn}
+                      disabled={googleLoading}
+                    >
+                      {googleLoading ? (
+                        <span className="btn-loader" />
+                      ) : (
+                        <>
+                          <GoogleIcon />
+                          <span>Continue with Google</span>
+                        </>
+                      )}
+                    </button>
+                    <div className="auth-divider"><span>or</span></div>
+                  </>
+                )}
+
                 {authMode !== 'forgot' && (
                   <div className="reg-auth-tabs">
                     <button
@@ -363,10 +408,25 @@ export default function RegisterModal({ open, onClose }) {
             <div className="form-group">
               <label>Mode</label>
               <select value={mode} onChange={e => setMode(e.target.value)}>
-                <option value="Online">Online (Google Meet)</option>
+                <option value="Online (Google Meet)">Online (Google Meet)</option>
                 <option value="In-person">In-person (if available)</option>
               </select>
             </div>
+
+            {/* Google Meet Toggle */}
+            <div className="google-meet-toggle">
+              <label className="meet-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={requestMeet}
+                  onChange={e => setRequestMeet(e.target.checked)}
+                  className="meet-checkbox"
+                />
+                <Video size={18} className="meet-icon" />
+                <span>Request Google Meet link for discovery call</span>
+              </label>
+            </div>
+
             <div className="reg-nav-row">
               <button className="btn btn-outline reg-back-btn" onClick={() => goTo(2)}>Back</button>
               <button className="btn btn-primary reg-next-btn" onClick={handleSubmit} disabled={loading}>
@@ -381,7 +441,7 @@ export default function RegisterModal({ open, onClose }) {
           <div className="reg-step active">
             <div className="reg-confirmation">
               <CheckCircle size={64} color="var(--gold)" strokeWidth={1.5} />
-              <h3 className="reg-confirm-title">Discovery Call Scheduled</h3>
+              <h3 className="reg-confirm-title">Discovery Call Scheduled!</h3>
               <p className="reg-confirm-desc">
                 Your free discovery call request has been received.<br />
                 <strong>Our team will contact you within 24 hours</strong> to confirm details.
@@ -392,6 +452,7 @@ export default function RegisterModal({ open, onClose }) {
                   <strong>Curriculum:</strong> {summary.curriculum}<br />
                   <strong>Subject:</strong> {summary.subject}<br />
                   <strong>Time:</strong> {summary.timeSlot} ({summary.mode})<br />
+                  {summary.requestMeet && <><strong>Google Meet:</strong> Link will be shared<br /></>}
                   <strong>Contact:</strong> {summary.parentEmail}
                 </div>
               )}

@@ -3,9 +3,8 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { supabase } from '../lib/supabase'
 import {
-  Calendar, Users, Mail, Clock, Search,
-  ChevronDown, ChevronUp, RefreshCw,
-  CheckCircle, XCircle, AlertCircle, Filter
+  Calendar, Mail, Clock, Search, Video, Link2,
+  RefreshCw, CheckCircle, XCircle, Filter, DollarSign
 } from 'lucide-react'
 
 export default function AdminPanel() {
@@ -20,9 +19,9 @@ export default function AdminPanel() {
   const [searchBookings, setSearchBookings] = useState('')
   const [searchEnquiries, setSearchEnquiries] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [sortField, setSortField] = useState('created_at')
-  const [sortDir, setSortDir] = useState('desc')
   const [updatingId, setUpdatingId] = useState(null)
+  const [meetLinkInputs, setMeetLinkInputs] = useState({})
+  const [showMeetInput, setShowMeetInput] = useState(null)
 
   useEffect(() => {
     loadBookings()
@@ -69,6 +68,28 @@ export default function AdminPanel() {
       toast(`Booking ${newStatus} successfully.`, 'success')
     } catch (err) {
       toast('Failed to update: ' + err.message, 'error')
+    } finally { setUpdatingId(null) }
+  }
+
+  const addMeetLink = async (id) => {
+    const link = meetLinkInputs[id]?.trim()
+    if (!link) return toast('Please enter a Google Meet link.', 'warning')
+    if (!link.includes('meet.google.com') && !link.includes('google.com')) {
+      return toast('Please enter a valid Google Meet link.', 'warning')
+    }
+    setUpdatingId(id)
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ meet_link: link })
+        .eq('id', id)
+      if (error) throw error
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, meet_link: link } : b))
+      setShowMeetInput(null)
+      setMeetLinkInputs(prev => ({ ...prev, [id]: '' }))
+      toast('Google Meet link added successfully!', 'success')
+    } catch (err) {
+      toast('Failed to add meet link: ' + err.message, 'error')
     } finally { setUpdatingId(null) }
   }
 
@@ -128,6 +149,7 @@ export default function AdminPanel() {
   const totalRevenue = bookings
     .filter(b => b.status === 'confirmed' || b.status === 'completed')
     .reduce((sum, b) => sum + (b.price || 0), 0)
+  const meetRequests = bookings.filter(b => b.google_meet && !b.meet_link).length
 
   return (
     <main id="admin-panel">
@@ -135,7 +157,7 @@ export default function AdminPanel() {
         <div className="container">
           <div className="admin-hero-content">
             <h1>Admin Dashboard</h1>
-            <p>Welcome, <strong>{getUserName()}</strong>. Manage bookings and enquiries.</p>
+            <p>Welcome, <strong>{getUserName()}</strong>. Manage bookings, enquiries, and Google Meet links.</p>
           </div>
         </div>
       </section>
@@ -166,7 +188,21 @@ export default function AdminPanel() {
               </div>
             </div>
             <div className="admin-stat-card">
-              <div className="admin-stat-icon admin-stat-icon-purple"><Mail size={22} /></div>
+              <div className="admin-stat-icon admin-stat-icon-purple"><Video size={22} /></div>
+              <div>
+                <div className="admin-stat-number">{meetRequests}</div>
+                <div className="admin-stat-label">Meet Requests</div>
+              </div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: '#e8f5e9', color: '#2e7d32' }}><DollarSign size={22} /></div>
+              <div>
+                <div className="admin-stat-number">${totalRevenue}</div>
+                <div className="admin-stat-label">Revenue</div>
+              </div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: '#fff3e0', color: '#e65100' }}><Mail size={22} /></div>
               <div>
                 <div className="admin-stat-number">{enquiries.length}</div>
                 <div className="admin-stat-label">Enquiries</div>
@@ -235,13 +271,13 @@ export default function AdminPanel() {
                     <thead>
                       <tr>
                         <th>Student</th>
-                        <th>Year Group</th>
+                        <th>Year</th>
                         <th>Subject</th>
                         <th>Date</th>
                         <th>Time</th>
                         <th>Price</th>
+                        <th>Meet</th>
                         <th>Status</th>
-                        <th>Created</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -254,8 +290,44 @@ export default function AdminPanel() {
                           <td>{formatDate(b.booking_date)}</td>
                           <td>{b.booking_time}</td>
                           <td className="admin-price">${b.price}</td>
+                          <td>
+                            {b.google_meet ? (
+                              b.meet_link ? (
+                                <a href={b.meet_link} target="_blank" rel="noopener noreferrer" className="admin-meet-link">
+                                  <Video size={13} /> Link
+                                </a>
+                              ) : (
+                                <button
+                                  className="admin-meet-add-btn"
+                                  onClick={() => setShowMeetInput(showMeetInput === b.id ? null : b.id)}
+                                  title="Add Google Meet Link"
+                                >
+                                  <Link2 size={13} /> Add
+                                </button>
+                              )
+                            ) : (
+                              <span className="meet-none">—</span>
+                            )}
+                            {showMeetInput === b.id && (
+                              <div className="admin-meet-input-row">
+                                <input
+                                  type="url"
+                                  placeholder="meet.google.com/..."
+                                  value={meetLinkInputs[b.id] || ''}
+                                  onChange={e => setMeetLinkInputs(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                  className="admin-meet-input"
+                                />
+                                <button
+                                  className="admin-meet-save"
+                                  onClick={() => addMeetLink(b.id)}
+                                  disabled={updatingId === b.id}
+                                >
+                                  Save
+                                </button>
+                              </div>
+                            )}
+                          </td>
                           <td><span className={`status-badge ${b.status}`}>{b.status}</span></td>
-                          <td className="admin-date-cell">{formatDateTime(b.created_at)}</td>
                           <td>
                             <div className="admin-actions">
                               {b.status === 'pending' && (
@@ -289,7 +361,7 @@ export default function AdminPanel() {
                                 </button>
                               )}
                               {(b.status === 'completed' || b.status === 'cancelled') && (
-                                <span className="admin-action-done">-</span>
+                                <span className="admin-action-done">—</span>
                               )}
                             </div>
                           </td>

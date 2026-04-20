@@ -9,9 +9,10 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     async function init() {
-      // Handle email confirmation redirect
+      // Handle OAuth / email confirmation redirects
       const hash = window.location.hash
       const params = new URLSearchParams(window.location.search)
+
       if (hash.includes('access_token') || hash.includes('type=signup') || params.has('code')) {
         try {
           if (params.has('code')) {
@@ -19,7 +20,7 @@ export function AuthProvider({ children }) {
           }
           window.history.replaceState(null, '', window.location.pathname)
         } catch (e) {
-          // silently fail
+          console.warn('Auth redirect handling:', e)
         }
       }
 
@@ -55,6 +56,21 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: SITE_URL,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
+    })
+    if (error) throw error
+    return data
+  }
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
@@ -71,8 +87,13 @@ export function AuthProvider({ children }) {
     return user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
   }
 
+  const getUserAvatar = () => {
+    if (!user) return null
+    return user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, resetPassword, getUserName }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signInWithGoogle, signOut, resetPassword, getUserName, getUserAvatar }}>
       {children}
     </AuthContext.Provider>
   )

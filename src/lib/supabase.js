@@ -23,3 +23,9 @@ export const PRICING = {
   'Year 11-12': 27,
   'Special Needs': 27
 }
+
+export const ADMIN_EMAILS = [
+  'v72653666@gmail.com',
+  'admin@zped.org',
+  'vidhyadharanss@gmail.com'
+]

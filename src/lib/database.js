@@ -5,7 +5,7 @@ export async function createBooking(bookingData) {
   if (!user) throw new Error('Not authenticated')
 
   const userName = user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'
-  const { data, error } = await supabase.from('bookings').insert([{
+  const insertData = {
     user_id: user.id,
     student_name: userName,
     tutor_name: bookingData.tutorName,
@@ -13,8 +13,11 @@ export async function createBooking(bookingData) {
     booking_date: bookingData.date,
     booking_time: bookingData.time,
     price: bookingData.price,
-    status: 'pending'
-  }]).select()
+    status: 'pending',
+    google_meet: bookingData.googleMeet ?? true
+  }
+
+  const { data, error } = await supabase.from('bookings').insert([insertData]).select()
   if (error) throw error
   return data?.[0] || null
 }
@@ -46,6 +49,12 @@ export async function fetchAllEnquiries() {
 
 export async function updateBookingStatus(id, status) {
   const { data, error } = await supabase.from('bookings').update({ status }).eq('id', id).select()
+  if (error) throw error
+  return data?.[0] || null
+}
+
+export async function updateBookingMeetLink(id, meetLink) {
+  const { data, error } = await supabase.from('bookings').update({ meet_link: meetLink }).eq('id', id).select()
   if (error) throw error
   return data?.[0] || null
 }

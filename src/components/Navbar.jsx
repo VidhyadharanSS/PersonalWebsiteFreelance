@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, view, isAdmin }) {
   const { theme, toggle } = useTheme()
-  const { user, signOut, getUserName } = useAuth()
+  const { user, signOut, getUserName, getUserAvatar } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('')
@@ -25,20 +25,17 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
     return () => window.removeEventListener('scroll', onScroll)
   }, [view])
 
-  // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false) }, [view])
 
-  // Close mobile menu on clicking outside
   useEffect(() => {
     if (!mobileOpen) return
     const handle = (e) => {
-      if (!e.target.closest('.navbar')) setMobileOpen(false)
+      if (!e.target.closest('.mobile-drawer')) setMobileOpen(false)
     }
     document.addEventListener('click', handle)
     return () => document.removeEventListener('click', handle)
   }, [mobileOpen])
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -70,6 +67,8 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
       onHome()
     } catch { /* silent */ }
   }
+
+  const avatarUrl = getUserAvatar()
 
   return (
     <>
@@ -104,7 +103,11 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
 
             {user ? (
               <div className="nav-user-group">
-                <div className="nav-user-avatar">{getUserName().charAt(0).toUpperCase()}</div>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="nav-user-avatar-img" />
+                ) : (
+                  <div className="nav-user-avatar">{getUserName().charAt(0).toUpperCase()}</div>
+                )}
                 <span className="nav-user-name">{getUserName()}</span>
                 {view !== 'dashboard' && (
                   <button className="btn btn-outline btn-nav btn-sm" onClick={onDashboard}>
@@ -130,8 +133,9 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                 <button className="btn btn-outline btn-nav btn-sm" onClick={onSignIn}>
                   <LogIn size={14} /> Sign In
                 </button>
-                <button className="btn btn-primary btn-nav" onClick={() => { onCTA('hero') }}>
-                  Free Discovery Call
+                <button className="btn btn-primary btn-nav btn-cta-nav" onClick={() => { onCTA('hero') }}>
+                  <span className="btn-text-full">Free Discovery Call</span>
+                  <span className="btn-text-short">Book Call</span>
                 </button>
               </div>
             )}
@@ -159,11 +163,18 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
         <div className="mobile-drawer-header">
           <img src="/logo-icon.jpeg" alt="ZP" className="mobile-drawer-logo" />
           <span className="brand-name">Zenith Pranavi</span>
+          <button className="mobile-drawer-close" onClick={() => setMobileOpen(false)}>
+            <X size={20} />
+          </button>
         </div>
 
         {user && (
           <div className="mobile-user-info">
-            <div className="nav-user-avatar">{getUserName().charAt(0).toUpperCase()}</div>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="nav-user-avatar-img" />
+            ) : (
+              <div className="nav-user-avatar">{getUserName().charAt(0).toUpperCase()}</div>
+            )}
             <div>
               <strong>{getUserName()}</strong>
               <span>{user.email}</span>
@@ -196,7 +207,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                 </button>
               )}
               {isAdmin && view !== 'admin' && (
-                <button className="mobile-action-btn" onClick={() => { setMobileOpen(false); onAdmin() }}>
+                <button className="mobile-action-btn mobile-action-admin" onClick={() => { setMobileOpen(false); onAdmin() }}>
                   <ShieldCheck size={18} /> Admin Panel
                 </button>
               )}
@@ -205,6 +216,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                   <Home size={18} /> Home
                 </button>
               )}
+              <div className="mobile-drawer-divider" />
               <button className="mobile-action-btn mobile-action-danger" onClick={handleLogout}>
                 <LogOut size={18} /> Sign Out
               </button>
@@ -212,7 +224,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
           ) : (
             <>
               <button className="mobile-action-btn" onClick={() => { setMobileOpen(false); onSignIn() }}>
-                <LogIn size={18} /> Sign In
+                <LogIn size={18} /> Sign In / Sign Up
               </button>
               <button className="btn btn-primary btn-full mobile-cta-btn" onClick={() => { setMobileOpen(false); onCTA('hero') }}>
                 Free Discovery Call

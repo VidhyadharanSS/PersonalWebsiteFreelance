@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════════
--- ZENITH PRANAVI (ZPed.org) — Complete Database Schema v2
--- Includes Admin RLS policies for booking/enquiry management
+-- ZENITH PRANAVI (ZPed.org) — Complete Database Schema v3
+-- Google Meet support + Admin for v72653666@gmail.com
 -- ═══════════════════════════════════════════════════════════════════════
 -- 
 -- HOW TO USE:
@@ -8,6 +8,9 @@
 -- 2. Click "New Query"  
 -- 3. Paste this ENTIRE file
 -- 4. Click "Run" (or Ctrl+Enter)
+--
+-- WARNING: This drops and recreates all tables.
+-- If you already have data, use the MIGRATION section at bottom instead.
 -- ═══════════════════════════════════════════════════════════════════════
 
 
@@ -44,7 +47,7 @@ CREATE TABLE tutors (
 
 
 -- ╔═══════════════════════════════════════╗
--- ║  4. BOOKINGS TABLE                    ║
+-- ║  4. BOOKINGS TABLE (with Google Meet) ║
 -- ╚═══════════════════════════════════════╝
 
 CREATE TABLE bookings (
@@ -57,6 +60,8 @@ CREATE TABLE bookings (
     booking_time    TEXT NOT NULL,
     price           INTEGER NOT NULL DEFAULT 0,
     status          TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')),
+    google_meet     BOOLEAN DEFAULT true,
+    meet_link       TEXT DEFAULT NULL,
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -110,18 +115,26 @@ CREATE POLICY "Users can update own bookings"
     ON bookings FOR UPDATE
     USING (auth.uid() = user_id);
 
--- ADMIN: Can read ALL bookings (by email)
+-- ADMIN: Can read ALL bookings
 CREATE POLICY "Admin can read all bookings"
     ON bookings FOR SELECT
     USING (
-        auth.jwt() ->> 'email' IN ('admin@zped.org', 'vidhyadharanss@gmail.com')
+        auth.jwt() ->> 'email' IN (
+            'v72653666@gmail.com',
+            'admin@zped.org',
+            'vidhyadharanss@gmail.com'
+        )
     );
 
--- ADMIN: Can update ALL bookings (confirm, cancel, complete)
+-- ADMIN: Can update ALL bookings (confirm, cancel, complete, add meet link)
 CREATE POLICY "Admin can update all bookings"
     ON bookings FOR UPDATE
     USING (
-        auth.jwt() ->> 'email' IN ('admin@zped.org', 'vidhyadharanss@gmail.com')
+        auth.jwt() ->> 'email' IN (
+            'v72653666@gmail.com',
+            'admin@zped.org',
+            'vidhyadharanss@gmail.com'
+        )
     );
 
 
@@ -129,7 +142,7 @@ CREATE POLICY "Admin can update all bookings"
 -- ║  9. RLS POLICIES — ENQUIRIES          ║
 -- ╚═══════════════════════════════════════╝
 
--- Anyone can submit an enquiry (public contact form)
+-- Anyone can submit an enquiry
 CREATE POLICY "Allow public insert on enquiries"
     ON enquiries FOR INSERT
     WITH CHECK (true);
@@ -138,14 +151,22 @@ CREATE POLICY "Allow public insert on enquiries"
 CREATE POLICY "Admin can read all enquiries"
     ON enquiries FOR SELECT
     USING (
-        auth.jwt() ->> 'email' IN ('admin@zped.org', 'vidhyadharanss@gmail.com')
+        auth.jwt() ->> 'email' IN (
+            'v72653666@gmail.com',
+            'admin@zped.org',
+            'vidhyadharanss@gmail.com'
+        )
     );
 
 -- ADMIN: Can delete enquiries
 CREATE POLICY "Admin can delete enquiries"
     ON enquiries FOR DELETE
     USING (
-        auth.jwt() ->> 'email' IN ('admin@zped.org', 'vidhyadharanss@gmail.com')
+        auth.jwt() ->> 'email' IN (
+            'v72653666@gmail.com',
+            'admin@zped.org',
+            'vidhyadharanss@gmail.com'
+        )
     );
 
 
@@ -178,14 +199,27 @@ INSERT INTO tutors (name, subjects, price_hour, rating, sessions_count, status) 
 
 
 -- ═══════════════════════════════════════════════════════════════════════
--- SCHEMA COMPLETE v2
+-- MIGRATION ONLY — If you already have data, run ONLY this section:
+-- ═══════════════════════════════════════════════════════════════════════
 -- 
--- Tables: tutors, bookings, enquiries
--- RLS: Enabled on all 3 tables
--- Admin Policies: admin@zped.org and vidhyadharanss@gmail.com can:
---   - Read ALL bookings and enquiries
---   - Update ALL bookings (confirm/cancel/complete)  
---   - Delete enquiries
--- User Policies: Each user can CRUD their own bookings
--- Public: Can read tutors, submit enquiries
+-- -- Add Google Meet columns to existing bookings table
+-- ALTER TABLE bookings ADD COLUMN IF NOT EXISTS google_meet BOOLEAN DEFAULT true;
+-- ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meet_link TEXT DEFAULT NULL;
+-- 
+-- -- Add admin policies for v72653666@gmail.com
+-- CREATE POLICY "Admin v72653666 can read all bookings"
+--     ON bookings FOR SELECT
+--     USING (auth.jwt() ->> 'email' = 'v72653666@gmail.com');
+-- 
+-- CREATE POLICY "Admin v72653666 can update all bookings"
+--     ON bookings FOR UPDATE
+--     USING (auth.jwt() ->> 'email' = 'v72653666@gmail.com');
+-- 
+-- CREATE POLICY "Admin v72653666 can read all enquiries"
+--     ON enquiries FOR SELECT
+--     USING (auth.jwt() ->> 'email' = 'v72653666@gmail.com');
+-- 
+-- CREATE POLICY "Admin v72653666 can delete enquiries"
+--     ON enquiries FOR DELETE
+--     USING (auth.jwt() ->> 'email' = 'v72653666@gmail.com');
 -- ═══════════════════════════════════════════════════════════════════════
