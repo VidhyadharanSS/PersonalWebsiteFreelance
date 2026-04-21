@@ -7,7 +7,8 @@ import {
   RefreshCw, CheckCircle, XCircle, Filter, DollarSign,
   CalendarPlus, ChevronLeft, ChevronRight, Download,
   Eye, Activity, TrendingUp,
-  FileText, Send, AlertCircle, ChevronDown, ChevronUp
+  FileText, Send, AlertCircle, ChevronDown, ChevronUp,
+  BarChart3, Zap, Users, Trash2
 } from 'lucide-react'
 
 // ── Google Calendar URL builder with Google Meet conferencing ──
@@ -398,6 +399,88 @@ export default function AdminPanel() {
     completed: bookings.filter(b => b.status === 'completed').reduce((s, b) => s + (b.price || 0), 0)
   }
 
+  // Analytics data
+  const bookingsByMonth = useMemo(() => {
+    const months = {}
+    bookings.forEach(b => {
+      if (!b.created_at) return
+      const d = new Date(b.created_at)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const label = d.toLocaleDateString('en-AU', { month: 'short', year: '2-digit' })
+      if (!months[key]) months[key] = { label, count: 0, revenue: 0 }
+      months[key].count++
+      if (b.status === 'confirmed' || b.status === 'completed') months[key].revenue += (b.price || 0)
+    })
+    return Object.entries(months).sort(([a], [b]) => a.localeCompare(b)).slice(-6).map(([, v]) => v)
+  }, [bookings])
+
+  const subjectBreakdown = useMemo(() => {
+    const subjects = {}
+    bookings.forEach(b => {
+      const s = b.subject || 'Other'
+      if (!subjects[s]) subjects[s] = 0
+      subjects[s]++
+    })
+    return Object.entries(subjects).sort(([, a], [, b]) => b - a).slice(0, 6)
+  }, [bookings])
+
+  const avgSessionPrice = totalBookings > 0 ? (bookings.reduce((s, b) => s + (b.price || 0), 0) / totalBookings).toFixed(0) : 0
+  const conversionRate = totalBookings > 0 ? ((confirmedBookings + completedBookings) / totalBookings * 100).toFixed(1) : 0
+
+  // Bulk actions
+  const [selectedBookings, setSelectedBookings] = useState(new Set())
+  const toggleBookingSelect = (id) => {
+    setSelectedBookings(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  const selectAllVisible = () => {
+    if (selectedBookings.size === filteredBookings.length) {
+      setSelectedBookings(new Set())
+    } else {
+      setSelectedBookings(new Set(filteredBookings.map(b => b.id)))
+    }
+  }
+  const bulkUpdateStatus = async (newStatus) => {
+    if (selectedBookings.size === 0) return toast('No bookings selected.', 'warning')
+    if (!window.confirm(`Update ${selectedBookings.size} booking(s) to "${newStatus}"?`)) return
+    setUpdatingId('bulk')
+    try {
+      const ids = Array.from(selectedBookings)
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: newStatus })
+        .in('id', ids)
+      if (error) throw error
+      setBookings(prev => prev.map(b => ids.includes(b.id) ? { ...b, status: newStatus } : b))
+      setSelectedBookings(new Set())
+      toast(`${ids.length} booking(s) updated to ${newStatus}.`, 'success')
+    } catch (err) {
+      toast('Bulk update failed: ' + err.message, 'error')
+    } finally { setUpdatingId(null) }
+  }
+  const bulkDelete = async () => {
+    if (selectedBookings.size === 0) return toast('No bookings selected.', 'warning')
+    if (!window.confirm(`Permanently delete ${selectedBookings.size} booking(s)? This cannot be undone.`)) return
+    setUpdatingId('bulk')
+    try {
+      const ids = Array.from(selectedBookings)
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .in('id', ids)
+      if (error) throw error
+      setBookings(prev => prev.filter(b => !ids.includes(b.id)))
+      setSelectedBookings(new Set())
+      toast(`${ids.length} booking(s) deleted.`, 'success')
+    } catch (err) {
+      toast('Bulk delete failed: ' + err.message, 'error')
+    } finally { setUpdatingId(null) }
+  }
+
   // ── Calendar view data ──
   const calendarDays = useMemo(() => {
     const year = calendarMonth.getFullYear()
@@ -579,6 +662,9 @@ export default function AdminPanel() {
             <button className={`admin-tab${activeTab === 'enquiries' ? ' active' : ''}`} onClick={() => setActiveTab('enquiries')}>
               <Mail size={16} /> Enquiries ({enquiries.length})
             </button>
+            <button className={`admin-tab${activeTab === 'analytics' ? ' active' : ''}`} onClick={() => setActiveTab('analytics')}>
+              <BarChart3 size={16} /> Analytics
+            </button>
             <button className={`admin-tab${activeTab === 'activity' ? ' active' : ''}`} onClick={() => setActiveTab('activity')}>
               <Activity size={16} /> Activity
             </button>
@@ -634,10 +720,26 @@ export default function AdminPanel() {
                   <p>{searchBookings || filterStatus !== 'all' ? 'Try adjusting your filters.' : 'No bookings have been made yet.'}</p>
                 </div>
               ) : (
+                <>
+                {selectedBookings.size > 0 && (
+                  <div className="admin-bulk-bar">
+                    <span className="admin-bulk-count"><Zap size={14} /> {selectedBookings.size} selected</span>
+                    <div className="admin-bulk-actions">
+                      <button className="admin-bulk-btn admin-bulk-confirm" onClick={() => bulkUpdateStatus('confirmed')} disabled={updatingId === 'bulk'}><CheckCircle size={14} /> Confirm</button>
+                      <button className="admin-bulk-btn admin-bulk-complete" onClick={() => bulkUpdateStatus('completed')} disabled={updatingId === 'bulk'}><CheckCircle size={14} /> Complete</button>
+                      <button className="admin-bulk-btn admin-bulk-cancel" onClick={() => bulkUpdateStatus('cancelled')} disabled={updatingId === 'bulk'}><XCircle size={14} /> Cancel</button>
+                      <button className="admin-bulk-btn admin-bulk-delete" onClick={bulkDelete} disabled={updatingId === 'bulk'}><Trash2 size={14} /> Delete</button>
+                    </div>
+                    <button className="admin-bulk-clear" onClick={() => setSelectedBookings(new Set())}>Clear</button>
+                  </div>
+                )}
                 <div className="admin-table-wrapper">
                   <table className="admin-table">
                     <thead>
                       <tr>
+                        <th style={{ width: 30 }}>
+                          <input type="checkbox" checked={selectedBookings.size === filteredBookings.length && filteredBookings.length > 0} onChange={selectAllVisible} className="admin-checkbox" />
+                        </th>
                         <th style={{ width: 30 }} />
                         <th className="admin-th-sortable" onClick={() => handleSort('student_name')}>Student <SortIcon field="student_name" /></th>
                         <th>Year</th>
@@ -653,7 +755,10 @@ export default function AdminPanel() {
                     <tbody>
                       {filteredBookings.map(b => (
                         <>
-                          <tr key={b.id} className={expandedRows.has(b.id) ? 'admin-row-expanded' : ''}>
+                          <tr key={b.id} className={`${expandedRows.has(b.id) ? 'admin-row-expanded' : ''}${selectedBookings.has(b.id) ? ' admin-row-selected' : ''}`}>
+                            <td>
+                              <input type="checkbox" checked={selectedBookings.has(b.id)} onChange={() => toggleBookingSelect(b.id)} className="admin-checkbox" />
+                            </td>
                             <td>
                               <button
                                 className="admin-expand-btn"
@@ -725,7 +830,7 @@ export default function AdminPanel() {
                           {/* ── Expanded row details ── */}
                           {expandedRows.has(b.id) && (
                             <tr key={`${b.id}-detail`} className="admin-expanded-detail-row">
-                              <td colSpan={10}>
+                              <td colSpan={11}>
                                 <div className="admin-expanded-detail">
                                   <div className="admin-detail-grid">
                                     <div className="admin-detail-item">
@@ -774,6 +879,7 @@ export default function AdminPanel() {
                     </tbody>
                   </table>
                 </div>
+                </>
               )}
             </div>
           )}
@@ -906,7 +1012,119 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* ── NEW FEATURE 3: Activity Log Tab ── */}
+          {/* ── Analytics Tab ── */}
+          {activeTab === 'analytics' && (
+            <div className="admin-tab-content">
+              <div className="analytics-header">
+                <h3 className="analytics-title"><BarChart3 size={18} /> Booking Analytics</h3>
+                <span className="analytics-sub">Visual overview of your booking performance</span>
+              </div>
+
+              <div className="analytics-kpi-grid">
+                <div className="analytics-kpi-card">
+                  <div className="analytics-kpi-value">{totalBookings}</div>
+                  <div className="analytics-kpi-label">Total Bookings</div>
+                  <div className="analytics-kpi-bar"><div className="analytics-kpi-fill analytics-kpi-fill-blue" style={{ width: '100%' }} /></div>
+                </div>
+                <div className="analytics-kpi-card">
+                  <div className="analytics-kpi-value">{conversionRate}%</div>
+                  <div className="analytics-kpi-label">Conversion Rate</div>
+                  <div className="analytics-kpi-bar"><div className="analytics-kpi-fill analytics-kpi-fill-green" style={{ width: `${conversionRate}%` }} /></div>
+                </div>
+                <div className="analytics-kpi-card">
+                  <div className="analytics-kpi-value">${avgSessionPrice}</div>
+                  <div className="analytics-kpi-label">Avg Session Price</div>
+                  <div className="analytics-kpi-bar"><div className="analytics-kpi-fill analytics-kpi-fill-gold" style={{ width: `${Math.min((avgSessionPrice / 27) * 100, 100)}%` }} /></div>
+                </div>
+                <div className="analytics-kpi-card">
+                  <div className="analytics-kpi-value">${totalRevenue}</div>
+                  <div className="analytics-kpi-label">Total Revenue</div>
+                  <div className="analytics-kpi-bar"><div className="analytics-kpi-fill analytics-kpi-fill-purple" style={{ width: '100%' }} /></div>
+                </div>
+              </div>
+
+              <div className="analytics-charts-row">
+                <div className="analytics-chart-card">
+                  <h4 className="analytics-chart-title">Bookings by Status</h4>
+                  <div className="analytics-status-bars">
+                    {[
+                      { label: 'Pending', count: pendingBookings, color: '#ff9800', pct: totalBookings > 0 ? (pendingBookings / totalBookings * 100) : 0 },
+                      { label: 'Confirmed', count: confirmedBookings, color: '#4caf50', pct: totalBookings > 0 ? (confirmedBookings / totalBookings * 100) : 0 },
+                      { label: 'Completed', count: completedBookings, color: '#2196f3', pct: totalBookings > 0 ? (completedBookings / totalBookings * 100) : 0 },
+                      { label: 'Cancelled', count: cancelledBookings, color: '#f44336', pct: totalBookings > 0 ? (cancelledBookings / totalBookings * 100) : 0 }
+                    ].map(s => (
+                      <div key={s.label} className="analytics-bar-row">
+                        <span className="analytics-bar-label">{s.label}</span>
+                        <div className="analytics-bar-track">
+                          <div className="analytics-bar-fill" style={{ width: `${Math.max(s.pct, 2)}%`, background: s.color }} />
+                        </div>
+                        <span className="analytics-bar-value">{s.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="analytics-chart-card">
+                  <h4 className="analytics-chart-title">Top Subjects</h4>
+                  <div className="analytics-status-bars">
+                    {subjectBreakdown.length === 0 ? (
+                      <p style={{ color: 'var(--text-light)', fontSize: '0.82rem', textAlign: 'center', padding: 20 }}>No data yet</p>
+                    ) : subjectBreakdown.map(([subject, count], i) => (
+                      <div key={subject} className="analytics-bar-row">
+                        <span className="analytics-bar-label" title={subject}>{subject.length > 14 ? subject.slice(0, 14) + '…' : subject}</span>
+                        <div className="analytics-bar-track">
+                          <div className="analytics-bar-fill" style={{ width: `${(count / (subjectBreakdown[0]?.[1] || 1)) * 100}%`, background: ['var(--gold)', 'var(--pink)', '#2196f3', '#4caf50', '#ff9800', '#9c27b0'][i % 6] }} />
+                        </div>
+                        <span className="analytics-bar-value">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {bookingsByMonth.length > 0 && (
+                <div className="analytics-chart-card analytics-chart-wide">
+                  <h4 className="analytics-chart-title">Monthly Trend (Last 6 Months)</h4>
+                  <div className="analytics-monthly-chart">
+                    {bookingsByMonth.map((m, i) => {
+                      const maxCount = Math.max(...bookingsByMonth.map(x => x.count), 1)
+                      return (
+                        <div key={i} className="analytics-month-col">
+                          <span className="analytics-month-value">{m.count}</span>
+                          <div className="analytics-month-bar-wrap">
+                            <div className="analytics-month-bar" style={{ height: `${(m.count / maxCount) * 100}%` }} />
+                          </div>
+                          <span className="analytics-month-label">{m.label}</span>
+                          <span className="analytics-month-revenue">${m.revenue}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="analytics-quick-stats">
+                <div className="analytics-quick-stat">
+                  <Users size={16} />
+                  <span>Unique Students: <strong>{new Set(bookings.map(b => b.student_email).filter(Boolean)).size}</strong></span>
+                </div>
+                <div className="analytics-quick-stat">
+                  <Video size={16} />
+                  <span>Meet Requests: <strong>{meetRequests + meetLinked}</strong> ({meetLinked} linked)</span>
+                </div>
+                <div className="analytics-quick-stat">
+                  <Mail size={16} />
+                  <span>Enquiries: <strong>{enquiries.length}</strong></span>
+                </div>
+                <div className="analytics-quick-stat">
+                  <TrendingUp size={16} />
+                  <span>This Month: <strong>{bookings.filter(b => { const d = new Date(b.created_at); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() }).length}</strong> bookings</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Activity Log Tab ── */}
           {activeTab === 'activity' && (
             <div className="admin-tab-content">
               <div className="admin-activity-header">

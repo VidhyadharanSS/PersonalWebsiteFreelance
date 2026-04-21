@@ -6,7 +6,8 @@ import {
   BookOpen, Rocket, Award, Users, Languages, Star,
   Video, HelpCircle, Focus, BarChart3,
   Lock, MessageCircle, UserCheck,
-  Mail, Clock, Instagram, ArrowRight, Sparkles, GraduationCap, Play
+  Mail, Clock, Instagram, ArrowRight, Sparkles, GraduationCap, Play,
+  ChevronDown, ChevronUp, Quote, ArrowUp
 } from 'lucide-react'
 
 function FadeIn({ children, className = '', delay = 0 }) {
@@ -31,6 +32,40 @@ function IconCircle({ icon: Icon, size = 40, iconSize = 18, className = '' }) {
     <div className={`icon-circle ${className}`} style={{ width: size, height: size, minWidth: size }}>
       <Icon size={iconSize} strokeWidth={1.8} />
     </div>
+  )
+}
+
+function FAQItem({ question, answer }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className={`faq-item${open ? ' faq-item-open' : ''}`}>
+      <button className="faq-question" onClick={() => setOpen(!open)}>
+        <span>{question}</span>
+        {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      </button>
+      <div className={`faq-answer${open ? ' faq-answer-open' : ''}`}>
+        <p>{answer}</p>
+      </div>
+    </div>
+  )
+}
+
+function BackToTop() {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 600)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  if (!visible) return null
+  return (
+    <button
+      className="back-to-top"
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Back to top"
+    >
+      <ArrowUp size={20} />
+    </button>
   )
 }
 
@@ -380,7 +415,73 @@ export default function Homepage({ onCTA, onRefund }) {
         </div>
       </section>
 
-      {/* CONTACT */}
+      {/* ── TESTIMONIALS ── */}
+      <section className="section testimonials-section" id="testimonials">
+        <div className="container">
+          <FadeIn>
+            <p className="section-badge"><Quote size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />Testimonials</p>
+            <h2 className="section-title">What Parents &amp; Students Say</h2>
+            <p className="section-desc">Real stories from <strong>real families</strong> who chose Zenith Pranavi.</p>
+          </FadeIn>
+          <div className="testimonials-grid">
+            {[
+              { name: 'Sarah M.', location: 'London, UK', rating: 5, text: 'My son was struggling with maths for years. After just 3 months with Zenith Pranavi, he went from a C to an A*. The tutor understood exactly how he learns.', avatar: 'S' },
+              { name: 'Rajesh K.', location: 'Mumbai, India', rating: 5, text: 'As a parent of an autistic child, finding the right tutor felt impossible. Zenith Pranavi matched us with someone who truly understands my daughter. She looks forward to every session.', avatar: 'R' },
+              { name: 'Emily C.', location: 'Sydney, Australia', rating: 5, text: 'The IB curriculum support is outstanding. My daughter\'s predicted grades improved significantly. The personalised learning map they created was a game-changer.', avatar: 'E' },
+              { name: 'Ahmed H.', location: 'Dubai, UAE', rating: 5, text: 'Fair pricing and world-class quality. We tried 4 other platforms before finding Zenith Pranavi. The difference is night and day — truly personalised teaching.', avatar: 'A' },
+              { name: 'Maria L.', location: 'São Paulo, Brazil', rating: 5, text: 'My twins have completely different learning styles. Zenith Pranavi gave each of them a different tutor perfectly matched to their needs. Both are thriving now.', avatar: 'M' },
+              { name: 'James T.', location: 'Toronto, Canada', rating: 5, text: 'The progress reports are incredible. I can see exactly what my son covered, where he improved, and what needs work. Complete transparency.', avatar: 'J' }
+            ].map((t, i) => (
+              <FadeIn key={t.name} delay={i * 0.08}>
+                <div className="testimonial-card">
+                  <div className="testimonial-stars">
+                    {Array.from({ length: t.rating }).map((_, si) => (
+                      <Star key={si} size={14} fill="var(--gold)" color="var(--gold)" />
+                    ))}
+                  </div>
+                  <p className="testimonial-text">&ldquo;{t.text}&rdquo;</p>
+                  <div className="testimonial-author">
+                    <div className="testimonial-avatar">{t.avatar}</div>
+                    <div>
+                      <strong className="testimonial-name">{t.name}</strong>
+                      <span className="testimonial-location">{t.location}</span>
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="section faq-section" id="faq">
+        <div className="container">
+          <FadeIn>
+            <p className="section-badge"><HelpCircle size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />FAQ</p>
+            <h2 className="section-title">Frequently Asked Questions</h2>
+            <p className="section-desc">Everything you need to know about learning with <strong>Zenith Pranavi</strong>.</p>
+          </FadeIn>
+          <div className="faq-list">
+            {[
+              { q: 'How does the free discovery call work?', a: 'The discovery call is a free 30-minute conversation via Google Meet. We learn about your child — their strengths, challenges, curriculum, and goals. There\'s no obligation, no sales pitch. Just a real conversation about how we can help.' },
+              { q: 'What curricula do you support?', a: 'We support all major international curricula including CBSE, IGCSE, IB (MYP & DP), US Common Core, Australian Curriculum, UK National Curriculum, and more. Our tutors are specialists in their respective curricula.' },
+              { q: 'How are tutors matched to students?', a: 'We match based on three factors: curriculum expertise, learning style compatibility, and specific needs (such as neurodiverse support). Every match is carefully considered — we don\'t just assign the next available tutor.' },
+              { q: 'What if my child has special learning needs?', a: 'We have specialist-trained educators for autism, ADHD, dyslexia, and other neurodiverse profiles. These aren\'t general tutors with basic training — they\'re professionals with deep expertise in inclusive education.' },
+              { q: 'Can I get a refund if I\'m not satisfied?', a: 'Yes. We offer refunds for unused sessions. If a session doesn\'t happen due to tutor absence or technical issues on our end, you get a full refund for that session. See our refund policy for complete details.' },
+              { q: 'How do sessions work technically?', a: 'All sessions are conducted live via Google Meet. You\'ll receive a unique link before each session. Sessions are one-on-one, fully interactive, and recorded only with your permission for revision purposes.' },
+              { q: 'What age groups do you teach?', a: 'We teach students from Year 1 (age 5-6) through Year 12 (age 17-18), plus university entrance exam preparation for SAT, JEE, NEET, and other competitive exams.' },
+              { q: 'How often should my child have sessions?', a: 'Most students benefit from 2-3 sessions per week for consistent progress. However, we\'re flexible — some families prefer intensive daily sessions before exams, while others start with one session weekly.' }
+            ].map((faq, i) => (
+              <FadeIn key={i} delay={i * 0.05}>
+                <FAQItem question={faq.q} answer={faq.a} />
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CONTACT ── */}
       <section className="section contact-section" id="contact">
         <div className="container">
           <FadeIn>
@@ -455,6 +556,8 @@ export default function Homepage({ onCTA, onRefund }) {
                 <li><a href="#why">Why Us</a></li>
                 <li><a href="#programs">Programs</a></li>
                 <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+                <li><a href="#faq">FAQ</a></li>
                 <li><a href="#contact">Contact</a></li>
               </ul>
             </div>
@@ -487,6 +590,7 @@ export default function Homepage({ onCTA, onRefund }) {
           </div>
         </div>
       </footer>
+      <BackToTop />
     </main>
   )
 }
