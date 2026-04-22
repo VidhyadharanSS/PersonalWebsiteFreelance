@@ -341,7 +341,7 @@ export default function Homepage({ onCTA, onRefund }) {
               help every child discover the <span className="underline-text">kind of smart they already are</span>. At
               Zenith Pranavi, that is not a philosophy. It is our daily practice.&rdquo;
             </blockquote>
-            <p className="quote-attribution">&mdash; Zenith Pranavi Education</p>
+            <p className="quote-attribution">&mdash; zped (Zenith Pranavi Education)</p>
           </FadeIn>
         </div>
       </section>
@@ -657,11 +657,11 @@ export default function Homepage({ onCTA, onRefund }) {
               <div className="contact-info">
                 <div className="contact-info-card">
                   <IconCircle icon={Mail} />
-                  <div><h3>Email Us</h3><p>hello@zped.org</p></div>
+                  <div><h3>Email Us</h3><p><a href="mailto:hello@zped.org">hello@zped.org</a></p></div>
                 </div>
                 <div className="contact-info-card">
                   <IconCircle icon={Globe} />
-                  <div><h3>Website</h3><p>www.zped.org</p></div>
+                  <div><h3>Website</h3><p><a href="https://zped.org" rel="canonical">zped.org</a></p></div>
                 </div>
                 <div className="contact-info-card">
                   <IconCircle icon={Clock} />
@@ -684,10 +684,10 @@ export default function Homepage({ onCTA, onRefund }) {
           <div className="footer-grid">
             <div className="footer-brand-col">
               <div className="footer-brand-row">
-                <img src="/logo-icon.jpeg" alt="Zenith Pranavi" className="footer-logo-img" />
-                <span className="brand-name">Zenith Pranavi</span>
+                <img src="/logo-icon.jpeg" alt="zped — Zenith Pranavi" className="footer-logo-img" />
+                <span className="brand-name">zped</span>
               </div>
-              <p className="footer-tagline">Where Every Child Reaches Their Zenith</p>
+              <p className="footer-tagline">by Zenith Pranavi — Where Every Child Reaches Their Zenith</p>
               <div className="footer-social">
                 <a href="https://www.instagram.com/mathmatisa?igsh=eWc3cXc3ODB2ODJy" target="_blank" rel="noopener noreferrer" className="footer-social-link" title="Instagram">
                   <Instagram size={18} />
@@ -730,7 +730,7 @@ export default function Homepage({ onCTA, onRefund }) {
             <span>Your information is protected</span>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2026 Zenith Pranavi Education. All rights reserved.</p>
+            <p>&copy; 2026 zped (Zenith Pranavi Education). All rights reserved. <a href="https://zped.org" style={{color:'var(--gold)',textDecoration:'none'}}>zped.org</a></p>
           </div>
         </div>
       </footer>

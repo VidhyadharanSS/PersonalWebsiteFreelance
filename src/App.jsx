@@ -7,6 +7,7 @@ import AdminPanel from './components/AdminPanel'
 import RegisterModal from './components/RegisterModal'
 import AuthModal from './components/AuthModal'
 import RefundModal from './components/RefundModal'
+import SEOHead from './components/SEOHead'
 import { useAuth } from './context/AuthContext'
 import { ADMIN_EMAILS } from './lib/supabase'
 
@@ -40,13 +41,14 @@ export default function App() {
           <img src="/logo-icon.jpeg" alt="ZP" className="loading-logo" />
         </div>
         <div className="loading-spinner" />
-        <p className="loading-text">Zenith Pranavi</p>
+        <p className="loading-text">zped <span style={{fontSize:'0.5em',opacity:0.7}}>by Zenith Pranavi</span></p>
       </div>
     )
   }
 
   return (
     <ToastProvider>
+      <SEOHead view={view} />
       <Navbar
         onCTA={handleCTA}
         onSignIn={handleSignIn}
