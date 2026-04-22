@@ -54,31 +54,6 @@
     }
   ],
 
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "zenith-pranavi.vercel.app"
-        }
-      ],
-      "destination": "https://zped.org/:path*",
-      "permanent": true
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.zped.org"
-        }
-      ],
-      "destination": "https://zped.org/:path*",
-      "permanent": true
-    }
-  ],
-
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

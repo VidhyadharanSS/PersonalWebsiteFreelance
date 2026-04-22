@@ -13,10 +13,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 })
 
 // Determine the correct site URL for redirects
-export const SITE_URL =
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? window.location.origin
-    : 'https://zenith-pranavi.vercel.app'
+// Use the current origin for redirects so it works on any domain
+export const SITE_URL = window.location.origin
 
 export const PRICING = {
   'Year 1-6': 13,
