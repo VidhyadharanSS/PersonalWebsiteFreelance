@@ -7,7 +7,7 @@ import {
   Video, HelpCircle, Focus, BarChart3,
   Lock, MessageCircle, UserCheck,
   Mail, Clock, Instagram, ArrowRight, Sparkles, GraduationCap, Play,
-  ChevronDown, ChevronUp, Quote, ArrowUp
+  ChevronDown, ChevronUp, Quote, ArrowUp, X
 } from 'lucide-react'
 
 function FadeIn({ children, className = '', delay = 0 }) {
@@ -130,9 +130,27 @@ export default function Homepage({ onCTA, onRefund }) {
       <section className="hero" id="home">
         <div className="hero-content">
           <FadeIn>
-            <div className="hero-emblem">
-              <div className="emblem-outer">
-                <img src="/logo-main.jpeg" alt="Zenith Pranavi" className="hero-logo-img" />
+            <div className="hero-visual">
+              <div className="hero-image-container">
+                <img 
+                  src="https://images.unsplash.com/photo-1588072432836-e10032774350?w=700&h=500&fit=crop" 
+                  alt="Children learning online" 
+                  className="hero-main-image" 
+                />
+                <div className="hero-floating-card hero-card-1">
+                  <div className="hero-card-icon">🎓</div>
+                  <div className="hero-card-text">
+                    <strong>98%</strong>
+                    <span>Success Rate</span>
+                  </div>
+                </div>
+                <div className="hero-floating-card hero-card-2">
+                  <div className="hero-card-icon">🌍</div>
+                  <div className="hero-card-text">
+                    <strong>50+</strong>
+                    <span>Countries</span>
+                  </div>
+                </div>
               </div>
             </div>
           </FadeIn>
@@ -180,9 +198,15 @@ export default function Homepage({ onCTA, onRefund }) {
           <div className="why-grid">
             <div className="why-emblem-col">
               <FadeIn>
-                <div className="why-emblem-wrapper">
-                  <div className="why-emblem-circle">
-                    <img src="/logo-main.jpeg" alt="Zenith Pranavi" className="why-logo-img" />
+                <div className="why-image-wrapper">
+                  <img 
+                    src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=600&fit=crop&crop=faces" 
+                    alt="Kids studying together" 
+                    className="why-hero-image" 
+                  />
+                  <div className="why-image-badge">
+                    <span className="why-badge-number">12K+</span>
+                    <span className="why-badge-text">Happy Students</span>
                   </div>
                 </div>
               </FadeIn>
@@ -411,6 +435,126 @@ export default function Homepage({ onCTA, onRefund }) {
               </div>
               <p className="cta-note">No credit card &middot; No commitment &middot; Just learning</p>
             </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ── HOW WE'RE DIFFERENT ── */}
+      <section className="section comparison-section" id="comparison">
+        <div className="container">
+          <FadeIn>
+            <p className="section-badge"><Award size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />The Difference</p>
+            <h2 className="section-title">How We Stand <strong>Apart</strong></h2>
+            <p className="section-desc">See why families choose Zenith Pranavi over traditional tutoring.</p>
+          </FadeIn>
+          <div className="comparison-grid">
+            <FadeIn>
+              <div className="comparison-card comparison-card-other">
+                <div className="comparison-header">
+                  <span className="comparison-label">Traditional Tutoring</span>
+                </div>
+                <ul className="comparison-list">
+                  <li className="comparison-item comparison-item-bad">
+                    <X size={16} />
+                    <span>One-size-fits-all approach</span>
+                  </li>
+                  <li className="comparison-item comparison-item-bad">
+                    <X size={16} />
+                    <span>Random tutor assignment</span>
+                  </li>
+                  <li className="comparison-item comparison-item-bad">
+                    <X size={16} />
+                    <span>No progress tracking</span>
+                  </li>
+                  <li className="comparison-item comparison-item-bad">
+                    <X size={16} />
+                    <span>Limited curriculum support</span>
+                  </li>
+                  <li className="comparison-item comparison-item-bad">
+                    <X size={16} />
+                    <span>No special needs expertise</span>
+                  </li>
+                  <li className="comparison-item comparison-item-bad">
+                    <X size={16} />
+                    <span>Rigid scheduling</span>
+                  </li>
+                </ul>
+              </div>
+            </FadeIn>
+            <FadeIn delay={0.15}>
+              <div className="comparison-card comparison-card-us">
+                <div className="comparison-header">
+                  <span className="comparison-label">Zenith Pranavi</span>
+                  <span className="comparison-badge">Recommended</span>
+                </div>
+                <ul className="comparison-list">
+                  <li className="comparison-item comparison-item-good">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <span><strong>Personalised</strong> learning paths</span>
+                  </li>
+                  <li className="comparison-item comparison-item-good">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <span><strong>Expert-matched</strong> tutors</span>
+                  </li>
+                  <li className="comparison-item comparison-item-good">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <span><strong>Monthly reports</strong> for parents</span>
+                  </li>
+                  <li className="comparison-item comparison-item-good">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <span><strong>All curricula</strong> worldwide</span>
+                  </li>
+                  <li className="comparison-item comparison-item-good">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <span><strong>Specialist</strong> SEN support</span>
+                  </li>
+                  <li className="comparison-item comparison-item-good">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <span><strong>Flexible</strong> 24/7 scheduling</span>
+                  </li>
+                </ul>
+              </div>
+            </FadeIn>
+          </div>
+        </div>
+      </section>
+
+      {/* ── MEET OUR TUTORS ── */}
+      <section className="section tutors-section" id="tutors">
+        <div className="container">
+          <FadeIn>
+            <p className="section-badge"><Users size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />Our Team</p>
+            <h2 className="section-title">Meet Our <strong>Expert Tutors</strong></h2>
+            <p className="section-desc">Carefully selected educators who are passionate about student success.</p>
+          </FadeIn>
+          <div className="tutors-grid">
+            {[
+              { name: 'Dr. Sarah Chen', role: 'IB Mathematics', exp: '12 years', rating: '4.9', photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=faces', badge: 'Top Rated' },
+              { name: 'James Wilson', role: 'IGCSE Sciences', exp: '8 years', rating: '4.8', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=faces', badge: 'Expert' },
+              { name: 'Priya Sharma', role: 'Special Needs', exp: '10 years', rating: '5.0', photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=faces', badge: 'SEN Specialist' },
+              { name: 'Michael Torres', role: 'SAT/ACT Prep', exp: '7 years', rating: '4.9', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces', badge: 'Test Expert' }
+            ].map((tutor, i) => (
+              <FadeIn key={tutor.name} delay={i * 0.1}>
+                <div className="tutor-card">
+                  <div className="tutor-image-wrap">
+                    <img src={tutor.photo} alt={tutor.name} className="tutor-image" />
+                    <span className="tutor-badge">{tutor.badge}</span>
+                  </div>
+                  <h3 className="tutor-name">{tutor.name}</h3>
+                  <p className="tutor-role">{tutor.role}</p>
+                  <div className="tutor-meta">
+                    <span className="tutor-exp">{tutor.exp} exp</span>
+                    <span className="tutor-rating">
+                      <Star size={12} fill="var(--gold)" color="var(--gold)" />
+                      {tutor.rating}
+                    </span>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+          <FadeIn delay={0.4}>
+            <p className="tutors-cta-text">All tutors are background-checked, certified, and continuously trained.</p>
           </FadeIn>
         </div>
       </section>

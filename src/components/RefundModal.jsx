@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Shield, Mail, Clock, Calculator, AlertTriangle, X } from 'lucide-react'
+import { Shield, Mail, Calculator, X } from 'lucide-react'
 
 export default function RefundModal({ open, onClose }) {
   useEffect(() => {
@@ -77,22 +77,6 @@ export default function RefundModal({ open, onClose }) {
           </div>
 
           <div className="refund-divider" />
-
-          <div className="refund-no-refund">
-            <AlertTriangle size={18} />
-            <div>
-              <h4>No refund for:</h4>
-              <p>&ldquo;Child not interested&rdquo;, &ldquo;Found cheaper option&rdquo;, or missing class without 6-hour notice.</p>
-            </div>
-          </div>
-
-          <div className="refund-rule">
-            <Clock size={18} />
-            <div>
-              <h4>7-Day Rule:</h4>
-              <p>Miss 3 classes in 7 days without 6-hour notice = remaining sessions forfeited.</p>
-            </div>
-          </div>
 
           <div className="refund-calculation">
             <Calculator size={20} />
