@@ -43,6 +43,16 @@ export default function SEOHead({ view = 'home' }) {
   useEffect(() => {
     const config = SEO_CONFIG[view] || SEO_CONFIG.home
 
+    // --- Google Site Verification ---
+    // Injects the verification tag required by Google Search Console
+    let verificationTag = document.querySelector('meta[name="google-site-verification"]')
+    if (!verificationTag) {
+      verificationTag = document.createElement('meta')
+      verificationTag.name = 'google-site-verification'
+      document.head.appendChild(verificationTag)
+    }
+    verificationTag.setAttribute('content', 'IxQmW9fqF0ROnm4r5gzTTUyYNdXIUiG8sKyLw6uMl0o')
+
     // Update document title
     document.title = config.title
 
