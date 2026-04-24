@@ -6,13 +6,13 @@
   <!-- Homepage — Primary landing page -->
   <url>
     <loc>https://zped.org/</loc>
-    <lastmod>2025-07-10</lastmod>
+    <lastmod>2025-07-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://zped.org/logo-main.jpeg</image:loc>
-      <image:title>zped — Zenith Pranavi Logo</image:title>
-      <image:caption>zped (Zenith Pranavi) — Premium Online Tutoring for Every Child</image:caption>
+      <image:loc>https://zped.org/logo-search.jpeg</image:loc>
+      <image:title>Zenith Pranavi (zped) — Official Logo</image:title>
+      <image:caption>Zenith Pranavi (zped) — Premium 1-on-1 Online Tutoring at zped.org</image:caption>
     </image:image>
   </url>
 
