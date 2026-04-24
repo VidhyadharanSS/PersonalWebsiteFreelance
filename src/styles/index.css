@@ -7,6 +7,7 @@
 /* ──────────── LIGHT THEME (Default) ──────────── */
 :root,
 [data-theme="light"] {
+  color-scheme: light;
   --navy: #1e2a4a;
   --navy-dark: #151e36;
   --navy-light: #2a3a5e;
@@ -63,6 +64,7 @@
 
 /* ──────────── DARK THEME ──────────── */
 [data-theme="dark"] {
+  color-scheme: dark;
   --navy: #8ba3d1; --navy-dark: #0d1117; --navy-light: #a3b8d8; --navy-medium: #1c2333; --navy-pale: rgba(139,163,209,0.08);
   --gold: #d4b96e; --gold-light: #e0c97f; --gold-dark: #c5a55a; --gold-pale: rgba(212,185,110,0.10);
   --cream: #0d1117; --cream-light: #161b22; --cream-dark: #21262d; --cream-warm: #131820;
@@ -138,6 +140,43 @@
 [data-theme="dark"] .reg-step-dot { background: var(--bg-input); border-color: var(--border-subtle); color: var(--text-muted); }
 [data-theme="dark"] .reg-step-dot.active { background: var(--gold); color: var(--navy-dark); border-color: var(--gold); }
 [data-theme="dark"] .reg-step-dot.completed { background: var(--gold-light); color: var(--navy-dark); border-color: var(--gold-light); }
+
+/* ── DARK MODE TEXT CONTRAST GUARDS (explicit overrides to prevent dark-on-dark) ── */
+[data-theme="dark"] .section-title,
+[data-theme="dark"] .section-title-left,
+[data-theme="dark"] .section-title em,
+[data-theme="dark"] .section-title-left em,
+[data-theme="dark"] .section-title strong:not([class]),
+[data-theme="dark"] .section-title-left strong {
+  color: var(--text-dark);
+}
+[data-theme="dark"] .section-desc,
+[data-theme="dark"] .why-description,
+[data-theme="dark"] .hero-desc {
+  color: var(--text-warm);
+}
+[data-theme="dark"] .why-description em,
+[data-theme="dark"] .why-description strong,
+[data-theme="dark"] .hero-desc strong {
+  color: var(--text-dark);
+}
+[data-theme="dark"] .why-feature-card strong,
+[data-theme="dark"] .comparison-card strong,
+[data-theme="dark"] .experience-card strong,
+[data-theme="dark"] .program-card strong {
+  color: var(--text-dark);
+}
+[data-theme="dark"] .why-feature-card span,
+[data-theme="dark"] .comparison-card span,
+[data-theme="dark"] .experience-card p,
+[data-theme="dark"] .program-card p {
+  color: var(--text-warm);
+}
+[data-theme="dark"] .why-feature-card span strong,
+[data-theme="dark"] .experience-card p strong,
+[data-theme="dark"] .program-card p strong {
+  color: var(--text-dark);
+}
 
 /* ──────────── RESET ──────────── */
 *,*::before,*::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1616,31 +1655,33 @@ strong { font-weight: 700; color: var(--text-dark); }
 [data-theme="dark"] .hero-main-image { border-color: rgba(212,185,110,0.25); }
 
 /* ══════════════════════════════════════════════════════════════
-   WHY SECTION (Kids Image with Badge)
+   WHY SECTION (Kids Image with Badge — badge sits BELOW image, no overlap)
    ══════════════════════════════════════════════════════════════ */
 .why-image-wrapper {
   position: relative; width: 340px; margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
 .why-hero-image {
   width: 100%; height: 380px; object-fit: cover; border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg); border: 2px solid rgba(197,165,90,0.2);
 }
 .why-image-badge {
-  position: absolute; bottom: 16px; right: 16px; background: var(--gold);
-  color: var(--navy-dark); padding: 12px 18px; border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg); display: flex; flex-direction: column; align-items: center;
+  background: var(--gold); color: var(--navy-dark);
+  padding: 10px 20px; border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  display: inline-flex; align-items: baseline; gap: 8px;
   border: 2px solid var(--gold-light);
+  font-family: var(--font-serif);
 }
 .why-badge-number {
-  font-family: var(--font-serif); font-size: 1.5rem; font-weight: 800; line-height: 1;
+  font-size: 1.3rem; font-weight: 800; line-height: 1;
 }
 .why-badge-text {
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-  margin-top: 2px;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
 }
 
 [data-theme="dark"] .why-hero-image { border-color: rgba(212,185,110,0.15); }
-[data-theme="dark"] .why-image-badge { background: var(--gold-dark); color: #0d1117; }
+[data-theme="dark"] .why-image-badge { background: var(--gold-dark); color: #0d1117; border-color: var(--gold); }
 
 /* ══════════════════════════════════════════════════════════════
    COMPARISON SECTION (How We're Different)
@@ -1772,10 +1813,10 @@ img[src=""] { opacity: 0; }
   .hero-card-2 { right: 10px; bottom: 15%; }
   
   /* Why section image */
-  .why-image-wrapper { width: 280px; }
+  .why-image-wrapper { width: 280px; gap: 14px; }
   .why-hero-image { height: 320px; }
-  .why-image-badge { bottom: 12px; right: 12px; padding: 10px 14px; }
-  .why-badge-number { font-size: 1.2rem; }
+  .why-image-badge { padding: 9px 16px; }
+  .why-badge-number { font-size: 1.15rem; }
   
   /* Comparison section */
   .comparison-grid { grid-template-columns: 1fr; gap: 16px; max-width: 480px; margin: 0 auto; }
@@ -1856,11 +1897,11 @@ img[src=""] { opacity: 0; }
   .hero-card-2 { right: 5px; bottom: 12%; }
   
   /* Why image mobile */
-  .why-image-wrapper { width: 100%; max-width: 300px; }
+  .why-image-wrapper { width: 100%; max-width: 300px; gap: 12px; }
   .why-hero-image { height: 280px; border-radius: var(--radius-lg); }
-  .why-image-badge { bottom: 10px; right: 10px; padding: 8px 12px; }
-  .why-badge-number { font-size: 1rem; }
-  .why-badge-text { font-size: 0.56rem; }
+  .why-image-badge { padding: 8px 16px; }
+  .why-badge-number { font-size: 1.05rem; }
+  .why-badge-text { font-size: 0.6rem; letter-spacing: 1px; }
   
   /* Comparison mobile */
   .comparison-card { padding: 18px; }
