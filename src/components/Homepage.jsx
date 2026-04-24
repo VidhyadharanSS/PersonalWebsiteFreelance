@@ -200,8 +200,8 @@ export default function Homepage({ onCTA, onRefund }) {
               <FadeIn>
                 <div className="why-image-wrapper">
                   <img 
-                    src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=600&fit=crop&crop=faces" 
-                    alt="Kids studying together" 
+                    src="/hero-study.jpeg" 
+                    alt="Zenith Pranavi learning" 
                     className="why-hero-image" 
                   />
                   <div className="why-image-badge">
@@ -516,46 +516,6 @@ export default function Homepage({ onCTA, onRefund }) {
               </div>
             </FadeIn>
           </div>
-        </div>
-      </section>
-
-      {/* ── MEET OUR TUTORS ── */}
-      <section className="section tutors-section" id="tutors">
-        <div className="container">
-          <FadeIn>
-            <p className="section-badge"><Users size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />Our Team</p>
-            <h2 className="section-title">Meet Our <strong>Expert Tutors</strong></h2>
-            <p className="section-desc">Carefully selected educators who are passionate about student success.</p>
-          </FadeIn>
-          <div className="tutors-grid">
-            {[
-              { name: 'Dr. Sarah Chen', role: 'IB Mathematics', exp: '12 years', rating: '4.9', photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=faces', badge: 'Top Rated' },
-              { name: 'James Wilson', role: 'IGCSE Sciences', exp: '8 years', rating: '4.8', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=faces', badge: 'Expert' },
-              { name: 'Priya Sharma', role: 'Special Needs', exp: '10 years', rating: '5.0', photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=faces', badge: 'SEN Specialist' },
-              { name: 'Michael Torres', role: 'SAT/ACT Prep', exp: '7 years', rating: '4.9', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces', badge: 'Test Expert' }
-            ].map((tutor, i) => (
-              <FadeIn key={tutor.name} delay={i * 0.1}>
-                <div className="tutor-card">
-                  <div className="tutor-image-wrap">
-                    <img src={tutor.photo} alt={tutor.name} className="tutor-image" />
-                    <span className="tutor-badge">{tutor.badge}</span>
-                  </div>
-                  <h3 className="tutor-name">{tutor.name}</h3>
-                  <p className="tutor-role">{tutor.role}</p>
-                  <div className="tutor-meta">
-                    <span className="tutor-exp">{tutor.exp} exp</span>
-                    <span className="tutor-rating">
-                      <Star size={12} fill="var(--gold)" color="var(--gold)" />
-                      {tutor.rating}
-                    </span>
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-          <FadeIn delay={0.4}>
-            <p className="tutors-cta-text">All tutors are background-checked, certified, and continuously trained.</p>
-          </FadeIn>
         </div>
       </section>
 

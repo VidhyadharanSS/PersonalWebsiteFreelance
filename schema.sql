@@ -54,6 +54,7 @@ CREATE TABLE bookings (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id         UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     student_name    TEXT NOT NULL,
+    student_email   TEXT DEFAULT NULL,
     tutor_name      TEXT NOT NULL,
     subject         TEXT NOT NULL,
     booking_date    DATE NOT NULL,
@@ -62,6 +63,7 @@ CREATE TABLE bookings (
     status          TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')),
     google_meet     BOOLEAN DEFAULT true,
     meet_link       TEXT DEFAULT NULL,
+    admin_notes     TEXT DEFAULT NULL,
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -202,9 +204,11 @@ INSERT INTO tutors (name, subjects, price_hour, rating, sessions_count, status) 
 -- MIGRATION ONLY — If you already have data, run ONLY this section:
 -- ═══════════════════════════════════════════════════════════════════════
 -- 
--- -- Add Google Meet columns to existing bookings table
--- ALTER TABLE bookings ADD COLUMN IF NOT EXISTS google_meet BOOLEAN DEFAULT true;
--- ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meet_link TEXT DEFAULT NULL;
+-- -- Add Google Meet + email + notes columns to existing bookings table
+-- ALTER TABLE bookings ADD COLUMN IF NOT EXISTS google_meet   BOOLEAN DEFAULT true;
+-- ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meet_link     TEXT DEFAULT NULL;
+-- ALTER TABLE bookings ADD COLUMN IF NOT EXISTS student_email TEXT DEFAULT NULL;
+-- ALTER TABLE bookings ADD COLUMN IF NOT EXISTS admin_notes   TEXT DEFAULT NULL;
 -- 
 -- -- Add admin policies for v72653666@gmail.com
 -- CREATE POLICY "Admin v72653666 can read all bookings"

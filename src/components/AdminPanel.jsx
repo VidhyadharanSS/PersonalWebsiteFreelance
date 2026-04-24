@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { supabase } from '../lib/supabase'
+import { sendBookingStatusUpdate, sendMeetLinkEmail } from '../lib/email'
 import {
   Calendar, Mail, Clock, Search, Video, Link2,
   RefreshCw, CheckCircle, XCircle, Filter, DollarSign,
@@ -176,6 +177,19 @@ export default function AdminPanel() {
         message: `Booking for ${booking?.student_name || 'Student'} marked as ${newStatus}`,
         time: new Date().toISOString()
       }, ...prev].slice(0, 50))
+
+      // ── Email the student about the status change (fire-and-forget) ──
+      if (booking?.student_email) {
+        sendBookingStatusUpdate(booking.student_email, {
+          studentName: booking.student_name,
+          subject: booking.subject,
+          date: booking.booking_date,
+          time: booking.booking_time,
+          status: newStatus,
+          meetLink: booking.meet_link || null
+        })
+      }
+
       toast(`Booking ${newStatus} successfully.`, 'success')
     } catch (err) {
       toast('Failed to update: ' + err.message, 'error')
@@ -198,6 +212,19 @@ export default function AdminPanel() {
       setBookings(prev => prev.map(b => b.id === id ? { ...b, meet_link: link } : b))
       setShowMeetInput(null)
       setMeetLinkInputs(prev => ({ ...prev, [id]: '' }))
+
+      // ── Email the student with their Meet link (fire-and-forget) ──
+      const booking = bookings.find(b => b.id === id)
+      if (booking?.student_email) {
+        sendMeetLinkEmail(booking.student_email, {
+          studentName: booking.student_name,
+          subject: booking.subject,
+          date: booking.booking_date,
+          time: booking.booking_time,
+          meetLink: link
+        })
+      }
+
       toast('Google Meet link added successfully!', 'success')
     } catch (err) {
       toast('Failed to add meet link: ' + err.message, 'error')
