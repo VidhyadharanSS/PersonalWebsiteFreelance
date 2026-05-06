@@ -5,7 +5,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    host: true
+    host: true,
+    // Allow all hosts including the Zoho Code IDE preview domain (*.zcodecorp.in)
+    allowedHosts: true
+  },
+  preview: {
+    port: 3000,
+    host: true,
+    allowedHosts: true
   },
   build: {
     outDir: 'dist',

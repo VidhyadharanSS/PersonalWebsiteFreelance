@@ -1,15 +1,22 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { supabase } from '../lib/supabase'
 import { sendBookingStatusUpdate, sendMeetLinkEmail } from '../lib/email'
+import {
+  logBookingStatusChange, logMeetLinkAdded, logNoteSaved,
+  logBulkStatusChange, logBulkDelete, logCSVExport,
+  logEnquiryDeleted, logCalendarSync, logEmailSent,
+  logAdminPanelViewed, fetchAuditLogs, AUDIT_ACTIONS, SEVERITY
+} from '../lib/auditLog'
 import {
   Calendar, Mail, Clock, Search, Video, Link2,
   RefreshCw, CheckCircle, XCircle, Filter, DollarSign,
   CalendarPlus, ChevronLeft, ChevronRight, Download,
   Eye, Activity, TrendingUp,
   FileText, Send, AlertCircle, ChevronDown, ChevronUp,
-  BarChart3, Zap, Users, Trash2
+  BarChart3, Zap, Users, Trash2, Shield,
+  BookOpen, ArrowUpRight, Sparkles
 } from 'lucide-react'
 
 // ── Google Calendar URL builder with Google Meet conferencing ──
@@ -19,10 +26,9 @@ function buildGoogleCalendarUrl(booking) {
   params.set('action', 'TEMPLATE')
   params.set('text', `Zenith Pranavi — ${booking.subject} (${booking.tutor_name || 'Session'})`)
 
-  // Build start/end datetime in UTC-ish format YYYYMMDDTHHMMSS
   if (booking.booking_date && booking.booking_time) {
-    const dateStr = booking.booking_date // "YYYY-MM-DD"
-    const timeStr = booking.booking_time  // "09:00 AM"
+    const dateStr = booking.booking_date
+    const timeStr = booking.booking_time
     const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
     if (match) {
       let hours = parseInt(match[1], 10)
@@ -31,7 +37,7 @@ function buildGoogleCalendarUrl(booking) {
       if (ampm === 'PM' && hours !== 12) hours += 12
       if (ampm === 'AM' && hours === 12) hours = 0
       const startDt = new Date(`${dateStr}T${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:00`)
-      const endDt = new Date(startDt.getTime() + 60 * 60 * 1000) // 1 hour session
+      const endDt = new Date(startDt.getTime() + 60 * 60 * 1000)
       const fmt = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
       params.set('dates', `${fmt(startDt)}/${fmt(endDt)}`)
     }
@@ -48,16 +54,43 @@ function buildGoogleCalendarUrl(booking) {
   ].join('\n'))
 
   params.set('location', 'Google Meet (auto-generated)')
-  // Request Google Meet conferencing
   params.set('crm', 'AVAILABLE')
   params.set('add', booking.student_email || '')
 
   return `${base}?${params.toString()}`
 }
 
+// ── Audit Action Labels & Icons ──
+const AUDIT_ACTION_LABELS = {
+  [AUDIT_ACTIONS.BOOKING_STATUS_CHANGE]: { label: 'Status Change', color: '#2196f3', icon: '🔄' },
+  [AUDIT_ACTIONS.BOOKING_MEET_LINK_ADDED]: { label: 'Meet Link Added', color: '#4caf50', icon: '🔗' },
+  [AUDIT_ACTIONS.BOOKING_NOTE_SAVED]: { label: 'Note Saved', color: '#9c27b0', icon: '📝' },
+  [AUDIT_ACTIONS.BOOKING_CALENDAR_SYNC]: { label: 'Calendar Sync', color: '#1a73e8', icon: '📅' },
+  [AUDIT_ACTIONS.BOOKING_BULK_STATUS]: { label: 'Bulk Update', color: '#ff9800', icon: '⚡' },
+  [AUDIT_ACTIONS.BOOKING_BULK_DELETE]: { label: 'Bulk Delete', color: '#f44336', icon: '🗑️' },
+  [AUDIT_ACTIONS.BOOKING_CSV_EXPORT]: { label: 'CSV Export', color: '#607d8b', icon: '📊' },
+  [AUDIT_ACTIONS.BOOKING_EMAIL_SENT]: { label: 'Email Sent', color: '#00bcd4', icon: '✉️' },
+  [AUDIT_ACTIONS.ENQUIRY_DELETED]: { label: 'Enquiry Deleted', color: '#f44336', icon: '🗑️' },
+  [AUDIT_ACTIONS.ENQUIRY_REPLIED]: { label: 'Enquiry Replied', color: '#4caf50', icon: '↩️' },
+  [AUDIT_ACTIONS.ADMIN_LOGIN]: { label: 'Admin Login', color: '#673ab7', icon: '🔐' },
+  [AUDIT_ACTIONS.ADMIN_PANEL_VIEWED]: { label: 'Panel Viewed', color: '#795548', icon: '👁️' },
+}
+
+const SEVERITY_CONFIG = {
+  [SEVERITY.INFO]: { color: '#2196f3', bg: 'rgba(33,150,243,0.08)', label: 'Info' },
+  [SEVERITY.WARNING]: { color: '#ff9800', bg: 'rgba(255,152,0,0.08)', label: 'Warning' },
+  [SEVERITY.CRITICAL]: { color: '#f44336', bg: 'rgba(244,67,54,0.08)', label: 'Critical' },
+}
+
 export default function AdminPanel() {
-  const { getUserName } = useAuth()
+  const { user, getUserName } = useAuth()
   const toast = useToast()
+
+  // Admin info for audit logs
+  const adminInfo = useMemo(() => ({
+    email: user?.email,
+    name: getUserName(),
+  }), [user, getUserName])
 
   const [activeTab, setActiveTab] = useState('bookings')
   const [bookings, setBookings] = useState([])
@@ -76,15 +109,46 @@ export default function AdminPanel() {
   })
   const [sortField, setSortField] = useState('created_at')
   const [sortDir, setSortDir] = useState('desc')
-  // ── New: Booking detail modal ──
   const [detailBooking, setDetailBooking] = useState(null)
-  // ── New: Admin notes ──
   const [noteInputs, setNoteInputs] = useState({})
   const [savingNote, setSavingNote] = useState(null)
-  // ── New: Expanded rows ──
   const [expandedRows, setExpandedRows] = useState(new Set())
-  // ── New: Recent Activity ──
   const [activityLog, setActivityLog] = useState([])
+
+  // ── Audit Log State ──
+  const [auditLogs, setAuditLogs] = useState([])
+  const [loadingAuditLogs, setLoadingAuditLogs] = useState(false)
+  const [auditFilter, setAuditFilter] = useState('all')
+  const [auditSeverityFilter, setAuditSeverityFilter] = useState('all')
+  const [auditSearch, setAuditSearch] = useState('')
+
+  // ── Log admin panel viewed on mount ──
+  const hasLoggedView = useRef(false)
+  useEffect(() => {
+    if (!hasLoggedView.current && adminInfo.email) {
+      hasLoggedView.current = true
+      logAdminPanelViewed(adminInfo)
+    }
+  }, [adminInfo])
+
+  // ── Load audit logs when tab is active ──
+  const loadAuditLogs = useCallback(async () => {
+    setLoadingAuditLogs(true)
+    try {
+      const data = await fetchAuditLogs({ limit: 200 })
+      setAuditLogs(data || [])
+    } catch (err) {
+      console.warn('Failed to load audit logs:', err)
+    } finally {
+      setLoadingAuditLogs(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'audit') {
+      loadAuditLogs()
+    }
+  }, [activeTab, loadAuditLogs])
 
   // ── Load data + real-time subscription ──
   const loadBookings = useCallback(async () => {
@@ -119,7 +183,6 @@ export default function AdminPanel() {
     loadBookings()
     loadEnquiries()
 
-    // Real-time subscription so new bookings appear immediately
     const bookingSub = supabase
       .channel('admin-bookings')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
@@ -162,23 +225,28 @@ export default function AdminPanel() {
     }
   }, [loadBookings, loadEnquiries, toast])
 
+  // ── AUDITED: Update Booking Status ──
   const updateBookingStatus = async (id, newStatus) => {
     setUpdatingId(id)
     try {
+      const booking = bookings.find(b => b.id === id)
+      const oldStatus = booking?.status || 'unknown'
+
       const { error } = await supabase
         .from('bookings')
         .update({ status: newStatus })
         .eq('id', id)
       if (error) throw error
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b))
-      const booking = bookings.find(b => b.id === id)
       setActivityLog(prev => [{
         type: `booking_${newStatus}`,
         message: `Booking for ${booking?.student_name || 'Student'} marked as ${newStatus}`,
         time: new Date().toISOString()
       }, ...prev].slice(0, 50))
 
-      // ── Email the student about the status change (fire-and-forget) ──
+      // 🔒 AUDIT LOG
+      logBookingStatusChange(booking, oldStatus, newStatus, adminInfo)
+
       if (booking?.student_email) {
         sendBookingStatusUpdate(booking.student_email, {
           studentName: booking.student_name,
@@ -196,6 +264,7 @@ export default function AdminPanel() {
     } finally { setUpdatingId(null) }
   }
 
+  // ── AUDITED: Add Meet Link ──
   const addMeetLink = async (id) => {
     const link = meetLinkInputs[id]?.trim()
     if (!link) return toast('Please enter a Google Meet link.', 'warning')
@@ -213,8 +282,11 @@ export default function AdminPanel() {
       setShowMeetInput(null)
       setMeetLinkInputs(prev => ({ ...prev, [id]: '' }))
 
-      // ── Email the student with their Meet link (fire-and-forget) ──
       const booking = bookings.find(b => b.id === id)
+
+      // 🔒 AUDIT LOG
+      logMeetLinkAdded(booking, link, adminInfo)
+
       if (booking?.student_email) {
         sendMeetLinkEmail(booking.student_email, {
           studentName: booking.student_name,
@@ -231,7 +303,7 @@ export default function AdminPanel() {
     } finally { setUpdatingId(null) }
   }
 
-  // ── NEW: Save admin notes on a booking ──
+  // ── AUDITED: Save admin notes ──
   const saveNote = async (id) => {
     const note = noteInputs[id]?.trim()
     if (!note) return
@@ -243,34 +315,40 @@ export default function AdminPanel() {
         .eq('id', id)
       if (error) throw error
       setBookings(prev => prev.map(b => b.id === id ? { ...b, admin_notes: note } : b))
+
+      const booking = bookings.find(b => b.id === id)
+      // 🔒 AUDIT LOG
+      logNoteSaved(booking, note, adminInfo)
+
       toast('Note saved.', 'success')
     } catch (err) {
       toast('Failed to save note: ' + err.message, 'error')
     } finally { setSavingNote(null) }
   }
 
-  // ── Create Google Calendar event + sync Meet link ──
+  // ── AUDITED: Calendar event ──
   const createCalendarEvent = (booking) => {
     const url = buildGoogleCalendarUrl(booking)
     window.open(url, '_blank', 'noopener,noreferrer')
-    toast('Google Calendar opened — save the event to auto-generate a Meet link. Then paste the Meet link back here.', 'info')
+    // 🔒 AUDIT LOG
+    logCalendarSync(booking, adminInfo)
+    toast('Google Calendar opened — save the event to auto-generate a Meet link.', 'info')
     setShowMeetInput(booking.id)
   }
 
-  // ── Bulk: open calendar events for all pending Meet requests ──
   const bulkCreateCalendarEvents = () => {
     const pendingMeet = bookings.filter(b => b.google_meet && !b.meet_link && (b.status === 'pending' || b.status === 'confirmed'))
     if (pendingMeet.length === 0) return toast('No pending Meet requests to sync.', 'info')
-    if (!window.confirm(`Open Google Calendar for ${pendingMeet.length} booking(s)? Each will open in a new tab.`)) return
+    if (!window.confirm(`Open Google Calendar for ${pendingMeet.length} booking(s)?`)) return
     pendingMeet.forEach((b, i) => {
       setTimeout(() => {
         window.open(buildGoogleCalendarUrl(b), '_blank', 'noopener,noreferrer')
       }, i * 600)
     })
-    toast(`Opened ${pendingMeet.length} calendar event(s). Save each to generate Meet links.`, 'success')
+    toast(`Opened ${pendingMeet.length} calendar event(s).`, 'success')
   }
 
-  // ── NEW: Export bookings to CSV ──
+  // ── AUDITED: Export CSV ──
   const exportCSV = () => {
     if (filteredBookings.length === 0) return toast('No bookings to export.', 'warning')
     const headers = ['Student', 'Email', 'Year Group', 'Subject', 'Date', 'Time', 'Price', 'Status', 'Google Meet', 'Meet Link', 'Notes', 'Created']
@@ -288,24 +366,33 @@ export default function AdminPanel() {
     a.download = `zenith-bookings-${new Date().toISOString().slice(0,10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
+
+    // 🔒 AUDIT LOG
+    logCSVExport(filteredBookings.length, adminInfo)
     toast(`Exported ${filteredBookings.length} bookings to CSV.`, 'success')
   }
 
-  // ── NEW: Email student directly ──
+  // ── AUDITED: Email student ──
   const emailStudent = (booking) => {
     const subject = encodeURIComponent(`Zenith Pranavi — Your ${booking.subject} Session on ${formatDate(booking.booking_date)}`)
     const body = encodeURIComponent(
       `Hi ${booking.student_name || 'Student'},\n\nRegarding your ${booking.subject} session scheduled for ${formatDate(booking.booking_date)} at ${booking.booking_time}.\n\n${booking.meet_link ? `Google Meet Link: ${booking.meet_link}\n\n` : ''}Best regards,\nZenith Pranavi Education`
     )
     window.open(`mailto:${booking.student_email || ''}?subject=${subject}&body=${body}`, '_self')
+    // 🔒 AUDIT LOG
+    logEmailSent(booking, adminInfo)
   }
 
+  // ── AUDITED: Delete enquiry ──
   const deleteEnquiry = async (id) => {
     if (!window.confirm('Delete this enquiry?')) return
+    const enquiry = enquiries.find(e => e.id === id)
     try {
       const { error } = await supabase.from('enquiries').delete().eq('id', id)
       if (error) throw error
       setEnquiries(prev => prev.filter(e => e.id !== id))
+      // 🔒 AUDIT LOG
+      logEnquiryDeleted(enquiry, adminInfo)
       toast('Enquiry deleted.', 'success')
     } catch (err) {
       toast('Failed to delete: ' + err.message, 'error')
@@ -344,7 +431,6 @@ export default function AdminPanel() {
     }
   }
 
-  // Toggle row expansion
   const toggleRow = (id) => {
     setExpandedRows(prev => {
       const next = new Set(prev)
@@ -400,6 +486,23 @@ export default function AdminPanel() {
     return true
   })
 
+  // Filter audit logs
+  const filteredAuditLogs = useMemo(() => {
+    return auditLogs.filter(log => {
+      if (auditFilter !== 'all' && log.action !== auditFilter) return false
+      if (auditSeverityFilter !== 'all' && log.severity !== auditSeverityFilter) return false
+      if (auditSearch) {
+        const q = auditSearch.toLowerCase()
+        return (
+          (log.description || '').toLowerCase().includes(q) ||
+          (log.admin_email || '').toLowerCase().includes(q) ||
+          (log.action || '').toLowerCase().includes(q)
+        )
+      }
+      return true
+    })
+  }, [auditLogs, auditFilter, auditSeverityFilter, auditSearch])
+
   // Stats
   const totalBookings = bookings.length
   const pendingBookings = bookings.filter(b => b.status === 'pending').length
@@ -412,7 +515,6 @@ export default function AdminPanel() {
   const meetRequests = bookings.filter(b => b.google_meet && !b.meet_link).length
   const meetLinked = bookings.filter(b => b.google_meet && b.meet_link).length
 
-  // ── NEW: Today's bookings & upcoming ──
   const todayStr = new Date().toISOString().slice(0, 10)
   const todaysBookings = bookings.filter(b => b.booking_date?.slice(0,10) === todayStr)
   const upcomingBookings = bookings
@@ -420,7 +522,6 @@ export default function AdminPanel() {
     .sort((a, b) => (a.booking_date + a.booking_time).localeCompare(b.booking_date + b.booking_time))
     .slice(0, 5)
 
-  // ── NEW: Revenue breakdown ──
   const revenueByStatus = {
     confirmed: bookings.filter(b => b.status === 'confirmed').reduce((s, b) => s + (b.price || 0), 0),
     completed: bookings.filter(b => b.status === 'completed').reduce((s, b) => s + (b.price || 0), 0)
@@ -471,6 +572,8 @@ export default function AdminPanel() {
       setSelectedBookings(new Set(filteredBookings.map(b => b.id)))
     }
   }
+
+  // ── AUDITED: Bulk update status ──
   const bulkUpdateStatus = async (newStatus) => {
     if (selectedBookings.size === 0) return toast('No bookings selected.', 'warning')
     if (!window.confirm(`Update ${selectedBookings.size} booking(s) to "${newStatus}"?`)) return
@@ -484,11 +587,17 @@ export default function AdminPanel() {
       if (error) throw error
       setBookings(prev => prev.map(b => ids.includes(b.id) ? { ...b, status: newStatus } : b))
       setSelectedBookings(new Set())
+
+      // 🔒 AUDIT LOG
+      logBulkStatusChange(ids.length, newStatus, adminInfo)
+
       toast(`${ids.length} booking(s) updated to ${newStatus}.`, 'success')
     } catch (err) {
       toast('Bulk update failed: ' + err.message, 'error')
     } finally { setUpdatingId(null) }
   }
+
+  // ── AUDITED: Bulk delete ──
   const bulkDelete = async () => {
     if (selectedBookings.size === 0) return toast('No bookings selected.', 'warning')
     if (!window.confirm(`Permanently delete ${selectedBookings.size} booking(s)? This cannot be undone.`)) return
@@ -502,6 +611,10 @@ export default function AdminPanel() {
       if (error) throw error
       setBookings(prev => prev.filter(b => !ids.includes(b.id)))
       setSelectedBookings(new Set())
+
+      // 🔒 AUDIT LOG
+      logBulkDelete(ids.length, adminInfo)
+
       toast(`${ids.length} booking(s) deleted.`, 'success')
     } catch (err) {
       toast('Bulk delete failed: ' + err.message, 'error')
@@ -542,10 +655,15 @@ export default function AdminPanel() {
 
   return (
     <main id="admin-panel">
-      <section className="admin-hero">
-        <div className="container">
+      {/* ── Enhanced Hero with gradient mesh ── */}
+      <section className="admin-hero admin-hero-enhanced">
+        <div className="admin-hero-mesh" />
+        <div className="container" style={{ position: 'relative', zIndex: 2 }}>
           <div className="admin-hero-content">
-            <h1>Admin Dashboard</h1>
+            <div className="admin-hero-badge">
+              <Shield size={14} /> Admin Portal
+            </div>
+            <h1>Dashboard</h1>
             <p>Welcome, <strong>{getUserName()}</strong>. Manage bookings, calendar sync, enquiries, and Meet links.</p>
             {todaysBookings.length > 0 && (
               <div className="admin-hero-alert">
@@ -557,46 +675,48 @@ export default function AdminPanel() {
         </div>
       </section>
 
-      {/* Stats Cards */}
+      {/* ── Enhanced Stats Cards ── */}
       <section className="admin-section">
         <div className="container">
-          <div className="admin-stats-grid">
-            <div className="admin-stat-card">
+          <div className="admin-stats-grid admin-stats-enhanced">
+            <div className="admin-stat-card admin-stat-glow admin-stat-glow-blue">
               <div className="admin-stat-icon admin-stat-icon-blue"><Calendar size={22} /></div>
               <div>
                 <div className="admin-stat-number">{totalBookings}</div>
                 <div className="admin-stat-label">Total Bookings</div>
               </div>
+              <div className="admin-stat-trend"><TrendingUp size={14} /></div>
             </div>
-            <div className="admin-stat-card">
+            <div className="admin-stat-card admin-stat-glow admin-stat-glow-amber">
               <div className="admin-stat-icon admin-stat-icon-amber"><Clock size={22} /></div>
               <div>
                 <div className="admin-stat-number">{pendingBookings}</div>
                 <div className="admin-stat-label">Pending</div>
               </div>
+              {pendingBookings > 0 && <div className="admin-stat-pulse" />}
             </div>
-            <div className="admin-stat-card">
+            <div className="admin-stat-card admin-stat-glow admin-stat-glow-green">
               <div className="admin-stat-icon admin-stat-icon-green"><CheckCircle size={22} /></div>
               <div>
                 <div className="admin-stat-number">{confirmedBookings}</div>
                 <div className="admin-stat-label">Confirmed</div>
               </div>
             </div>
-            <div className="admin-stat-card">
+            <div className="admin-stat-card admin-stat-glow admin-stat-glow-purple">
               <div className="admin-stat-icon admin-stat-icon-purple"><Video size={22} /></div>
               <div>
                 <div className="admin-stat-number">{meetLinked} / {meetLinked + meetRequests}</div>
                 <div className="admin-stat-label">Meet Linked</div>
               </div>
             </div>
-            <div className="admin-stat-card">
+            <div className="admin-stat-card admin-stat-glow admin-stat-glow-emerald">
               <div className="admin-stat-icon" style={{ background: '#e8f5e9', color: '#2e7d32' }}><DollarSign size={22} /></div>
               <div>
                 <div className="admin-stat-number">${totalRevenue}</div>
                 <div className="admin-stat-label">Revenue</div>
               </div>
             </div>
-            <div className="admin-stat-card">
+            <div className="admin-stat-card admin-stat-glow admin-stat-glow-orange">
               <div className="admin-stat-icon" style={{ background: '#fff3e0', color: '#e65100' }}><Mail size={22} /></div>
               <div>
                 <div className="admin-stat-number">{enquiries.length}</div>
@@ -605,11 +725,11 @@ export default function AdminPanel() {
             </div>
           </div>
 
-          {/* ── NEW FEATURE 1: Quick Overview Panel — Today & Upcoming ── */}
+          {/* ── Quick Overview Panel ── */}
           {(todaysBookings.length > 0 || upcomingBookings.length > 0) && (
             <div className="admin-overview-panel">
               {todaysBookings.length > 0 && (
-                <div className="admin-overview-section">
+                <div className="admin-overview-section admin-overview-glass">
                   <h4 className="admin-overview-title"><Activity size={16} /> Today&rsquo;s Sessions ({todaysBookings.length})</h4>
                   <div className="admin-overview-list">
                     {todaysBookings.map(b => (
@@ -633,7 +753,7 @@ export default function AdminPanel() {
                 </div>
               )}
               {upcomingBookings.length > 0 && (
-                <div className="admin-overview-section">
+                <div className="admin-overview-section admin-overview-glass">
                   <h4 className="admin-overview-title"><TrendingUp size={16} /> Upcoming Sessions</h4>
                   <div className="admin-overview-list">
                     {upcomingBookings.map(b => (
@@ -652,7 +772,7 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* ── NEW FEATURE 2: Revenue Breakdown ── */}
+          {/* ── Revenue Breakdown ── */}
           <div className="admin-revenue-breakdown">
             <div className="admin-revenue-bar">
               {totalRevenue > 0 ? (
@@ -676,39 +796,38 @@ export default function AdminPanel() {
         </div>
       </section>
 
-      {/* Tabs */}
+      {/* ── Enhanced Tabs ── */}
       <section className="admin-section">
         <div className="container">
-          <div className="admin-tabs">
+          <div className="admin-tabs admin-tabs-enhanced">
             <button className={`admin-tab${activeTab === 'bookings' ? ' active' : ''}`} onClick={() => setActiveTab('bookings')}>
-              <Calendar size={16} /> Bookings ({bookings.length})
+              <Calendar size={16} /> <span>Bookings</span> <span className="admin-tab-count">{bookings.length}</span>
             </button>
             <button className={`admin-tab${activeTab === 'calendar' ? ' active' : ''}`} onClick={() => setActiveTab('calendar')}>
-              <CalendarPlus size={16} /> Calendar Sync
+              <CalendarPlus size={16} /> <span>Calendar</span>
             </button>
             <button className={`admin-tab${activeTab === 'enquiries' ? ' active' : ''}`} onClick={() => setActiveTab('enquiries')}>
-              <Mail size={16} /> Enquiries ({enquiries.length})
+              <Mail size={16} /> <span>Enquiries</span> <span className="admin-tab-count">{enquiries.length}</span>
             </button>
             <button className={`admin-tab${activeTab === 'analytics' ? ' active' : ''}`} onClick={() => setActiveTab('analytics')}>
-              <BarChart3 size={16} /> Analytics
+              <BarChart3 size={16} /> <span>Analytics</span>
+            </button>
+            <button className={`admin-tab${activeTab === 'audit' ? ' active' : ''}`} onClick={() => setActiveTab('audit')}>
+              <Shield size={16} /> <span>Audit Log</span>
+              {auditLogs.length > 0 && <span className="admin-tab-count admin-tab-count-audit">{auditLogs.length}</span>}
             </button>
             <button className={`admin-tab${activeTab === 'activity' ? ' active' : ''}`} onClick={() => setActiveTab('activity')}>
-              <Activity size={16} /> Activity
+              <Activity size={16} /> <span>Activity</span>
             </button>
           </div>
 
-          {/* Bookings Tab */}
+          {/* ═══ Bookings Tab ═══ */}
           {activeTab === 'bookings' && (
-            <div className="admin-tab-content">
+            <div className="admin-tab-content admin-tab-fade">
               <div className="admin-toolbar">
-                <div className="admin-search-box">
+                <div className="admin-search-box admin-search-enhanced">
                   <Search size={16} />
-                  <input
-                    type="text"
-                    placeholder="Search by student, email, subject, or year..."
-                    value={searchBookings}
-                    onChange={e => setSearchBookings(e.target.value)}
-                  />
+                  <input type="text" placeholder="Search by student, email, subject, or year..." value={searchBookings} onChange={e => setSearchBookings(e.target.value)} />
                 </div>
                 <div className="admin-filter-row">
                   <div className="admin-filter-select">
@@ -722,34 +841,30 @@ export default function AdminPanel() {
                     </select>
                   </div>
                   {meetRequests > 0 && (
-                    <button className="admin-gcal-bulk-btn" onClick={bulkCreateCalendarEvents} title="Sync all pending Meet requests to Google Calendar">
+                    <button className="admin-gcal-bulk-btn" onClick={bulkCreateCalendarEvents}>
                       <CalendarPlus size={14} /> Sync All ({meetRequests})
                     </button>
                   )}
-                  <button className="admin-refresh-btn" onClick={exportCSV} title="Export CSV">
-                    <Download size={16} />
-                  </button>
-                  <button className="admin-refresh-btn" onClick={loadBookings} title="Refresh">
-                    <RefreshCw size={16} />
-                  </button>
+                  <button className="admin-refresh-btn" onClick={exportCSV} title="Export CSV"><Download size={16} /></button>
+                  <button className="admin-refresh-btn" onClick={loadBookings} title="Refresh"><RefreshCw size={16} /></button>
                 </div>
               </div>
 
               {loadingBookings ? (
                 <div className="admin-loading">
-                  <div className="btn-loader" style={{ width: 28, height: 28, borderWidth: 3, borderColor: 'var(--gold-pale)', borderTopColor: 'var(--gold)' }} />
+                  <div className="admin-spinner" />
                   <span>Loading bookings...</span>
                 </div>
               ) : filteredBookings.length === 0 ? (
-                <div className="admin-empty">
-                  <Calendar size={48} strokeWidth={1} />
+                <div className="admin-empty admin-empty-enhanced">
+                  <div className="admin-empty-icon"><BookOpen size={48} strokeWidth={1} /></div>
                   <h3>No bookings found</h3>
                   <p>{searchBookings || filterStatus !== 'all' ? 'Try adjusting your filters.' : 'No bookings have been made yet.'}</p>
                 </div>
               ) : (
                 <>
                 {selectedBookings.size > 0 && (
-                  <div className="admin-bulk-bar">
+                  <div className="admin-bulk-bar admin-bulk-enhanced">
                     <span className="admin-bulk-count"><Zap size={14} /> {selectedBookings.size} selected</span>
                     <div className="admin-bulk-actions">
                       <button className="admin-bulk-btn admin-bulk-confirm" onClick={() => bulkUpdateStatus('confirmed')} disabled={updatingId === 'bulk'}><CheckCircle size={14} /> Confirm</button>
@@ -760,13 +875,11 @@ export default function AdminPanel() {
                     <button className="admin-bulk-clear" onClick={() => setSelectedBookings(new Set())}>Clear</button>
                   </div>
                 )}
-                <div className="admin-table-wrapper">
+                <div className="admin-table-wrapper admin-table-enhanced">
                   <table className="admin-table">
                     <thead>
                       <tr>
-                        <th style={{ width: 30 }}>
-                          <input type="checkbox" checked={selectedBookings.size === filteredBookings.length && filteredBookings.length > 0} onChange={selectAllVisible} className="admin-checkbox" />
-                        </th>
+                        <th style={{ width: 30 }}><input type="checkbox" checked={selectedBookings.size === filteredBookings.length && filteredBookings.length > 0} onChange={selectAllVisible} className="admin-checkbox" /></th>
                         <th style={{ width: 30 }} />
                         <th className="admin-th-sortable" onClick={() => handleSort('student_name')}>Student <SortIcon field="student_name" /></th>
                         <th>Year</th>
@@ -783,15 +896,9 @@ export default function AdminPanel() {
                       {filteredBookings.map(b => (
                         <>
                           <tr key={b.id} className={`${expandedRows.has(b.id) ? 'admin-row-expanded' : ''}${selectedBookings.has(b.id) ? ' admin-row-selected' : ''}`}>
+                            <td><input type="checkbox" checked={selectedBookings.has(b.id)} onChange={() => toggleBookingSelect(b.id)} className="admin-checkbox" /></td>
                             <td>
-                              <input type="checkbox" checked={selectedBookings.has(b.id)} onChange={() => toggleBookingSelect(b.id)} className="admin-checkbox" />
-                            </td>
-                            <td>
-                              <button
-                                className="admin-expand-btn"
-                                onClick={() => toggleRow(b.id)}
-                                title={expandedRows.has(b.id) ? 'Collapse' : 'Expand details'}
-                              >
+                              <button className="admin-expand-btn" onClick={() => toggleRow(b.id)} title={expandedRows.has(b.id) ? 'Collapse' : 'Expand'}>
                                 {expandedRows.has(b.id) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                               </button>
                             </td>
@@ -808,17 +915,11 @@ export default function AdminPanel() {
                               <div className="admin-meet-cell">
                                 {b.google_meet ? (
                                   b.meet_link ? (
-                                    <a href={b.meet_link} target="_blank" rel="noopener noreferrer" className="admin-meet-link">
-                                      <Video size={13} /> Join Meet
-                                    </a>
+                                    <a href={b.meet_link} target="_blank" rel="noopener noreferrer" className="admin-meet-link"><Video size={13} /> Join Meet</a>
                                   ) : (
                                     <div className="admin-meet-actions-col">
-                                      <button className="admin-gcal-btn" onClick={() => createCalendarEvent(b)} title="Create Google Calendar event with Meet">
-                                        <CalendarPlus size={13} /> Calendar + Meet
-                                      </button>
-                                      <button className="admin-meet-add-btn" onClick={() => setShowMeetInput(showMeetInput === b.id ? null : b.id)} title="Paste Meet link manually">
-                                        <Link2 size={13} /> Paste Link
-                                      </button>
+                                      <button className="admin-gcal-btn" onClick={() => createCalendarEvent(b)}><CalendarPlus size={13} /> Calendar + Meet</button>
+                                      <button className="admin-meet-add-btn" onClick={() => setShowMeetInput(showMeetInput === b.id ? null : b.id)}><Link2 size={13} /> Paste Link</button>
                                     </div>
                                   )
                                 ) : (
@@ -832,7 +933,7 @@ export default function AdminPanel() {
                                 )}
                               </div>
                             </td>
-                            <td><span className={`status-badge ${b.status}`}>{b.status}</span></td>
+                            <td><span className={`status-badge status-badge-enhanced ${b.status}`}>{b.status}</span></td>
                             <td>
                               <div className="admin-actions">
                                 {b.status === 'pending' && (
@@ -842,59 +943,29 @@ export default function AdminPanel() {
                                   </>
                                 )}
                                 {b.status === 'confirmed' && (
-                                  <button className="admin-action-btn complete" onClick={() => updateBookingStatus(b.id, 'completed')} disabled={updatingId === b.id} title="Mark Completed"><CheckCircle size={15} /></button>
+                                  <button className="admin-action-btn complete" onClick={() => updateBookingStatus(b.id, 'completed')} disabled={updatingId === b.id} title="Complete"><CheckCircle size={15} /></button>
                                 )}
-                                {(b.status === 'completed' || b.status === 'cancelled') && (
-                                  <span className="admin-action-done">—</span>
-                                )}
+                                {(b.status === 'completed' || b.status === 'cancelled') && <span className="admin-action-done">—</span>}
                                 <button className="admin-action-btn" onClick={() => setDetailBooking(b)} title="View Details" style={{ color: 'var(--text-medium)' }}><Eye size={15} /></button>
-                                {b.student_email && (
-                                  <button className="admin-action-btn" onClick={() => emailStudent(b)} title="Email Student" style={{ color: '#1a73e8' }}><Send size={14} /></button>
-                                )}
+                                {b.student_email && <button className="admin-action-btn" onClick={() => emailStudent(b)} title="Email Student" style={{ color: '#1a73e8' }}><Send size={14} /></button>}
                               </div>
                             </td>
                           </tr>
-                          {/* ── Expanded row details ── */}
                           {expandedRows.has(b.id) && (
                             <tr key={`${b.id}-detail`} className="admin-expanded-detail-row">
                               <td colSpan={11}>
-                                <div className="admin-expanded-detail">
+                                <div className="admin-expanded-detail admin-expanded-enhanced">
                                   <div className="admin-detail-grid">
-                                    <div className="admin-detail-item">
-                                      <span className="admin-detail-label">Student Email</span>
-                                      <span className="admin-detail-value">{b.student_email || '—'}</span>
-                                    </div>
-                                    <div className="admin-detail-item">
-                                      <span className="admin-detail-label">Phone</span>
-                                      <span className="admin-detail-value">{b.phone || '—'}</span>
-                                    </div>
-                                    <div className="admin-detail-item">
-                                      <span className="admin-detail-label">Booked On</span>
-                                      <span className="admin-detail-value">{formatDateTime(b.created_at)}</span>
-                                    </div>
-                                    <div className="admin-detail-item">
-                                      <span className="admin-detail-label">Google Meet</span>
-                                      <span className="admin-detail-value">{b.google_meet ? (b.meet_link ? 'Linked ✓' : 'Requested — awaiting link') : 'Not requested'}</span>
-                                    </div>
+                                    <div className="admin-detail-item"><span className="admin-detail-label">Student Email</span><span className="admin-detail-value">{b.student_email || '—'}</span></div>
+                                    <div className="admin-detail-item"><span className="admin-detail-label">Phone</span><span className="admin-detail-value">{b.phone || '—'}</span></div>
+                                    <div className="admin-detail-item"><span className="admin-detail-label">Booked On</span><span className="admin-detail-value">{formatDateTime(b.created_at)}</span></div>
+                                    <div className="admin-detail-item"><span className="admin-detail-label">Google Meet</span><span className="admin-detail-value">{b.google_meet ? (b.meet_link ? 'Linked ✓' : 'Requested — awaiting link') : 'Not requested'}</span></div>
                                   </div>
-                                  {/* Admin notes */}
                                   <div className="admin-note-section">
                                     <label className="admin-note-label"><FileText size={14} /> Admin Notes</label>
                                     <div className="admin-note-input-row">
-                                      <textarea
-                                        className="admin-note-textarea"
-                                        placeholder="Add a note about this booking..."
-                                        value={noteInputs[b.id] !== undefined ? noteInputs[b.id] : (b.admin_notes || '')}
-                                        onChange={e => setNoteInputs(prev => ({ ...prev, [b.id]: e.target.value }))}
-                                        rows={2}
-                                      />
-                                      <button
-                                        className="admin-meet-save"
-                                        onClick={() => saveNote(b.id)}
-                                        disabled={savingNote === b.id}
-                                      >
-                                        {savingNote === b.id ? '...' : 'Save'}
-                                      </button>
+                                      <textarea className="admin-note-textarea" placeholder="Add a note about this booking..." value={noteInputs[b.id] !== undefined ? noteInputs[b.id] : (b.admin_notes || '')} onChange={e => setNoteInputs(prev => ({ ...prev, [b.id]: e.target.value }))} rows={2} />
+                                      <button className="admin-meet-save" onClick={() => saveNote(b.id)} disabled={savingNote === b.id}>{savingNote === b.id ? '...' : 'Save'}</button>
                                     </div>
                                   </div>
                                 </div>
@@ -911,9 +982,9 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* Calendar Sync Tab */}
+          {/* ═══ Calendar Sync Tab ═══ */}
           {activeTab === 'calendar' && (
-            <div className="admin-tab-content">
+            <div className="admin-tab-content admin-tab-fade">
               <div className="admin-calendar-header">
                 <div className="admin-calendar-nav">
                   <button className="admin-cal-nav-btn" onClick={prevMonth}><ChevronLeft size={18} /></button>
@@ -922,13 +993,9 @@ export default function AdminPanel() {
                 </div>
                 <div className="admin-calendar-actions">
                   {meetRequests > 0 && (
-                    <button className="admin-gcal-bulk-btn" onClick={bulkCreateCalendarEvents}>
-                      <CalendarPlus size={14} /> Sync All Pending ({meetRequests})
-                    </button>
+                    <button className="admin-gcal-bulk-btn" onClick={bulkCreateCalendarEvents}><CalendarPlus size={14} /> Sync All Pending ({meetRequests})</button>
                   )}
-                  <button className="admin-refresh-btn" onClick={loadBookings} title="Refresh">
-                    <RefreshCw size={16} />
-                  </button>
+                  <button className="admin-refresh-btn" onClick={loadBookings} title="Refresh"><RefreshCw size={16} /></button>
                 </div>
               </div>
 
@@ -948,17 +1015,11 @@ export default function AdminPanel() {
                         <div key={b.id} className={`admin-cal-event admin-cal-event-${b.status}`}>
                           <span className="admin-cal-event-time">{b.booking_time?.replace(':00 ', '')}</span>
                           <span className="admin-cal-event-name">{b.student_name?.split(' ')[0] || 'Student'}</span>
-                          {b.google_meet && !b.meet_link && (
-                            <button className="admin-cal-event-sync" onClick={() => createCalendarEvent(b)} title="Sync to Google Calendar"><CalendarPlus size={10} /></button>
-                          )}
-                          {b.google_meet && b.meet_link && (
-                            <a href={b.meet_link} target="_blank" rel="noopener noreferrer" className="admin-cal-event-meet" title="Join Meet"><Video size={10} /></a>
-                          )}
+                          {b.google_meet && !b.meet_link && <button className="admin-cal-event-sync" onClick={() => createCalendarEvent(b)}><CalendarPlus size={10} /></button>}
+                          {b.google_meet && b.meet_link && <a href={b.meet_link} target="_blank" rel="noopener noreferrer" className="admin-cal-event-meet"><Video size={10} /></a>}
                         </div>
                       ))}
-                      {dayBookings.length > 3 && (
-                        <div className="admin-cal-more">+{dayBookings.length - 3} more</div>
-                      )}
+                      {dayBookings.length > 3 && <div className="admin-cal-more">+{dayBookings.length - 3} more</div>}
                     </div>
                   )
                 })}
@@ -966,10 +1027,7 @@ export default function AdminPanel() {
 
               {meetRequests > 0 && (
                 <div className="admin-meet-pending-summary">
-                  <div className="admin-meet-pending-header">
-                    <Video size={18} />
-                    <h4>{meetRequests} Booking{meetRequests > 1 ? 's' : ''} Awaiting Google Meet Link</h4>
-                  </div>
+                  <div className="admin-meet-pending-header"><Video size={18} /><h4>{meetRequests} Booking{meetRequests > 1 ? 's' : ''} Awaiting Google Meet Link</h4></div>
                   <div className="admin-meet-pending-list">
                     {bookings.filter(b => b.google_meet && !b.meet_link).map(b => (
                       <div key={b.id} className="admin-meet-pending-item">
@@ -978,12 +1036,8 @@ export default function AdminPanel() {
                           <span>{b.subject} — {formatDate(b.booking_date)} at {b.booking_time}</span>
                         </div>
                         <div className="admin-meet-pending-actions">
-                          <button className="admin-gcal-btn" onClick={() => createCalendarEvent(b)}>
-                            <CalendarPlus size={13} /> Calendar + Meet
-                          </button>
-                          <button className="admin-meet-add-btn" onClick={() => { setActiveTab('bookings'); setShowMeetInput(b.id) }}>
-                            <Link2 size={13} /> Paste Link
-                          </button>
+                          <button className="admin-gcal-btn" onClick={() => createCalendarEvent(b)}><CalendarPlus size={13} /> Calendar + Meet</button>
+                          <button className="admin-meet-add-btn" onClick={() => { setActiveTab('bookings'); setShowMeetInput(b.id) }}><Link2 size={13} /> Paste Link</button>
                         </div>
                       </div>
                     ))}
@@ -993,44 +1047,30 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* Enquiries Tab */}
+          {/* ═══ Enquiries Tab ═══ */}
           {activeTab === 'enquiries' && (
-            <div className="admin-tab-content">
+            <div className="admin-tab-content admin-tab-fade">
               <div className="admin-toolbar">
-                <div className="admin-search-box">
-                  <Search size={16} />
-                  <input type="text" placeholder="Search by name, email, or message..." value={searchEnquiries} onChange={e => setSearchEnquiries(e.target.value)} />
-                </div>
+                <div className="admin-search-box admin-search-enhanced"><Search size={16} /><input type="text" placeholder="Search by name, email, or message..." value={searchEnquiries} onChange={e => setSearchEnquiries(e.target.value)} /></div>
                 <button className="admin-refresh-btn" onClick={loadEnquiries} title="Refresh"><RefreshCw size={16} /></button>
               </div>
-
               {loadingEnquiries ? (
-                <div className="admin-loading">
-                  <div className="btn-loader" style={{ width: 28, height: 28, borderWidth: 3, borderColor: 'var(--gold-pale)', borderTopColor: 'var(--gold)' }} />
-                  <span>Loading enquiries...</span>
-                </div>
+                <div className="admin-loading"><div className="admin-spinner" /><span>Loading enquiries...</span></div>
               ) : filteredEnquiries.length === 0 ? (
-                <div className="admin-empty">
-                  <Mail size={48} strokeWidth={1} />
-                  <h3>No enquiries found</h3>
-                  <p>{searchEnquiries ? 'Try a different search term.' : 'No enquiries have been submitted yet.'}</p>
-                </div>
+                <div className="admin-empty admin-empty-enhanced"><div className="admin-empty-icon"><Mail size={48} strokeWidth={1} /></div><h3>No enquiries found</h3><p>{searchEnquiries ? 'Try a different search term.' : 'No enquiries submitted yet.'}</p></div>
               ) : (
                 <div className="admin-enquiries-grid">
                   {filteredEnquiries.map(e => (
-                    <div key={e.id} className="admin-enquiry-card">
+                    <div key={e.id} className="admin-enquiry-card admin-enquiry-enhanced">
                       <div className="admin-enquiry-header">
                         <div className="admin-enquiry-avatar">{(e.name || 'U').charAt(0).toUpperCase()}</div>
-                        <div className="admin-enquiry-meta">
-                          <strong>{e.name}</strong>
-                          <a href={`mailto:${e.email}`}>{e.email}</a>
-                        </div>
+                        <div className="admin-enquiry-meta"><strong>{e.name}</strong><a href={`mailto:${e.email}`}>{e.email}</a></div>
                         <button className="admin-enquiry-delete" onClick={() => deleteEnquiry(e.id)} title="Delete"><XCircle size={16} /></button>
                       </div>
                       <div className="admin-enquiry-body"><p>{e.message}</p></div>
                       <div className="admin-enquiry-footer">
                         <span>{formatDateTime(e.created_at)}</span>
-                        <a href={`mailto:${e.email}?subject=Re: Your enquiry to Zenith Pranavi`} className="admin-reply-btn">Reply</a>
+                        <a href={`mailto:${e.email}?subject=Re: Your enquiry to Zenith Pranavi`} className="admin-reply-btn">Reply <ArrowUpRight size={12} /></a>
                       </div>
                     </div>
                   ))}
@@ -1039,31 +1079,31 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* ── Analytics Tab ── */}
+          {/* ═══ Analytics Tab ═══ */}
           {activeTab === 'analytics' && (
-            <div className="admin-tab-content">
+            <div className="admin-tab-content admin-tab-fade">
               <div className="analytics-header">
                 <h3 className="analytics-title"><BarChart3 size={18} /> Booking Analytics</h3>
                 <span className="analytics-sub">Visual overview of your booking performance</span>
               </div>
 
               <div className="analytics-kpi-grid">
-                <div className="analytics-kpi-card">
+                <div className="analytics-kpi-card analytics-kpi-enhanced">
                   <div className="analytics-kpi-value">{totalBookings}</div>
                   <div className="analytics-kpi-label">Total Bookings</div>
                   <div className="analytics-kpi-bar"><div className="analytics-kpi-fill analytics-kpi-fill-blue" style={{ width: '100%' }} /></div>
                 </div>
-                <div className="analytics-kpi-card">
+                <div className="analytics-kpi-card analytics-kpi-enhanced">
                   <div className="analytics-kpi-value">{conversionRate}%</div>
                   <div className="analytics-kpi-label">Conversion Rate</div>
                   <div className="analytics-kpi-bar"><div className="analytics-kpi-fill analytics-kpi-fill-green" style={{ width: `${conversionRate}%` }} /></div>
                 </div>
-                <div className="analytics-kpi-card">
+                <div className="analytics-kpi-card analytics-kpi-enhanced">
                   <div className="analytics-kpi-value">${avgSessionPrice}</div>
                   <div className="analytics-kpi-label">Avg Session Price</div>
                   <div className="analytics-kpi-bar"><div className="analytics-kpi-fill analytics-kpi-fill-gold" style={{ width: `${Math.min((avgSessionPrice / 27) * 100, 100)}%` }} /></div>
                 </div>
-                <div className="analytics-kpi-card">
+                <div className="analytics-kpi-card analytics-kpi-enhanced">
                   <div className="analytics-kpi-value">${totalRevenue}</div>
                   <div className="analytics-kpi-label">Total Revenue</div>
                   <div className="analytics-kpi-bar"><div className="analytics-kpi-fill analytics-kpi-fill-purple" style={{ width: '100%' }} /></div>
@@ -1082,9 +1122,7 @@ export default function AdminPanel() {
                     ].map(s => (
                       <div key={s.label} className="analytics-bar-row">
                         <span className="analytics-bar-label">{s.label}</span>
-                        <div className="analytics-bar-track">
-                          <div className="analytics-bar-fill" style={{ width: `${Math.max(s.pct, 2)}%`, background: s.color }} />
-                        </div>
+                        <div className="analytics-bar-track"><div className="analytics-bar-fill" style={{ width: `${Math.max(s.pct, 2)}%`, background: s.color }} /></div>
                         <span className="analytics-bar-value">{s.count}</span>
                       </div>
                     ))}
@@ -1099,9 +1137,7 @@ export default function AdminPanel() {
                     ) : subjectBreakdown.map(([subject, count], i) => (
                       <div key={subject} className="analytics-bar-row">
                         <span className="analytics-bar-label" title={subject}>{subject.length > 14 ? subject.slice(0, 14) + '…' : subject}</span>
-                        <div className="analytics-bar-track">
-                          <div className="analytics-bar-fill" style={{ width: `${(count / (subjectBreakdown[0]?.[1] || 1)) * 100}%`, background: ['var(--gold)', 'var(--pink)', '#2196f3', '#4caf50', '#ff9800', '#9c27b0'][i % 6] }} />
-                        </div>
+                        <div className="analytics-bar-track"><div className="analytics-bar-fill" style={{ width: `${(count / (subjectBreakdown[0]?.[1] || 1)) * 100}%`, background: ['var(--gold)', 'var(--pink)', '#2196f3', '#4caf50', '#ff9800', '#9c27b0'][i % 6] }} /></div>
                         <span className="analytics-bar-value">{count}</span>
                       </div>
                     ))}
@@ -1118,9 +1154,7 @@ export default function AdminPanel() {
                       return (
                         <div key={i} className="analytics-month-col">
                           <span className="analytics-month-value">{m.count}</span>
-                          <div className="analytics-month-bar-wrap">
-                            <div className="analytics-month-bar" style={{ height: `${(m.count / maxCount) * 100}%` }} />
-                          </div>
+                          <div className="analytics-month-bar-wrap"><div className="analytics-month-bar" style={{ height: `${(m.count / maxCount) * 100}%` }} /></div>
                           <span className="analytics-month-label">{m.label}</span>
                           <span className="analytics-month-revenue">${m.revenue}</span>
                         </div>
@@ -1131,36 +1165,150 @@ export default function AdminPanel() {
               )}
 
               <div className="analytics-quick-stats">
-                <div className="analytics-quick-stat">
-                  <Users size={16} />
-                  <span>Unique Students: <strong>{new Set(bookings.map(b => b.student_email).filter(Boolean)).size}</strong></span>
-                </div>
-                <div className="analytics-quick-stat">
-                  <Video size={16} />
-                  <span>Meet Requests: <strong>{meetRequests + meetLinked}</strong> ({meetLinked} linked)</span>
-                </div>
-                <div className="analytics-quick-stat">
-                  <Mail size={16} />
-                  <span>Enquiries: <strong>{enquiries.length}</strong></span>
-                </div>
-                <div className="analytics-quick-stat">
-                  <TrendingUp size={16} />
-                  <span>This Month: <strong>{bookings.filter(b => { const d = new Date(b.created_at); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() }).length}</strong> bookings</span>
-                </div>
+                <div className="analytics-quick-stat"><Users size={16} /><span>Unique Students: <strong>{new Set(bookings.map(b => b.student_email).filter(Boolean)).size}</strong></span></div>
+                <div className="analytics-quick-stat"><Video size={16} /><span>Meet Requests: <strong>{meetRequests + meetLinked}</strong> ({meetLinked} linked)</span></div>
+                <div className="analytics-quick-stat"><Mail size={16} /><span>Enquiries: <strong>{enquiries.length}</strong></span></div>
+                <div className="analytics-quick-stat"><TrendingUp size={16} /><span>This Month: <strong>{bookings.filter(b => { const d = new Date(b.created_at); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() }).length}</strong> bookings</span></div>
               </div>
             </div>
           )}
 
-          {/* ── Activity Log Tab ── */}
+          {/* ═══════════════════════════════════════════════
+               🔒 AUDIT LOG TAB — NEW FEATURE
+               ═══════════════════════════════════════════════ */}
+          {activeTab === 'audit' && (
+            <div className="admin-tab-content admin-tab-fade">
+              <div className="audit-header">
+                <div className="audit-header-text">
+                  <h3 className="audit-title"><Shield size={20} /> Audit Log</h3>
+                  <p className="audit-subtitle">Complete record of all admin actions — who did what, when, and to which entity.</p>
+                </div>
+                <button className="admin-refresh-btn" onClick={loadAuditLogs} title="Refresh Audit Logs"><RefreshCw size={16} /></button>
+              </div>
+
+              {/* Audit Filters */}
+              <div className="audit-toolbar">
+                <div className="admin-search-box admin-search-enhanced">
+                  <Search size={16} />
+                  <input type="text" placeholder="Search audit logs..." value={auditSearch} onChange={e => setAuditSearch(e.target.value)} />
+                </div>
+                <div className="audit-filter-row">
+                  <div className="admin-filter-select">
+                    <Filter size={14} />
+                    <select value={auditFilter} onChange={e => setAuditFilter(e.target.value)}>
+                      <option value="all">All Actions</option>
+                      {Object.entries(AUDIT_ACTION_LABELS).map(([key, val]) => (
+                        <option key={key} value={key}>{val.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="admin-filter-select">
+                    <AlertCircle size={14} />
+                    <select value={auditSeverityFilter} onChange={e => setAuditSeverityFilter(e.target.value)}>
+                      <option value="all">All Severity</option>
+                      <option value="info">Info</option>
+                      <option value="warning">Warning</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Audit Stats Summary */}
+              <div className="audit-stats-row">
+                <div className="audit-stat-pill">
+                  <span className="audit-stat-num">{auditLogs.length}</span>
+                  <span>Total Entries</span>
+                </div>
+                <div className="audit-stat-pill audit-stat-warning">
+                  <span className="audit-stat-num">{auditLogs.filter(l => l.severity === 'warning').length}</span>
+                  <span>Warnings</span>
+                </div>
+                <div className="audit-stat-pill audit-stat-critical">
+                  <span className="audit-stat-num">{auditLogs.filter(l => l.severity === 'critical').length}</span>
+                  <span>Critical</span>
+                </div>
+                <div className="audit-stat-pill">
+                  <span className="audit-stat-num">{new Set(auditLogs.map(l => l.admin_email).filter(Boolean)).size}</span>
+                  <span>Admins Active</span>
+                </div>
+              </div>
+
+              {/* Audit Log List */}
+              {loadingAuditLogs ? (
+                <div className="admin-loading"><div className="admin-spinner" /><span>Loading audit logs...</span></div>
+              ) : filteredAuditLogs.length === 0 ? (
+                <div className="admin-empty admin-empty-enhanced">
+                  <div className="admin-empty-icon"><Shield size={48} strokeWidth={1} /></div>
+                  <h3>No audit logs found</h3>
+                  <p>{auditSearch || auditFilter !== 'all' || auditSeverityFilter !== 'all' ? 'Try adjusting your filters.' : 'Admin actions will be recorded here automatically.'}</p>
+                </div>
+              ) : (
+                <div className="audit-log-list">
+                  {filteredAuditLogs.map((log, idx) => {
+                    const actionConfig = AUDIT_ACTION_LABELS[log.action] || { label: log.action, color: '#607d8b', icon: '📋' }
+                    const sevConfig = SEVERITY_CONFIG[log.severity] || SEVERITY_CONFIG.info
+                    let meta = {}
+                    try { meta = typeof log.metadata === 'string' ? JSON.parse(log.metadata) : (log.metadata || {}) } catch { meta = {} }
+                    
+                    return (
+                      <div key={log.id || idx} className={`audit-log-item audit-log-severity-${log.severity}`}>
+                        <div className="audit-log-icon" style={{ background: sevConfig.bg, color: actionConfig.color }}>
+                          <span>{actionConfig.icon}</span>
+                        </div>
+                        <div className="audit-log-content">
+                          <div className="audit-log-top">
+                            <span className="audit-log-action-badge" style={{ background: `${actionConfig.color}15`, color: actionConfig.color, borderColor: `${actionConfig.color}30` }}>
+                              {actionConfig.label}
+                            </span>
+                            <span className="audit-log-severity-badge" style={{ background: sevConfig.bg, color: sevConfig.color }}>
+                              {sevConfig.label}
+                            </span>
+                            {log.entity_type && (
+                              <span className="audit-log-entity-badge">
+                                {log.entity_type === 'booking' ? <Calendar size={10} /> : log.entity_type === 'enquiry' ? <Mail size={10} /> : <Sparkles size={10} />}
+                                {log.entity_type}
+                              </span>
+                            )}
+                          </div>
+                          <p className="audit-log-desc">{log.description}</p>
+                          {/* Metadata pills */}
+                          {Object.keys(meta).length > 0 && (
+                            <div className="audit-log-meta">
+                              {Object.entries(meta).slice(0, 4).map(([k, v]) => (
+                                <span key={k} className="audit-log-meta-pill" title={`${k}: ${v}`}>
+                                  <strong>{k.replace(/_/g, ' ')}:</strong> {String(v).slice(0, 40)}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          <div className="audit-log-footer">
+                            <span className="audit-log-admin">
+                              <Shield size={11} /> {log.admin_name || log.admin_email || 'System'}
+                            </span>
+                            <span className="audit-log-time">
+                              <Clock size={11} /> {formatDateTime(log.created_at)} ({timeAgo(log.created_at)})
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ═══ Activity Log Tab ═══ */}
           {activeTab === 'activity' && (
-            <div className="admin-tab-content">
+            <div className="admin-tab-content admin-tab-fade">
               <div className="admin-activity-header">
                 <h3 className="admin-activity-title"><Activity size={18} /> Recent Activity</h3>
                 <span className="admin-activity-sub">Real-time updates from bookings and enquiries</span>
               </div>
               {activityLog.length === 0 ? (
-                <div className="admin-empty">
-                  <Activity size={48} strokeWidth={1} />
+                <div className="admin-empty admin-empty-enhanced">
+                  <div className="admin-empty-icon"><Activity size={48} strokeWidth={1} /></div>
                   <h3>No activity yet</h3>
                   <p>Actions performed during this session will appear here in real-time.</p>
                 </div>
@@ -1231,16 +1379,8 @@ export default function AdminPanel() {
               </div>
             )}
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              {detailBooking.student_email && (
-                <button className="btn btn-outline btn-sm" onClick={() => emailStudent(detailBooking)}>
-                  <Send size={14} /> Email Student
-                </button>
-              )}
-              {detailBooking.google_meet && !detailBooking.meet_link && (
-                <button className="btn btn-primary btn-sm" onClick={() => { createCalendarEvent(detailBooking); setDetailBooking(null) }}>
-                  <CalendarPlus size={14} /> Create Calendar Event
-                </button>
-              )}
+              {detailBooking.student_email && <button className="btn btn-outline btn-sm" onClick={() => emailStudent(detailBooking)}><Send size={14} /> Email Student</button>}
+              {detailBooking.google_meet && !detailBooking.meet_link && <button className="btn btn-primary btn-sm" onClick={() => { createCalendarEvent(detailBooking); setDetailBooking(null) }}><CalendarPlus size={14} /> Create Calendar Event</button>}
             </div>
           </div>
         </div>
