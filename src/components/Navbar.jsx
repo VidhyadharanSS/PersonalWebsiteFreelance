@@ -3,7 +3,7 @@ import { Sun, Moon, LogIn, LogOut, LayoutDashboard, ShieldCheck, Home, Menu, X, 
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
-export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, view, isAdmin }) {
+export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, onLearn, view, isAdmin }) {
   const { theme, toggle } = useTheme()
   const { user, signOut, getUserName, getUserAvatar } = useAuth()
   const [scrolled, setScrolled] = useState(false)
@@ -114,6 +114,15 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                 </a>
               </li>
             ))}
+            <li>
+              <a
+                href="/learn"
+                className={`nav-link${view === 'learn' ? ' active' : ''}`}
+                onClick={e => { e.preventDefault(); setMobileOpen(false); onLearn() }}
+              >
+                Learn
+              </a>
+            </li>
           </ul>
 
           {/* Desktop Actions */}
@@ -179,7 +188,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                     <ShieldCheck size={14} /> Admin
                   </button>
                 )}
-                {(view === 'dashboard' || view === 'admin') && (
+                {(view === 'dashboard' || view === 'admin' || view === 'learn') && (
                   <button className="btn btn-outline btn-nav btn-sm" onClick={onHome}>
                     <Home size={14} /> Home
                   </button>
@@ -251,6 +260,15 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
               </a>
             </li>
           ))}
+          <li>
+            <a
+              href="/learn"
+              className={`mobile-nav-link${view === 'learn' ? ' active' : ''}`}
+              onClick={e => { e.preventDefault(); setMobileOpen(false); onLearn() }}
+            >
+              Learn
+            </a>
+          </li>
         </ul>
 
         <div className="mobile-drawer-divider" />
@@ -268,7 +286,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                   <ShieldCheck size={18} /> Admin Panel
                 </button>
               )}
-              {(view === 'dashboard' || view === 'admin') && (
+              {(view === 'dashboard' || view === 'admin' || view === 'learn') && (
                 <button className="mobile-action-btn" onClick={() => { setMobileOpen(false); onHome() }}>
                   <Home size={18} /> Home
                 </button>

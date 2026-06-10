@@ -659,6 +659,7 @@ export default function Homepage({ onCTA, onRefund }) {
               <ul className="footer-col-links">
                 <li><a href="#why">Why Us</a></li>
                 <li><a href="#programs">Programs</a></li>
+                <li><a href="/learn">Learn Articles</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#testimonials">Testimonials</a></li>
                 <li><a href="#faq">FAQ</a></li>

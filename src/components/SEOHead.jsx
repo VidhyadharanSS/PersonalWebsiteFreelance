@@ -23,6 +23,13 @@ const SEO_CONFIG = {
     ogTitle: 'Student Dashboard — zped',
     ogDescription: 'Track your child\'s learning progress with zped\'s interactive dashboard.',
   },
+  learn: {
+    title: 'ZP Learn — Science Articles for Students | Zenith Pranavi',
+    description: 'Read clear science articles from ZP Learn by Zenith Pranavi. Explore biomolecules, photosynthesis, atoms, climate, and other student-friendly topics.',
+    canonical: 'https://zped.org/learn',
+    ogTitle: 'ZP Learn — Student-Friendly Science Articles',
+    ogDescription: 'Readable science lessons with key terms, quick facts, checkpoints, and examples for curious learners.',
+  },
   admin: {
     title: 'Admin Panel — zped | Zenith Pranavi',
     description: 'zped administration panel for managing bookings, students, and tutoring operations.',
