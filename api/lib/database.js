@@ -1,6 +1,10 @@
 import 'dotenv/config'
 import mysql from 'mysql2/promise'
 
+const ssl = process.env.DB_SSL === 'true'
+  ? { minVersion: 'TLSv1.2', rejectUnauthorized: true }
+  : undefined
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: Number(process.env.DB_PORT || 3306),
@@ -14,6 +18,7 @@ const pool = mysql.createPool({
   keepAliveInitialDelay: 0,
   timezone: 'Z',
   decimalNumbers: true,
+  ssl,
 })
 
 export async function query(sql, params = []) {

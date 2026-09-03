@@ -70,6 +70,8 @@ Run `npm start` under systemd or another process supervisor and place nginx or C
 
 Do not deploy this configuration to Vercel while `DB_HOST=localhost`: Vercel functions run remotely and cannot access MySQL on the local Linux machine.
 
+For managed MySQL or TiDB Cloud, set `DB_SSL=true` and use the provider's public host, port, username, password, and database name in the deployment environment.
+
 ## Validation
 
 ```bash
