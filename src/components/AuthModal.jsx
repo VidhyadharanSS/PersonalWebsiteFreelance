@@ -15,7 +15,7 @@ function GoogleIcon() {
 }
 
 export default function AuthModal({ open, onClose }) {
-  const { signIn, signUp, signInWithGoogle, resetPassword, completePasswordReset } = useAuth()
+  const { signIn, signUp, signInWithGoogle, resetPassword, completePasswordReset, googleEnabled } = useAuth()
   const toast = useToast()
   const [mode, setMode] = useState('signin')
   const [loading, setLoading] = useState(false)
@@ -136,7 +136,7 @@ export default function AuthModal({ open, onClose }) {
         </div>
 
         {/* Google Sign In — shown for signin and signup */}
-        {mode !== 'forgot' && mode !== 'reset' && (
+        {googleEnabled && mode !== 'forgot' && mode !== 'reset' && (
           <>
             <button
               className="btn-google-signin"

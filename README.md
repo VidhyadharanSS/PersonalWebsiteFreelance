@@ -32,6 +32,25 @@ npm run dev
 
 The development app and API are available at `http://localhost:3000`.
 
+For a persistent local deployment using Docker:
+
+```bash
+docker compose up -d --build
+docker compose ps
+```
+
+Both services use `restart: unless-stopped`; MySQL data is stored in a named volume.
+
+## Google Sign-In
+
+Create an OAuth 2.0 Client ID of type **Web application** in Google Cloud Console. Add the exact authorized redirect URI matching your deployment:
+
+```text
+http://localhost:3000/api/auth/callback
+```
+
+For production, use `https://your-domain.example/api/auth/callback` and set `SITE_URL` to `https://your-domain.example`. Put the generated values in `.env` as `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI`, then restart with `docker compose up -d --build`. The Google control is shown only when all required server configuration is present.
+
 Promote an existing account to administrator when needed:
 
 ```sql

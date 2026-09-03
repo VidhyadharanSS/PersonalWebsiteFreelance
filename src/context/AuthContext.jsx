@@ -60,6 +60,7 @@ function loadUser() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [googleEnabled, setGoogleEnabled] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -77,12 +78,14 @@ export function AuthProvider({ children }) {
     return () => { active = false }
   }, [])
 
-  /**
-   * Sign up a new user
-   * In custom mode: register via serverless API proxy → Catalyst User Management
-   */
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then(response => response.ok ? response.json() : null)
+      .then(data => setGoogleEnabled(Boolean(data?.googleEnabled)))
+      .catch(() => setGoogleEnabled(false))
+  }, [])
+
   const signUp = useCallback(async (email, password, name) => {
-    // Call our serverless proxy which handles Catalyst user signup + password setup
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -117,13 +120,10 @@ export function AuthProvider({ children }) {
     return data
   }, [])
 
-  /**
-   * Sign in with Google (OAuth)
-   * Redirects to Catalyst's Google OAuth flow via serverless proxy
-   */
   const signInWithGoogle = useCallback(async () => {
+    if (!googleEnabled) throw new Error('Google sign in is not configured')
     window.location.href = `/api/auth/google?redirect_url=${encodeURIComponent(window.location.href)}`
-  }, [])
+  }, [googleEnabled])
 
   /**
    * Sign out
@@ -197,7 +197,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading,
+      user, loading, googleEnabled,
       signUp, signIn, signInWithGoogle, signOut, resetPassword, completePasswordReset,
       getUserName, getUserAvatar, isAdmin,
     }}>

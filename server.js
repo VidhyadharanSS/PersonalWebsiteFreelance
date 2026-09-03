@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import dataHandler from './api/data.js'
 import sendEmailHandler from './api/send-email.js'
 import callbackHandler from './api/auth/callback.js'
+import authConfigHandler from './api/auth/config.js'
 import googleHandler from './api/auth/google.js'
 import meHandler from './api/auth/me.js'
 import resetPasswordHandler from './api/auth/reset-password.js'
@@ -23,6 +24,7 @@ const routes = {
   '/api/data': dataHandler,
   '/api/send-email': sendEmailHandler,
   '/api/auth/callback': callbackHandler,
+  '/api/auth/config': authConfigHandler,
   '/api/auth/google': googleHandler,
   '/api/auth/me': meHandler,
   '/api/auth/reset-password': resetPasswordHandler,

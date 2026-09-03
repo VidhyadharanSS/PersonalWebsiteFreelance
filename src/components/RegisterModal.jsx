@@ -31,7 +31,7 @@ const CURRICULA = ['CBSE','ICSE','State Board','IGCSE (Cambridge)','IB (PYP, MYP
 const TIME_SLOTS = ['Morning (9 AM - 12 PM)','Afternoon (12 - 3 PM)','Evening (3 - 6 PM)','Night (6 - 9 PM)']
 
 export default function RegisterModal({ open, onClose }) {
-  const { user, signUp, signIn, signInWithGoogle, resetPassword, getUserName } = useAuth()
+  const { user, signUp, signIn, signInWithGoogle, resetPassword, getUserName, googleEnabled } = useAuth()
   const toast = useToast()
   const [step, setStep] = useState(1)
   const [authMode, setAuthMode] = useState('create')
@@ -99,7 +99,7 @@ export default function RegisterModal({ open, onClose }) {
 
   const handleCreate = async () => {
     if (!fullName || !email || !password) return toast('Please fill in all fields.', 'warning')
-    if (password.length < 6) return toast('Password must be at least 6 characters.', 'warning')
+    if (password.length < 8) return toast('Password must be at least 8 characters.', 'warning')
     setLoading(true)
     try {
       await signUp(email, password, fullName)
@@ -231,7 +231,7 @@ export default function RegisterModal({ open, onClose }) {
             ) : (
               <>
                 {/* Google Sign In */}
-                {authMode !== 'forgot' && (
+                {googleEnabled && authMode !== 'forgot' && (
                   <>
                     <button
                       className="btn-google-signin"
