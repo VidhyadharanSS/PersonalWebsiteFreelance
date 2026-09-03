@@ -12,7 +12,7 @@ import AuthModal from './components/AuthModal'
 import RefundModal from './components/RefundModal'
 import SEOHead from './components/SEOHead'
 import { useAuth } from './context/AuthContext'
-import { ADMIN_EMAILS } from './lib/catalyst'
+import { ADMIN_EMAILS } from './lib/config'
 
 // Lazy load heavy components for code splitting
 const LearnPage = lazy(() => import('./components/LearnPage'))
@@ -33,6 +33,10 @@ export default function App() {
   const [refundModalOpen, setRefundModalOpen] = useState(false)
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email?.toLowerCase())
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has('reset_token')) setAuthModalOpen(true)
+  }, [])
 
   // Derive the current view from the route for SEO and navbar
   const getView = useCallback(() => {

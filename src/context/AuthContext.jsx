@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════
-// AUTH CONTEXT — Zoho Catalyst Authentication
+// AUTH CONTEXT — MySQL-backed authentication
 // ═══════════════════════════════════════════════════════════════════════
 //
 // Supports two authentication modes:
@@ -13,12 +13,12 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { catalyst, CATALYST_CONFIG, SITE_URL, ADMIN_EMAILS } from '../lib/catalyst'
+import { ADMIN_EMAILS } from '../lib/config'
 
 const AuthContext = createContext()
 
 // Session storage key
-const USER_KEY = 'catalyst_user'
+const USER_KEY = 'zped_user'
 
 function persistUser(user) {
   if (user) {
@@ -62,12 +62,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // On mount, restore user from session
-    const stored = loadUser()
-    if (stored) {
-      setUser(stored)
-    }
-    setLoading(false)
+    let active = true
+    fetch('/api/auth/me', { credentials: 'same-origin' })
+      .then(async response => response.ok ? response.json() : null)
+      .then(data => {
+        if (active) setUser(data?.user ? persistUser(data.user) : persistUser(null))
+      })
+      .catch(() => {
+        if (active) setUser(loadUser())
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => { active = false }
   }, [])
 
   /**
@@ -85,15 +92,7 @@ export function AuthProvider({ children }) {
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Sign up failed')
 
-    const userData = persistUser({
-      id: data.user_id || data.zuid || email,
-      user_id: data.user_id || data.zuid || '',
-      email: email,
-      email_id: email,
-      name: name,
-      first_name: name,
-      full_name: name,
-    })
+    const userData = persistUser(data.user)
 
     setUser(userData)
     return data
@@ -112,23 +111,7 @@ export function AuthProvider({ children }) {
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Sign in failed')
 
-    // Store access token for API calls
-    if (data.access_token) {
-      catalyst.setAccessToken(data.access_token, data.expires_in || 3600)
-    }
-
-    const userData = persistUser({
-      id: data.user_id || data.zuid || email,
-      user_id: data.user_id || '',
-      email: email,
-      email_id: data.email_id || email,
-      name: data.first_name || data.name || email.split('@')[0],
-      first_name: data.first_name || '',
-      last_name: data.last_name || '',
-      full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || email.split('@')[0],
-      avatar_url: data.avatar_url || null,
-      role: data.user_type || 'App User',
-    })
+    const userData = persistUser(data.user)
 
     setUser(userData)
     return data
@@ -139,9 +122,7 @@ export function AuthProvider({ children }) {
    * Redirects to Catalyst's Google OAuth flow via serverless proxy
    */
   const signInWithGoogle = useCallback(async () => {
-    // Redirect to our serverless proxy that initiates Catalyst OAuth
-    const redirectUrl = encodeURIComponent(`${SITE_URL}/auth/callback`)
-    window.location.href = `/api/auth/google?redirect_url=${redirectUrl}`
+    window.location.href = `/api/auth/google?redirect_url=${encodeURIComponent(window.location.href)}`
   }, [])
 
   /**
@@ -167,6 +148,17 @@ export function AuthProvider({ children }) {
       body: JSON.stringify({ email }),
     })
 
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Password reset failed')
+    return data
+  }, [])
+
+  const completePasswordReset = useCallback(async (token, password) => {
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Password reset failed')
     return data
@@ -206,7 +198,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, loading,
-      signUp, signIn, signInWithGoogle, signOut, resetPassword,
+      signUp, signIn, signInWithGoogle, signOut, resetPassword, completePasswordReset,
       getUserName, getUserAvatar, isAdmin,
     }}>
       {children}

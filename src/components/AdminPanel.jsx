@@ -1,7 +1,13 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
-import { catalyst } from '../lib/catalyst'
+import {
+  fetchAllBookings, fetchAllEnquiries,
+  updateBookingStatus as saveBookingStatus,
+  updateBookingMeetLink, updateBookingNotes,
+  deleteEnquiry as removeEnquiry,
+  bulkUpdateBookingStatus, bulkDeleteBookings,
+} from '../lib/database'
 import { sendBookingStatusUpdate, sendMeetLinkEmail } from '../lib/email'
 import {
   logBookingStatusChange, logMeetLinkAdded, logNoteSaved,
@@ -154,10 +160,7 @@ export default function AdminPanel() {
   const loadBookings = useCallback(async () => {
     setLoadingBookings(true)
     try {
-      const rows = await catalyst.getAllRows('Bookings')
-      const data = rows.map(r => ({ ...r, id: r.ROWID, created_at: r.CREATEDTIME }))
-        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-      setBookings(data)
+      setBookings(await fetchAllBookings())
     } catch (err) {
       toast('Failed to load bookings: ' + err.message, 'error')
     } finally { setLoadingBookings(false) }
@@ -166,10 +169,7 @@ export default function AdminPanel() {
   const loadEnquiries = useCallback(async () => {
     setLoadingEnquiries(true)
     try {
-      const rows = await catalyst.getAllRows('Enquiries')
-      const data = rows.map(r => ({ ...r, id: r.ROWID, created_at: r.CREATEDTIME }))
-        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-      setEnquiries(data)
+      setEnquiries(await fetchAllEnquiries())
     } catch (err) {
       toast('Failed to load enquiries: ' + err.message, 'error')
     } finally { setLoadingEnquiries(false) }
@@ -179,7 +179,7 @@ export default function AdminPanel() {
     loadBookings()
     loadEnquiries()
 
-    // Catalyst doesn't have real-time subscriptions — use polling
+    // Poll for updates from other admin sessions.
     const pollInterval = setInterval(() => {
       loadBookings()
       loadEnquiries()
@@ -197,7 +197,7 @@ export default function AdminPanel() {
       const booking = bookings.find(b => b.id === id)
       const oldStatus = booking?.status || 'unknown'
 
-      await catalyst.updateRow('Bookings', { ROWID: id, status: newStatus })
+      await saveBookingStatus(id, newStatus)
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b))
       setActivityLog(prev => [{
         type: `booking_${newStatus}`,
@@ -234,7 +234,7 @@ export default function AdminPanel() {
     }
     setUpdatingId(id)
     try {
-      await catalyst.updateRow('Bookings', { ROWID: id, meet_link: link })
+      await updateBookingMeetLink(id, link)
       setBookings(prev => prev.map(b => b.id === id ? { ...b, meet_link: link } : b))
       setShowMeetInput(null)
       setMeetLinkInputs(prev => ({ ...prev, [id]: '' }))
@@ -266,7 +266,7 @@ export default function AdminPanel() {
     if (!note) return
     setSavingNote(id)
     try {
-      await catalyst.updateRow('Bookings', { ROWID: id, admin_notes: note })
+      await updateBookingNotes(id, note)
       setBookings(prev => prev.map(b => b.id === id ? { ...b, admin_notes: note } : b))
 
       const booking = bookings.find(b => b.id === id)
@@ -341,7 +341,7 @@ export default function AdminPanel() {
     if (!window.confirm('Delete this enquiry?')) return
     const enquiry = enquiries.find(e => e.id === id)
     try {
-      await catalyst.deleteRow('Enquiries', id)
+      await removeEnquiry(id)
       setEnquiries(prev => prev.filter(e => e.id !== id))
       // 🔒 AUDIT LOG
       logEnquiryDeleted(enquiry, adminInfo)
@@ -532,8 +532,7 @@ export default function AdminPanel() {
     setUpdatingId('bulk')
     try {
       const ids = Array.from(selectedBookings)
-      const updatePayload = ids.map(id => ({ ROWID: id, status: newStatus }))
-      await catalyst.updateRow('Bookings', updatePayload)
+      await bulkUpdateBookingStatus(ids, newStatus)
       setBookings(prev => prev.map(b => ids.includes(b.id) ? { ...b, status: newStatus } : b))
       setSelectedBookings(new Set())
 
@@ -553,7 +552,7 @@ export default function AdminPanel() {
     setUpdatingId('bulk')
     try {
       const ids = Array.from(selectedBookings)
-      await catalyst.deleteRows('Bookings', ids)
+      await bulkDeleteBookings(ids)
       setBookings(prev => prev.filter(b => !ids.includes(b.id)))
       setSelectedBookings(new Set())
 

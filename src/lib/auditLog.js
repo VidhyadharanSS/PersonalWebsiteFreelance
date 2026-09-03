@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════════════════
 // AUDIT LOGGING SERVICE — Tracks all admin actions for accountability
-// Logs to Catalyst Data Store `AuditLogs` table + keeps in-memory session log
+// Logs to the MySQL `audit_logs` table and keeps an in-memory session log
 // ═══════════════════════════════════════════════════════════════════════
 
-import { catalyst } from './catalyst'
+import { createAuditLog, fetchStoredAuditLogCount, fetchStoredAuditLogs } from './database'
 
 // ── Action Types ──
 export const AUDIT_ACTIONS = {
@@ -85,9 +85,9 @@ export async function logAudit({
   sessionLogs = [memEntry, ...sessionLogs].slice(0, 200)
   notifyListeners()
 
-  // Persist to Catalyst Data Store (fire-and-forget)
+  // Persist to MySQL (fire-and-forget)
   try {
-    await catalyst.insertRow('AuditLogs', entry)
+    await createAuditLog(entry)
   } catch (err) {
     console.warn('[AuditLog] DB insert error:', err.message)
   }
@@ -98,15 +98,7 @@ export async function logAudit({
 // ── Fetch historical audit logs from DB ──
 export async function fetchAuditLogs({ limit = 100, offset = 0, action = null, entityType = null } = {}) {
   try {
-    const rows = await catalyst.getAllRows('AuditLogs')
-    let filtered = rows.map(r => ({ ...r, id: r.ROWID, created_at: r.CREATEDTIME }))
-
-    if (action) filtered = filtered.filter(r => r.action === action)
-    if (entityType) filtered = filtered.filter(r => r.entity_type === entityType)
-
-    return filtered
-      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-      .slice(offset, offset + limit)
+    return await fetchStoredAuditLogs({ limit, offset, action, entity_type: entityType })
   } catch (error) {
     console.warn('[AuditLog] Fetch failed:', error.message)
     return sessionLogs // fallback to session logs
@@ -116,8 +108,7 @@ export async function fetchAuditLogs({ limit = 100, offset = 0, action = null, e
 // ── Fetch audit log count ──
 export async function fetchAuditLogCount() {
   try {
-    const rows = await catalyst.getAllRows('AuditLogs')
-    return rows.length
+    return await fetchStoredAuditLogCount()
   } catch {
     return sessionLogs.length
   }

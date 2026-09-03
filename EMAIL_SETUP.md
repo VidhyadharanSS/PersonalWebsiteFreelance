@@ -1,6 +1,6 @@
 # Email Confirmation Setup
 
-The site sends transactional emails via a Vercel serverless function
+The site sends transactional emails through the self-hosted Node API
 (`/api/send-email.js`) using [Resend](https://resend.com) as the provider.
 
 Emails are sent for:
@@ -26,7 +26,7 @@ configured or temporarily fails, the booking/enquiry still succeeds.
    you through adding the DNS records. For quick testing, you can use the
    built-in sender `onboarding@resend.dev` without verification.
 3. **Create an API key** in the Resend dashboard.
-4. **Add environment variables in Vercel**
+4. **Add environment variables to `.env` on the application server**
    (Project → Settings → Environment Variables):
 
    ```
@@ -38,7 +38,7 @@ configured or temporarily fails, the booking/enquiry still succeeds.
    > If you haven't verified a domain yet, use
    > `EMAIL_FROM = Zenith Pranavi <onboarding@resend.dev>`.
 
-5. **Redeploy** the project (Vercel → Deployments → Redeploy).
+5. **Restart** the application service so it reads the new environment.
 
 That's it — emails will start flowing automatically.
 
@@ -47,7 +47,7 @@ That's it — emails will start flowing automatically.
 ## Database migration (one-time)
 
 The bookings table now stores `student_email` so admin actions can email
-the student back. If you have an existing Supabase DB, run:
+the student back. If you have an existing MySQL database, run:
 
 ```sql
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS student_email TEXT DEFAULT NULL;
@@ -60,15 +60,12 @@ New bookings will automatically populate this column.
 
 ## Local development
 
-The serverless function only runs on Vercel (or `vercel dev`). Without it,
-`fetch('/api/send-email')` returns 404 — that's fine, it's caught and
-silently logged so your UI flow is not affected.
+The Express server exposes `/api/send-email` alongside the Vite application.
 
 To test locally with emails enabled:
 
 ```bash
-npm i -g vercel
-vercel dev
+npm run dev
 ```
 
 This exposes `/api/send-email` alongside the Vite dev server.
@@ -81,6 +78,6 @@ This exposes `/api/send-email` alongside the Vite dev server.
   and the project has been redeployed after adding it.
 - **"Domain not verified" from Resend** — either verify the domain in
   Resend or switch `EMAIL_FROM` to `onboarding@resend.dev`.
-- **Admin emails missing** — confirm `ADMIN_EMAIL` in Vercel env vars.
+- **Admin emails missing** — confirm `ADMIN_EMAIL` in the server `.env` file.
 - **Emails land in spam** — verify the domain in Resend and set up SPF/DKIM
   as prompted.

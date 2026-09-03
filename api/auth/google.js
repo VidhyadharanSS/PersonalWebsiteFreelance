@@ -1,36 +1,25 @@
-// ═══════════════════════════════════════════════════════════════════════
-// AUTH PROXY — Google OAuth via Zoho Catalyst
-// ═══════════════════════════════════════════════════════════════════════
-//
-// Initiates the OAuth flow by redirecting to Zoho Accounts.
-// After authorization, Zoho redirects back with an auth code.
-// ═══════════════════════════════════════════════════════════════════════
+import jwt from 'jsonwebtoken'
 
-const ACCOUNTS_URL = process.env.ZOHO_ACCOUNTS_URL || 'https://accounts.zoho.in'
-const CLIENT_ID = process.env.ZOHO_CLIENT_ID
-const REDIRECT_URI = process.env.ZOHO_REDIRECT_URI || `${process.env.SITE_URL || ''}/api/auth/callback`
-const SCOPES = 'ZohoCatalyst.tables.rows.CREATE,ZohoCatalyst.tables.rows.READ,ZohoCatalyst.tables.rows.UPDATE,ZohoCatalyst.tables.rows.DELETE,ZohoCatalyst.projects.users.READ'
-
-export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
+export default function handler(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.JWT_SECRET) {
+    return res.status(500).json({ error: 'Google sign-in is not configured' })
   }
 
-  const redirectUrl = req.query.redirect_url || process.env.SITE_URL || ''
+  const siteUrl = process.env.SITE_URL || 'http://localhost:5173'
+  let redirectUrl = siteUrl
+  try {
+    const requested = new URL(req.query.redirect_url || siteUrl)
+    if (requested.origin === new URL(siteUrl).origin) redirectUrl = requested.toString()
+  } catch { /* use the configured site URL */ }
 
-  if (!CLIENT_ID) {
-    return res.status(500).json({ error: 'OAuth not configured. Set ZOHO_CLIENT_ID in environment.' })
-  }
-
-  // Build Zoho OAuth authorization URL
-  const authUrl = new URL(`${ACCOUNTS_URL}/oauth/v2/auth`)
-  authUrl.searchParams.set('scope', SCOPES)
-  authUrl.searchParams.set('client_id', CLIENT_ID)
+  const state = jwt.sign({ redirectUrl }, process.env.JWT_SECRET, { expiresIn: '10m', issuer: 'zped-oauth' })
+  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
+  authUrl.searchParams.set('client_id', process.env.GOOGLE_CLIENT_ID)
+  authUrl.searchParams.set('redirect_uri', process.env.GOOGLE_REDIRECT_URI || `${siteUrl}/api/auth/callback`)
   authUrl.searchParams.set('response_type', 'code')
-  authUrl.searchParams.set('access_type', 'offline')
-  authUrl.searchParams.set('redirect_uri', REDIRECT_URI)
-  authUrl.searchParams.set('state', Buffer.from(redirectUrl).toString('base64'))
-  authUrl.searchParams.set('prompt', 'consent')
-
+  authUrl.searchParams.set('scope', 'openid email profile')
+  authUrl.searchParams.set('state', state)
+  authUrl.searchParams.set('prompt', 'select_account')
   return res.redirect(302, authUrl.toString())
 }

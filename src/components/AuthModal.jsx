@@ -15,7 +15,7 @@ function GoogleIcon() {
 }
 
 export default function AuthModal({ open, onClose }) {
-  const { signIn, signUp, signInWithGoogle, resetPassword } = useAuth()
+  const { signIn, signUp, signInWithGoogle, resetPassword, completePasswordReset } = useAuth()
   const toast = useToast()
   const [mode, setMode] = useState('signin')
   const [loading, setLoading] = useState(false)
@@ -27,7 +27,7 @@ export default function AuthModal({ open, onClose }) {
 
   useEffect(() => {
     if (open) {
-      setMode('signin')
+      setMode(new URLSearchParams(window.location.search).has('reset_token') ? 'reset' : 'signin')
       setEmail('')
       setPassword('')
       setName('')
@@ -72,7 +72,7 @@ export default function AuthModal({ open, onClose }) {
   const handleSignUp = async (e) => {
     e.preventDefault()
     if (!name || !email || !password) return toast('Please fill all fields.', 'warning')
-    if (password.length < 6) return toast('Password must be at least 6 characters.', 'warning')
+    if (password.length < 8) return toast('Password must be at least 8 characters.', 'warning')
     setLoading(true)
     try {
       await signUp(email, password, name)
@@ -95,6 +95,23 @@ export default function AuthModal({ open, onClose }) {
     } finally { setLoading(false) }
   }
 
+  const handleReset = async (e) => {
+    e.preventDefault()
+    if (password.length < 8) return toast('Password must be at least 8 characters.', 'warning')
+    setLoading(true)
+    try {
+      const params = new URLSearchParams(window.location.search)
+      await completePasswordReset(params.get('reset_token'), password)
+      params.delete('reset_token')
+      window.history.replaceState({}, '', `${window.location.pathname}${params.size ? `?${params}` : ''}`)
+      setPassword('')
+      setMode('signin')
+      toast('Password updated. You can now sign in.', 'success')
+    } catch (err) {
+      toast(err.message || 'Password reset failed.', 'error')
+    } finally { setLoading(false) }
+  }
+
   if (!open) return null
 
   return (
@@ -108,16 +125,18 @@ export default function AuthModal({ open, onClose }) {
             {mode === 'signin' && 'Welcome Back'}
             {mode === 'signup' && 'Create Account'}
             {mode === 'forgot' && 'Reset Password'}
+            {mode === 'reset' && 'Choose New Password'}
           </h3>
           <p className="auth-modal-sub">
             {mode === 'signin' && 'Sign in to access your dashboard'}
             {mode === 'signup' && 'Join Zenith Pranavi today'}
             {mode === 'forgot' && 'Enter your email to receive a reset link'}
+            {mode === 'reset' && 'Use at least 8 characters'}
           </p>
         </div>
 
         {/* Google Sign In — shown for signin and signup */}
-        {mode !== 'forgot' && (
+        {mode !== 'forgot' && mode !== 'reset' && (
           <>
             <button
               className="btn-google-signin"
@@ -140,7 +159,7 @@ export default function AuthModal({ open, onClose }) {
           </>
         )}
 
-        {mode !== 'forgot' && (
+        {mode !== 'forgot' && mode !== 'reset' && (
           <div className="reg-auth-tabs">
             <button
               className={`reg-auth-tab${mode === 'signin' ? ' active' : ''}`}
@@ -197,7 +216,7 @@ export default function AuthModal({ open, onClose }) {
               <div className="password-input-wrap">
                 <input
                   type={showPw ? 'text' : 'password'}
-                  placeholder="Min 6 characters"
+                  placeholder="Min 8 characters"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
@@ -224,6 +243,29 @@ export default function AuthModal({ open, onClose }) {
             <p className="auth-link-row">
               <a href="#" onClick={e => { e.preventDefault(); setMode('signin') }}>← Back to Sign In</a>
             </p>
+          </form>
+        )}
+
+        {mode === 'reset' && (
+          <form onSubmit={handleReset} className="auth-form">
+            <div className="form-group">
+              <label>New Password</label>
+              <div className="password-input-wrap">
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  placeholder="Min 8 characters"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoFocus
+                />
+                <button type="button" className="pw-toggle" onClick={() => setShowPw(!showPw)} tabIndex={-1}>
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+              {loading ? <span className="btn-loader" /> : 'Update Password'}
+            </button>
           </form>
         )}
       </div>
