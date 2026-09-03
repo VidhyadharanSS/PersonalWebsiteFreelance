@@ -6,7 +6,6 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    // Allow all hosts including the Zoho Code IDE preview domain (*.zcodecorp.in)
     allowedHosts: true
   },
   preview: {
@@ -16,6 +15,32 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
-  }
+    sourcemap: false,
+    // Code splitting for better caching
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          router: ['react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+          icons: ['lucide-react'],
+        },
+      },
+    },
+    // Optimize chunk sizes
+    chunkSizeWarningLimit: 600,
+    // Minification (esbuild is Vite's default — fast & efficient)
+    minify: 'esbuild',
+  },
+  // Test configuration
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    css: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/', 'src/test/', '*.config.*'],
+    },
+  },
 })
