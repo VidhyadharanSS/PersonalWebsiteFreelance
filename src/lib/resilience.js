@@ -142,8 +142,8 @@ export async function resilientQuery(operation, options = {}) {
  * Connection health check
  */
 export class ConnectionMonitor {
-  constructor(supabase) {
-    this.supabase = supabase
+  constructor(catalystClient) {
+    this.client = catalystClient
     this.isOnline = navigator.onLine
     this.lastCheck = null
     this.listeners = new Set()
@@ -166,7 +166,8 @@ export class ConnectionMonitor {
   async healthCheck() {
     try {
       const start = Date.now()
-      await this.supabase.from('tutors').select('id').limit(1)
+      // Simple connectivity check — fetch a single row from any table
+      await this.client.getRows('Bookings', { maxRows: 1 })
       this.lastCheck = { ok: true, latency: Date.now() - start, at: new Date() }
       this.updateStatus(true)
       return this.lastCheck

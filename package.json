@@ -13,7 +13,13 @@
     "lint": "echo 'Lint check passed'"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.4",
+    "@zcatalyst/auth": "^0.0.4",
+    "@zcatalyst/auth-client": "^0.0.3",
+    "@zcatalyst/cache": "^0.0.3",
+    "@zcatalyst/datastore": "^0.0.3",
+    "@zcatalyst/mail": "^0.0.3",
+    "@zcatalyst/stratus": "^0.0.5",
+    "@zcatalyst/utils": "^0.0.3",
     "dompurify": "^3.4.14",
     "lucide-react": "^0.511.0",
     "react": "^19.1.0",

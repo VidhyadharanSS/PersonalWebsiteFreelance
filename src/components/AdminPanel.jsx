@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
-import { supabase } from '../lib/supabase'
+import { catalyst } from '../lib/catalyst'
 import { sendBookingStatusUpdate, sendMeetLinkEmail } from '../lib/email'
 import {
   logBookingStatusChange, logMeetLinkAdded, logNoteSaved,
@@ -154,12 +154,10 @@ export default function AdminPanel() {
   const loadBookings = useCallback(async () => {
     setLoadingBookings(true)
     try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (error) throw error
-      setBookings(data || [])
+      const rows = await catalyst.getAllRows('Bookings')
+      const data = rows.map(r => ({ ...r, id: r.ROWID, created_at: r.CREATEDTIME }))
+        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      setBookings(data)
     } catch (err) {
       toast('Failed to load bookings: ' + err.message, 'error')
     } finally { setLoadingBookings(false) }
@@ -168,12 +166,10 @@ export default function AdminPanel() {
   const loadEnquiries = useCallback(async () => {
     setLoadingEnquiries(true)
     try {
-      const { data, error } = await supabase
-        .from('enquiries')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (error) throw error
-      setEnquiries(data || [])
+      const rows = await catalyst.getAllRows('Enquiries')
+      const data = rows.map(r => ({ ...r, id: r.ROWID, created_at: r.CREATEDTIME }))
+        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      setEnquiries(data)
     } catch (err) {
       toast('Failed to load enquiries: ' + err.message, 'error')
     } finally { setLoadingEnquiries(false) }
@@ -183,45 +179,14 @@ export default function AdminPanel() {
     loadBookings()
     loadEnquiries()
 
-    const bookingSub = supabase
-      .channel('admin-bookings')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setBookings(prev => [payload.new, ...prev])
-          setActivityLog(prev => [{
-            type: 'booking_new',
-            message: `New booking from ${payload.new.student_name || 'Student'} — ${payload.new.subject}`,
-            time: new Date().toISOString()
-          }, ...prev].slice(0, 50))
-          toast(`New booking received from ${payload.new.student_name || 'a student'}!`, 'info')
-        } else if (payload.eventType === 'UPDATE') {
-          setBookings(prev => prev.map(b => b.id === payload.new.id ? payload.new : b))
-        } else if (payload.eventType === 'DELETE') {
-          setBookings(prev => prev.filter(b => b.id !== payload.old.id))
-        }
-      })
-      .subscribe()
-
-    const enquirySub = supabase
-      .channel('admin-enquiries')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'enquiries' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setEnquiries(prev => [payload.new, ...prev])
-          setActivityLog(prev => [{
-            type: 'enquiry_new',
-            message: `New enquiry from ${payload.new.name || 'Someone'} — ${(payload.new.message || '').slice(0, 50)}`,
-            time: new Date().toISOString()
-          }, ...prev].slice(0, 50))
-          toast(`New enquiry from ${payload.new.name || 'someone'}!`, 'info')
-        } else if (payload.eventType === 'DELETE') {
-          setEnquiries(prev => prev.filter(e => e.id !== payload.old.id))
-        }
-      })
-      .subscribe()
+    // Catalyst doesn't have real-time subscriptions — use polling
+    const pollInterval = setInterval(() => {
+      loadBookings()
+      loadEnquiries()
+    }, 30000) // Refresh every 30 seconds
 
     return () => {
-      supabase.removeChannel(bookingSub)
-      supabase.removeChannel(enquirySub)
+      clearInterval(pollInterval)
     }
   }, [loadBookings, loadEnquiries, toast])
 
@@ -232,11 +197,7 @@ export default function AdminPanel() {
       const booking = bookings.find(b => b.id === id)
       const oldStatus = booking?.status || 'unknown'
 
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status: newStatus })
-        .eq('id', id)
-      if (error) throw error
+      await catalyst.updateRow('Bookings', { ROWID: id, status: newStatus })
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b))
       setActivityLog(prev => [{
         type: `booking_${newStatus}`,
@@ -273,11 +234,7 @@ export default function AdminPanel() {
     }
     setUpdatingId(id)
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ meet_link: link })
-        .eq('id', id)
-      if (error) throw error
+      await catalyst.updateRow('Bookings', { ROWID: id, meet_link: link })
       setBookings(prev => prev.map(b => b.id === id ? { ...b, meet_link: link } : b))
       setShowMeetInput(null)
       setMeetLinkInputs(prev => ({ ...prev, [id]: '' }))
@@ -309,11 +266,7 @@ export default function AdminPanel() {
     if (!note) return
     setSavingNote(id)
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ admin_notes: note })
-        .eq('id', id)
-      if (error) throw error
+      await catalyst.updateRow('Bookings', { ROWID: id, admin_notes: note })
       setBookings(prev => prev.map(b => b.id === id ? { ...b, admin_notes: note } : b))
 
       const booking = bookings.find(b => b.id === id)
@@ -388,8 +341,7 @@ export default function AdminPanel() {
     if (!window.confirm('Delete this enquiry?')) return
     const enquiry = enquiries.find(e => e.id === id)
     try {
-      const { error } = await supabase.from('enquiries').delete().eq('id', id)
-      if (error) throw error
+      await catalyst.deleteRow('Enquiries', id)
       setEnquiries(prev => prev.filter(e => e.id !== id))
       // 🔒 AUDIT LOG
       logEnquiryDeleted(enquiry, adminInfo)
@@ -580,11 +532,8 @@ export default function AdminPanel() {
     setUpdatingId('bulk')
     try {
       const ids = Array.from(selectedBookings)
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status: newStatus })
-        .in('id', ids)
-      if (error) throw error
+      const updatePayload = ids.map(id => ({ ROWID: id, status: newStatus }))
+      await catalyst.updateRow('Bookings', updatePayload)
       setBookings(prev => prev.map(b => ids.includes(b.id) ? { ...b, status: newStatus } : b))
       setSelectedBookings(new Set())
 
@@ -604,11 +553,7 @@ export default function AdminPanel() {
     setUpdatingId('bulk')
     try {
       const ids = Array.from(selectedBookings)
-      const { error } = await supabase
-        .from('bookings')
-        .delete()
-        .in('id', ids)
-      if (error) throw error
+      await catalyst.deleteRows('Bookings', ids)
       setBookings(prev => prev.filter(b => !ids.includes(b.id)))
       setSelectedBookings(new Set())
 

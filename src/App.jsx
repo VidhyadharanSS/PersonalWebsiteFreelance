@@ -12,7 +12,7 @@ import AuthModal from './components/AuthModal'
 import RefundModal from './components/RefundModal'
 import SEOHead from './components/SEOHead'
 import { useAuth } from './context/AuthContext'
-import { ADMIN_EMAILS } from './lib/supabase'
+import { ADMIN_EMAILS } from './lib/catalyst'
 
 // Lazy load heavy components for code splitting
 const LearnPage = lazy(() => import('./components/LearnPage'))

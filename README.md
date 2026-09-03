@@ -1,151 +1,166 @@
-# Zenith Pranavi (zped.org)
+# 🎓 Zenith Pranavi — Premium Tutoring Platform
 
-> Premium 1-on-1 Online Tutoring Platform — Where Every Child Reaches Their Zenith
-
-[![React](https://img.shields.io/badge/React-19-blue)](https://react.dev)
+[![React 19](https://img.shields.io/badge/React-19-blue)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-6-purple)](https://vitejs.dev)
-[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)](https://supabase.com)
+[![Zoho Catalyst](https://img.shields.io/badge/Zoho_Catalyst-Data_Store-green)](https://catalyst.zoho.com)
 [![License](https://img.shields.io/badge/License-Private-red)]()
 
-## 🏗️ Architecture
+## 🌟 Overview
 
-```
-React 19 + Vite 6 (Frontend)
-├── React Router v7 (SPA Routing)
-├── React Helmet Async (SEO)
-├── Lucide React (Icons)
-├── DOMPurify (XSS Protection)
-└── Vitest (Testing)
+A premium tutoring platform for **zped.org** with subject booking, admin management, session reviews, student progress tracking, and real-time notifications — powered by **Zoho Catalyst** for a resilient, always-on database.
 
-Supabase (Backend)
-├── PostgreSQL (Database)
-├── Row Level Security (Authorization)
-├── Auth (Google OAuth + Email/Password)
-└── Realtime (Live Updates)
+### Tech Stack
 
-Vercel (Deployment)
-├── Serverless Functions (Email API)
-├── Edge Network (CDN)
-└── Security Headers (CSP, HSTS, etc.)
-```
+| Layer          | Technology                                |
+|----------------|-------------------------------------------|
+| Frontend       | React 19 + Vite 6 + React Router 7       |
+| Database       | Zoho Catalyst Data Store (Relational)     |
+| Authentication | Zoho Catalyst Auth + OAuth 2.0            |
+| Email          | Resend API (via Vercel serverless)        |
+| Hosting        | Vercel / Zoho Catalyst Web Client Hosting |
+| Security       | DOMPurify, CSP headers, rate limiting     |
+| Testing        | Vitest + React Testing Library            |
 
-## ✨ Features
+## 🚀 Features
 
-### Core Platform
-- **1-on-1 Session Booking** — Book tutoring sessions with subject/time/tutor selection
-- **Google Meet Integration** — Auto-provision meeting links for virtual sessions
-- **Multi-curriculum Support** — GCSE, A-Level, IB, CBSE, IGCSE, and more
-- **SEN Specialist Support** — Autism, ADHD, dyslexia-trained tutors
+- ✅ **Subject Booking System** — students book tutoring sessions by year group
+- ✅ **Admin Dashboard** — manage bookings, enquiries, and students with audit logging
+- ✅ **Google Meet Integration** — admins assign Meet links to confirmed sessions
+- ✅ **Email Notifications** — automatic emails for bookings, status updates, enquiries
+- ✅ **Session Reviews** — students rate and review completed sessions
+- ✅ **Student Progress Tracking** — per-subject progress reports
+- ✅ **Notification System** — in-app notifications for booking updates
+- ✅ **Dark/Light Mode** — theme toggle with system preference detection
+- ✅ **SEO Optimized** — React Helmet Async for dynamic meta tags
+- ✅ **Error Boundaries** — graceful crash recovery
+- ✅ **Offline Detection** — real-time connectivity monitoring
+- ✅ **Input Sanitization** — XSS protection via DOMPurify
+- ✅ **Rate Limiting** — client-side form submission throttling
+- ✅ **Circuit Breaker** — prevents cascade failures to database
+- ✅ **Retry with Backoff** — automatic retry for transient errors
+- ✅ **Audit Logging** — all admin actions tracked for accountability
+- ✅ **Code Splitting** — lazy-loaded routes for optimal performance
 
-### User Experience
-- **React Router SPA** — Smooth client-side navigation with proper URL routing
-- **Light/Dark Theme** — System-aware with manual toggle
-- **Responsive Design** — Mobile-first, works on all devices
-- **Lazy Loading** — Code-split pages for fast initial load
-- **Offline Detection** — Banner notification when connectivity is lost
-- **Error Boundaries** — Graceful error recovery without app crashes
-- **404 Page** — Beautiful branded not-found page
-
-### Security & Resilience
-- **Input Sanitization** — DOMPurify-based XSS prevention on all inputs
-- **Rate Limiting** — Client-side protection against abuse
-- **Database Resilience** — Automatic retry with exponential backoff
-- **Circuit Breaker** — Prevents cascading failures
-- **Row Level Security** — PostgreSQL policies for data isolation
-- **Security Headers** — CSP, HSTS, X-Frame-Options, etc.
-- **PKCE Auth Flow** — Secure OAuth implementation
-
-### Admin Portal
-- **Dashboard Analytics** — Revenue, bookings, conversion metrics
-- **Calendar View** — Visual booking calendar
-- **Audit Logging** — Full trail of admin actions
-- **Bulk Operations** — Multi-select booking management
-- **CSV Export** — Data export capability
-- **Google Calendar Sync** — One-click calendar integration
-
-### Content
-- **ZP Learn** — Educational articles with interactive reading experience
-- **SEO Optimized** — JSON-LD structured data, Open Graph, Twitter Cards
-- **FAQ Section** — Accordion-style frequently asked questions
-
-## 🚀 Getting Started
+## 📦 Installation
 
 ```bash
-# Install dependencies
+git clone https://github.com/your-repo/NodeStream.git
+cd NodeStream
 npm install
-
-# Start development server
+cp .env.example .env  # Fill in your Catalyst credentials
 npm run dev
-
-# Run tests
-npm test
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
 ```
 
-## 🗄️ Database Setup
+## 🔧 Zoho Catalyst Setup
 
-1. Create a [Supabase](https://supabase.com) project
-2. Run `schema.sql` in the SQL Editor
-3. Run `audit-logs-migration.sql` for audit logging
-4. Run `enhanced-schema.sql` for reviews, notifications, progress tracking
-5. Enable Google OAuth in Authentication → Providers
+### 1. Create a Catalyst Project
 
-## 📧 Email Setup
+1. Go to [Zoho Catalyst Console](https://console.catalyst.zoho.com)
+2. Create a new project
+3. Note the **Project ID** and **ZAID** from General Settings
 
-See [EMAIL_SETUP.md](./EMAIL_SETUP.md) for Resend configuration.
+### 2. Create Data Store Tables
+
+Follow the schema guide in **`catalyst-schema.md`** to create these tables:
+
+- `Bookings` — tutoring session bookings
+- `Enquiries` — contact form submissions
+- `SessionReviews` — student session reviews
+- `Notifications` — in-app notifications
+- `StudentProgress` — per-subject progress tracking
+- `AuditLogs` — admin action audit trail
+
+### 3. Configure Authentication
+
+1. Enable **Public Signup** in Authentication settings
+2. Configure **Google Social Login** (optional)
+3. Set **Authorized Domains**: your deployment domain
+
+### 4. Set Environment Variables
+
+```env
+# Client-side (Vite)
+VITE_CATALYST_PROJECT_ID=your_project_id
+VITE_CATALYST_PROJECT_KEY=your_zaid
+VITE_CATALYST_API_DOMAIN=https://api.catalyst.zoho.in
+
+# Server-side (Vercel)
+CATALYST_SERVER_TOKEN=your_oauth_access_token
+CATALYST_PROJECT_ID=your_project_id
+ZOHO_CLIENT_ID=your_client_id
+ZOHO_CLIENT_SECRET=your_client_secret
+```
+
+See `.env.example` for the full list.
 
 ## 🧪 Testing
 
 ```bash
-npm test          # Watch mode
-npm run test:run  # Single run
-npm run test:coverage  # With coverage report
+npm test          # Run all tests
+npm run test:ui   # Interactive test UI
+npm run test:cov  # Coverage report
 ```
 
-## 🛡️ Security
-
-- All user inputs are sanitized with DOMPurify
-- Database operations use parameterized queries via Supabase
-- Row Level Security policies enforce data isolation
-- Admin emails are whitelisted server-side
-- OAuth uses PKCE flow for maximum security
-- Security headers configured in `vercel.json`
-
-## 📁 Project Structure
+## 📂 Project Structure
 
 ```
-src/
-├── components/          # React components
-│   ├── ErrorBoundary    # Error recovery
-│   ├── NotFound         # 404 page
-│   ├── OfflineBanner    # Connectivity indicator
-│   ├── LoadingSpinner   # Reusable loader
-│   └── ...              # Feature components
-├── context/             # React contexts
-│   ├── AuthContext       # Authentication state
-│   └── ThemeContext      # Theme management
-├── lib/                 # Utilities & services
-│   ├── database.js       # Resilient DB operations
-│   ├── resilience.js     # Retry & circuit breaker
-│   ├── sanitize.js       # Input validation & XSS
-│   ├── auditLog.js       # Admin action logging
-│   ├── supabase.js       # Supabase client
-│   └── email.js          # Email dispatcher
-├── styles/              # CSS
-├── test/                # Test files
-├── App.jsx              # Root with React Router
-└── main.jsx             # Entry point
+NodeStream/
+├── api/
+│   ├── auth/
+│   │   ├── signup.js          # User registration proxy
+│   │   ├── signin.js          # User login proxy
+│   │   ├── signout.js         # Session logout
+│   │   ├── reset-password.js  # Password reset proxy
+│   │   ├── google.js          # Google OAuth initiation
+│   │   └── callback.js        # OAuth callback handler
+│   └── send-email.js          # Resend email API
+├── src/
+│   ├── components/
+│   │   ├── AdminPanel.jsx     # Admin dashboard
+│   │   ├── AuthModal.jsx      # Login/signup modal
+│   │   ├── Dashboard.jsx      # Student dashboard
+│   │   ├── Homepage.jsx       # Landing page
+│   │   ├── LearnPage.jsx      # Learning resources
+│   │   └── ...
+│   ├── context/
+│   │   ├── AuthContext.jsx    # Catalyst authentication
+│   │   └── ThemeContext.jsx   # Dark/light mode
+│   ├── lib/
+│   │   ├── catalyst.js        # Catalyst REST API client
+│   │   ├── database.js        # Data Store operations
+│   │   ├── resilience.js      # Retry, circuit breaker
+│   │   ├── sanitize.js        # Input sanitization
+│   │   ├── email.js           # Email helpers
+│   │   └── auditLog.js        # Audit logging
+│   ├── App.jsx                # Root app with routing
+│   └── main.jsx               # Entry point
+├── catalyst-schema.md          # Data Store setup guide
+├── .env.example                # Environment variable template
+└── vite.config.js              # Build configuration
 ```
 
-## 🌐 Deployment
+## 🔒 Security
 
-Deployed on Vercel with automatic CI/CD from the `main` branch.
+- **Input Sanitization** — DOMPurify strips XSS payloads
+- **CSP Headers** — Content Security Policy restricts resource loading
+- **HSTS** — Strict transport security enforced
+- **Rate Limiting** — 3-second cooldown between form submissions
+- **Parameterized Queries** — ZCQL prevents injection
+- **OAuth 2.0** — Secure token-based authentication
 
----
+## 🌍 Why Zoho Catalyst over Supabase?
 
-Built with ❤️ by the Zenith Pranavi team — [zped.org](https://zped.org)
+| Concern         | Supabase Free          | Zoho Catalyst           |
+|-----------------|------------------------|-------------------------|
+| **Uptime**      | Pauses after inactivity| Always on, no pausing   |
+| **Data Centers**| Limited                | 7 DCs (US, EU, IN, AU, CA, JP, SA) |
+| **Auth**        | Email + OAuth          | Email + Google/Zoho + roles |
+| **Ecosystem**   | Standalone             | Integrates with Zoho CRM, Mail, etc. |
+| **Query Lang**  | SQL                    | ZCQL (SQL-like)         |
+| **Cache**       | None                   | Built-in key-value cache|
+| **Push Notifs** | None                   | Web + mobile            |
+| **Free Credits**| Limited rows           | $250 wallet credits     |
+
+## 📄 License
+
+Private — © 2024 Zenith Pranavi. All rights reserved.

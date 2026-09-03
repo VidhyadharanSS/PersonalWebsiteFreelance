@@ -21,7 +21,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           router: ['react-router-dom'],
-          supabase: ['@supabase/supabase-js'],
+          sanitize: ['dompurify'],
           icons: ['lucide-react'],
         },
       },
