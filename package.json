@@ -14,7 +14,9 @@
     "lint": "echo 'Lint check passed'"
   },
   "dependencies": {
+    "aos": "^2.3.4",
     "bcryptjs": "^3.0.3",
+    "bootstrap": "^5.3.8",
     "dompurify": "^3.4.14",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

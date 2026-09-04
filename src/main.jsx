@@ -6,6 +6,12 @@ import App from './App'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary'
+
+// Bootstrap (grid & utilities only — custom theme overrides below)
+import 'bootstrap/dist/css/bootstrap.min.css'
+// AOS animations
+import 'aos/dist/aos.css'
+// Custom styles (loaded AFTER bootstrap to override)
 import './styles/index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(

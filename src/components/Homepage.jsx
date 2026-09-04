@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useToast } from './Toast'
 import { submitEnquiry } from '../lib/database'
+import AOS from 'aos'
 import {
   Globe, Shield, Heart, Flower2,
   BookOpen, Rocket, Award, Users, Languages, Star,
@@ -9,23 +10,6 @@ import {
   Mail, Clock, Instagram, ArrowRight, Sparkles, GraduationCap, Play,
   ChevronDown, ChevronUp, Quote, ArrowUp, X
 } from 'lucide-react'
-
-function FadeIn({ children, className = '', delay = 0 }) {
-  const ref = useRef()
-  const [visible, setVisible] = useState(false)
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) { setVisible(true); observer.disconnect() }
-    }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' })
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [])
-  return (
-    <div ref={ref} className={`fade-in${visible ? ' visible' : ''} ${className}`} style={{ transitionDelay: `${delay}s` }}>
-      {children}
-    </div>
-  )
-}
 
 function IconCircle({ icon: Icon, size = 40, iconSize = 18, className = '' }) {
   return (
@@ -59,11 +43,7 @@ function BackToTop() {
   }, [])
   if (!visible) return null
   return (
-    <button
-      className="back-to-top"
-      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      aria-label="Back to top"
-    >
+    <button className="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top">
       <ArrowUp size={20} />
     </button>
   )
@@ -72,6 +52,21 @@ function BackToTop() {
 export default function Homepage({ onCTA, onRefund }) {
   const toast = useToast()
   const [enquiryLoading, setEnquiryLoading] = useState(false)
+
+  // Initialize AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 60,
+      delay: 0,
+    })
+    // Refresh on window resize for responsive
+    const handleResize = () => AOS.refresh()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const handleEnquiry = async (e) => {
     e.preventDefault()
@@ -126,16 +121,17 @@ export default function Homepage({ onCTA, onRefund }) {
   return (
     <main id="homepage">
 
-      {/* HERO */}
+      {/* ═══ HERO ═══ */}
       <section className="hero" id="home">
         <div className="hero-content">
-          <FadeIn>
+          <div data-aos="zoom-in" data-aos-duration="1000">
             <div className="hero-visual">
               <div className="hero-image-container">
-                <img 
-                  src="https://images.unsplash.com/photo-1588072432836-e10032774350?w=700&h=500&fit=crop" 
-                  alt="Children learning online" 
-                  className="hero-main-image" 
+                <img
+                  src="https://images.unsplash.com/photo-1588072432836-e10032774350?w=700&h=500&fit=crop"
+                  alt="Children learning online"
+                  className="hero-main-image"
+                  loading="eager"
                 />
                 <div className="hero-floating-card hero-card-1">
                   <div className="hero-card-icon">🎓</div>
@@ -153,22 +149,22 @@ export default function Homepage({ onCTA, onRefund }) {
                 </div>
               </div>
             </div>
-          </FadeIn>
-          <FadeIn delay={0.1}>
+          </div>
+          <div data-aos="fade-up" data-aos-delay="200">
             <h1 className="hero-title">Zenith Pranavi</h1>
-          </FadeIn>
-          <FadeIn delay={0.2}>
+          </div>
+          <div data-aos="fade-up" data-aos-delay="350">
             <p className="hero-subtitle">Where Every Child Reaches Their Zenith</p>
-          </FadeIn>
-          <FadeIn delay={0.3}>
+          </div>
+          <div data-aos="fade-up" data-aos-delay="500">
             <p className="hero-desc">
               World-class online tutoring for <strong>every child</strong> &mdash; every grade, every curriculum, every ability. Learning that feels <strong>personal</strong>, because it is.
             </p>
-          </FadeIn>
-          <FadeIn delay={0.35}>
+          </div>
+          <div data-aos="fade-up" data-aos-delay="600">
             <p className="hero-quote">&ldquo;We don&rsquo;t refund moods. We refund mistakes.&rdquo;</p>
-          </FadeIn>
-          <FadeIn delay={0.4}>
+          </div>
+          <div data-aos="fade-up" data-aos-delay="700">
             <div className="hero-cta-row">
               <button className="btn btn-primary btn-lg hero-primary-btn" onClick={() => onCTA('hero')}>
                 <Play size={16} />
@@ -179,8 +175,8 @@ export default function Homepage({ onCTA, onRefund }) {
                 Learn More <ArrowRight size={16} />
               </a>
             </div>
-          </FadeIn>
-          <FadeIn delay={0.5}>
+          </div>
+          <div data-aos="fade-up" data-aos-delay="850">
             <div className="hero-stats">
               <div className="stat"><span className="stat-number gold">50+</span><span className="stat-label">Countries</span></div>
               <div className="stat-divider" />
@@ -188,31 +184,27 @@ export default function Homepage({ onCTA, onRefund }) {
               <div className="stat-divider" />
               <div className="stat"><span className="stat-number pink">98%</span><span className="stat-label">Satisfaction</span></div>
             </div>
-          </FadeIn>
+          </div>
         </div>
       </section>
 
-      {/* WHY US */}
+      {/* ═══ WHY US ═══ */}
       <section className="section why-section" id="why">
         <div className="container">
           <div className="why-grid">
             <div className="why-emblem-col">
-              <FadeIn>
+              <div data-aos="fade-right" data-aos-duration="1000">
                 <div className="why-image-wrapper">
-                  <img 
-                    src="/hero-study.jpeg" 
-                    alt="Zenith Pranavi learning" 
-                    className="why-hero-image" 
-                  />
+                  <img src="/hero-study.jpeg" alt="Zenith Pranavi learning" className="why-hero-image" loading="lazy" />
                   <div className="why-image-badge">
                     <span className="why-badge-number">12K+</span>
                     <span className="why-badge-text">Happy Students</span>
                   </div>
                 </div>
-              </FadeIn>
+              </div>
             </div>
             <div className="why-content-col">
-              <FadeIn>
+              <div data-aos="fade-left">
                 <p className="section-badge-left">Why Zenith Pranavi</p>
                 <h2 className="section-title-left">Learning That <em>Sees</em><br /><strong>Every Child</strong></h2>
                 <div className="section-underline" />
@@ -221,10 +213,10 @@ export default function Homepage({ onCTA, onRefund }) {
                   Whether your child is <strong>gifted</strong>, needs <strong>extra support</strong>, or simply learns
                   differently &mdash; we meet them <em>exactly where they are</em>.
                 </p>
-              </FadeIn>
+              </div>
               <div className="why-features">
                 {whyFeatures.map((f, i) => (
-                  <FadeIn key={f.title} delay={i * 0.1}>
+                  <div key={f.title} data-aos="fade-left" data-aos-delay={i * 120}>
                     <div className="why-feature-card">
                       <IconCircle icon={f.icon} />
                       <div>
@@ -232,7 +224,7 @@ export default function Homepage({ onCTA, onRefund }) {
                         <span>{f.desc}</span>
                       </div>
                     </div>
-                  </FadeIn>
+                  </div>
                 ))}
               </div>
             </div>
@@ -240,17 +232,17 @@ export default function Homepage({ onCTA, onRefund }) {
         </div>
       </section>
 
-      {/* PROGRAMS */}
+      {/* ═══ PROGRAMS ═══ */}
       <section className="section programs-section" id="programs">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up">
             <p className="section-badge"><Sparkles size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />Our Programs</p>
             <h2 className="section-title">Every Child Has a Path.<br />We Help Them <strong>Walk It</strong>.</h2>
             <p className="section-desc">Six unique learning pathways, crafted for every kind of <strong>brilliant mind</strong>.</p>
-          </FadeIn>
+          </div>
           <div className="programs-grid">
             {programs.map((p, i) => (
-              <FadeIn key={p.num} delay={i * 0.08}>
+              <div key={p.num} data-aos="fade-up" data-aos-delay={i * 100}>
                 <div className="program-card">
                   <div className="program-number">{p.num}</div>
                   <IconCircle icon={p.icon} size={48} iconSize={22} className="program-icon" />
@@ -258,24 +250,24 @@ export default function Homepage({ onCTA, onRefund }) {
                   <p className="program-desc">{p.desc}</p>
                   <div className="program-age">{p.age}</div>
                 </div>
-              </FadeIn>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* PRICING */}
+      {/* ═══ PRICING ═══ */}
       <section className="section pricing-section" id="pricing">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up">
             <p className="pricing-label">SIMPLE, HONEST PRICING</p>
             <h2 className="pricing-title">No Surprises. Just Learning.</h2>
             <div className="section-underline-center" />
             <p className="pricing-sub">Every price below is <strong>per hour, one-on-one</strong>, with a fully qualified tutor. First session free. Adjusted fairly by country and curriculum level.</p>
-          </FadeIn>
+          </div>
           <div className="pricing-grid">
             {pricingCards.map((card, i) => (
-              <FadeIn key={card.badge} delay={i * 0.08}>
+              <div key={card.badge} data-aos="zoom-in" data-aos-delay={i * 100}>
                 <div className={`pricing-card${card.popular ? ' pricing-card-popular' : ''}${card.inclusive ? ' pricing-card-inclusive' : ''}`}>
                   {card.popular && <div className="popular-ribbon">Most Popular</div>}
                   <div className={`pricing-badge ${card.badgeClass}`}>{card.badge}</div>
@@ -297,63 +289,63 @@ export default function Homepage({ onCTA, onRefund }) {
                   </p>
                   <button className={`btn pricing-btn ${card.btnClass}`} onClick={() => onCTA('pricing')}>{card.btnLabel}</button>
                 </div>
-              </FadeIn>
+              </div>
             ))}
           </div>
 
           <div className="pricing-trust-strip">
-            <FadeIn><div className="trust-pill"><IconCircle icon={Lock} size={32} iconSize={14} className="trust-icon" /><span className="trust-text"><strong>100% Secure Payments</strong> &mdash; SSL encrypted</span></div></FadeIn>
-            <FadeIn delay={0.08}><div className="trust-pill"><IconCircle icon={MessageCircle} size={32} iconSize={14} className="trust-icon" /><span className="trust-text"><strong>Doubt Sessions Included</strong> &mdash; never leave a question unanswered</span></div></FadeIn>
-            <FadeIn delay={0.16}><div className="trust-pill"><IconCircle icon={UserCheck} size={32} iconSize={14} className="trust-icon" /><span className="trust-text"><strong>Parent Meetings Included</strong> &mdash; you are part of every step</span></div></FadeIn>
+            <div data-aos="fade-up" data-aos-delay="0"><div className="trust-pill"><IconCircle icon={Lock} size={34} iconSize={14} className="trust-icon" /><span className="trust-text"><strong>100% Secure Payments</strong> &mdash; SSL encrypted</span></div></div>
+            <div data-aos="fade-up" data-aos-delay="100"><div className="trust-pill"><IconCircle icon={MessageCircle} size={34} iconSize={14} className="trust-icon" /><span className="trust-text"><strong>Doubt Sessions Included</strong> &mdash; never leave a question unanswered</span></div></div>
+            <div data-aos="fade-up" data-aos-delay="200"><div className="trust-pill"><IconCircle icon={UserCheck} size={34} iconSize={14} className="trust-icon" /><span className="trust-text"><strong>Parent Meetings Included</strong> &mdash; you are part of every step</span></div></div>
           </div>
         </div>
       </section>
 
-      {/* EXPERIENCE */}
+      {/* ═══ EXPERIENCE ═══ */}
       <section className="section experience-section" id="experience">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up">
             <p className="experience-label">THE LEARNING EXPERIENCE</p>
             <h2 className="experience-title">Not Just Teaching. Truly Learning.</h2>
             <div className="section-underline-center" />
             <p className="experience-sub">Every session at Zenith Pranavi is designed around one question &mdash; is this child genuinely <strong>understanding</strong>, <strong>growing</strong>, and <strong>loving the process</strong>?</p>
-          </FadeIn>
+          </div>
           <div className="experience-grid">
             {experiences.map((exp, i) => (
-              <FadeIn key={exp.title} delay={i * 0.1}>
+              <div key={exp.title} data-aos="flip-up" data-aos-delay={i * 120}>
                 <div className="experience-card">
                   <IconCircle icon={exp.icon} size={56} iconSize={24} className="exp-icon" />
                   <h3 className="exp-card-title">{exp.title}</h3>
                   <p className="exp-card-desc">{exp.desc}</p>
                 </div>
-              </FadeIn>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* QUOTE */}
+      {/* ═══ QUOTE ═══ */}
       <section className="quote-section">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up" data-aos-duration="1200">
             <blockquote className="philosophy-quote">
               &ldquo;The goal is not to make every child the <span className="underline-text">same kind of smart</span> &mdash; it&rsquo;s to
               help every child discover the <span className="underline-text">kind of smart they already are</span>. At
               Zenith Pranavi, that is not a philosophy. It is our daily practice.&rdquo;
             </blockquote>
             <p className="quote-attribution">&mdash; zped (Zenith Pranavi Education)</p>
-          </FadeIn>
+          </div>
         </div>
       </section>
 
-      {/* PROCESS */}
+      {/* ═══ PROCESS ═══ */}
       <section className="section process-section" id="how-it-works">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up">
             <p className="section-badge"><GraduationCap size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />The Process</p>
             <h2 className="section-title process-title">Simple to Start.<br />Profound in Impact.</h2>
             <div className="section-underline-center" />
-          </FadeIn>
+          </div>
           <div className="process-steps">
             {[
               { num: '01', title: 'Free Discovery Call', desc: <><strong>30 minutes</strong> understanding your child &mdash; strengths, challenges, curriculum, and dreams. No forms. No pressure. Just a <strong>real conversation</strong>.</>, tags: ['30 Minutes','Free','Google Meet'] },
@@ -361,7 +353,7 @@ export default function Homepage({ onCTA, onRefund }) {
               { num: '03', title: 'Meet Your Matched Tutor', desc: <>We match your child with an <strong>expert</strong> who specialises in their curriculum, learning style, and specific needs.</>, tags: ['Expert-Matched'] },
               { num: '04', title: 'Learn, Grow, Ascend', desc: <><strong>Live online sessions via Google Meet</strong>, flexible scheduling, parent progress reports, and monthly reviews.</>, tags: ['Live','Google Meet','Adaptive'] }
             ].map((s, i) => (
-              <FadeIn key={s.num} delay={i * 0.12}>
+              <div key={s.num} data-aos="fade-right" data-aos-delay={i * 150}>
                 <div className="process-step">
                   <div className="step-number-circle">{s.num}</div>
                   <h3 className="step-title">{s.title}</h3>
@@ -372,27 +364,27 @@ export default function Homepage({ onCTA, onRefund }) {
                     ))}
                   </div>
                 </div>
-              </FadeIn>
+              </div>
             ))}
           </div>
-          <FadeIn delay={0.3}>
+          <div data-aos="fade-up" data-aos-delay="300">
             <div className="process-cta">
               <p className="process-cta-text">To book a session, schedule your free discovery call first.</p>
               <button className="btn btn-primary btn-lg" onClick={() => onCTA('process')}>
                 <Play size={16} /> Schedule Free Call
               </button>
             </div>
-          </FadeIn>
+          </div>
         </div>
       </section>
 
-      {/* IMPACT */}
+      {/* ═══ IMPACT ═══ */}
       <section className="section impact-section">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up">
             <p className="section-badge">Our Impact</p>
             <h2 className="section-title impact-title">Numbers That Matter</h2>
-          </FadeIn>
+          </div>
           <div className="impact-grid">
             {[
               { num: '50', suffix: '+', label: 'Countries', desc: 'Students from six continents', cls: 'gold' },
@@ -400,32 +392,32 @@ export default function Homepage({ onCTA, onRefund }) {
               { num: '98', suffix: '%', label: 'Satisfaction', desc: 'Parents say their child improved', cls: 'pink' },
               { num: '200', suffix: '+', label: 'Educators', desc: 'Expert tutors across every grade', cls: 'navy' }
             ].map((item, i) => (
-              <FadeIn key={item.label} delay={i * 0.1}>
+              <div key={item.label} data-aos="zoom-in" data-aos-delay={i * 120}>
                 <div className="impact-card">
                   <div className={`impact-number ${item.cls}`}>{item.num}<span className="impact-plus">{item.suffix}</span></div>
                   <div className="impact-label">{item.label}</div>
                   <div className="impact-desc">{item.desc}</div>
                 </div>
-              </FadeIn>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* BANNER */}
+      {/* ═══ BANNER ═══ */}
       <section className="get-started-banner">
         <div className="container">
           <div className="get-started-inner">
-            <h2 className="get-started-text">Global Learning. Every Grade. Every Child.</h2>
-            <button className="btn btn-primary btn-lg get-started-cta-btn" onClick={() => onCTA('banner')}>Schedule Free Call</button>
+            <h2 className="get-started-text" data-aos="fade-right">Global Learning. Every Grade. Every Child.</h2>
+            <button className="btn btn-primary btn-lg get-started-cta-btn" data-aos="fade-left" onClick={() => onCTA('banner')}>Schedule Free Call</button>
           </div>
         </div>
       </section>
 
-      {/* FINAL CTA */}
+      {/* ═══ FINAL CTA ═══ */}
       <section className="section cta-section" id="final-cta">
         <div className="container">
-          <FadeIn>
+          <div data-aos="zoom-in" data-aos-duration="900">
             <div className="cta-card cta-card-final">
               <Sparkles size={32} color="var(--gold)" strokeWidth={1.5} style={{ margin: '0 auto 16px', display: 'block' }} />
               <h2 className="cta-title">Your Child&rsquo;s Zenith<br /><span className="cta-title-accent">Starts Here</span></h2>
@@ -435,98 +427,66 @@ export default function Homepage({ onCTA, onRefund }) {
               </div>
               <p className="cta-note">No credit card &middot; No commitment &middot; Just learning</p>
             </div>
-          </FadeIn>
+          </div>
         </div>
       </section>
 
-      {/* ── HOW WE'RE DIFFERENT ── */}
+      {/* ═══ COMPARISON ═══ */}
       <section className="section comparison-section" id="comparison">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up">
             <p className="section-badge"><Award size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />The Difference</p>
             <h2 className="section-title">How We Stand <strong>Apart</strong></h2>
             <p className="section-desc">See why families choose Zenith Pranavi over traditional tutoring.</p>
-          </FadeIn>
+          </div>
           <div className="comparison-grid">
-            <FadeIn>
+            <div data-aos="fade-right">
               <div className="comparison-card comparison-card-other">
                 <div className="comparison-header">
                   <span className="comparison-label">Traditional Tutoring</span>
                 </div>
                 <ul className="comparison-list">
-                  <li className="comparison-item comparison-item-bad">
-                    <X size={16} />
-                    <span>One-size-fits-all approach</span>
-                  </li>
-                  <li className="comparison-item comparison-item-bad">
-                    <X size={16} />
-                    <span>Random tutor assignment</span>
-                  </li>
-                  <li className="comparison-item comparison-item-bad">
-                    <X size={16} />
-                    <span>No progress tracking</span>
-                  </li>
-                  <li className="comparison-item comparison-item-bad">
-                    <X size={16} />
-                    <span>Limited curriculum support</span>
-                  </li>
-                  <li className="comparison-item comparison-item-bad">
-                    <X size={16} />
-                    <span>No special needs expertise</span>
-                  </li>
-                  <li className="comparison-item comparison-item-bad">
-                    <X size={16} />
-                    <span>Rigid scheduling</span>
-                  </li>
+                  {['One-size-fits-all approach','Random tutor assignment','No progress tracking','Limited curriculum support','No special needs expertise','Rigid scheduling'].map(text => (
+                    <li key={text} className="comparison-item comparison-item-bad"><X size={16} /><span>{text}</span></li>
+                  ))}
                 </ul>
               </div>
-            </FadeIn>
-            <FadeIn delay={0.15}>
+            </div>
+            <div data-aos="fade-left" data-aos-delay="150">
               <div className="comparison-card comparison-card-us">
                 <div className="comparison-header">
                   <span className="comparison-label">Zenith Pranavi</span>
                   <span className="comparison-badge">Recommended</span>
                 </div>
                 <ul className="comparison-list">
-                  <li className="comparison-item comparison-item-good">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    <span><strong>Personalised</strong> learning paths</span>
-                  </li>
-                  <li className="comparison-item comparison-item-good">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    <span><strong>Expert-matched</strong> tutors</span>
-                  </li>
-                  <li className="comparison-item comparison-item-good">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    <span><strong>Monthly reports</strong> for parents</span>
-                  </li>
-                  <li className="comparison-item comparison-item-good">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    <span><strong>All curricula</strong> worldwide</span>
-                  </li>
-                  <li className="comparison-item comparison-item-good">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    <span><strong>Specialist</strong> SEN support</span>
-                  </li>
-                  <li className="comparison-item comparison-item-good">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    <span><strong>Flexible</strong> 24/7 scheduling</span>
-                  </li>
+                  {[
+                    { text: <><strong>Personalised</strong> learning paths</> },
+                    { text: <><strong>Expert-matched</strong> tutors</> },
+                    { text: <><strong>Monthly reports</strong> for parents</> },
+                    { text: <><strong>All curricula</strong> worldwide</> },
+                    { text: <><strong>Specialist</strong> SEN support</> },
+                    { text: <><strong>Flexible</strong> 24/7 scheduling</> }
+                  ].map((item, i) => (
+                    <li key={i} className="comparison-item comparison-item-good">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                      <span>{item.text}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
-            </FadeIn>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
+      {/* ═══ TESTIMONIALS ═══ */}
       <section className="section testimonials-section" id="testimonials">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up">
             <p className="section-badge"><Quote size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />Testimonials</p>
             <h2 className="section-title">What Parents &amp; Students Say</h2>
             <p className="section-desc">Real stories from <strong>real families</strong> who chose Zenith Pranavi.</p>
-          </FadeIn>
+          </div>
           <div className="testimonials-grid">
             {[
               { name: 'Sarah M.', location: 'London, UK', rating: 5, text: 'My son was struggling with maths for years. After just 3 months with Zenith Pranavi, he went from a C to an A*. The tutor understood exactly how he learns.', avatar: 'S' },
@@ -536,7 +496,7 @@ export default function Homepage({ onCTA, onRefund }) {
               { name: 'Maria L.', location: 'São Paulo, Brazil', rating: 5, text: 'My twins have completely different learning styles. Zenith Pranavi gave each of them a different tutor perfectly matched to their needs. Both are thriving now.', avatar: 'M' },
               { name: 'James T.', location: 'Toronto, Canada', rating: 5, text: 'The progress reports are incredible. I can see exactly what my son covered, where he improved, and what needs work. Complete transparency.', avatar: 'J' }
             ].map((t, i) => (
-              <FadeIn key={t.name} delay={i * 0.08}>
+              <div key={t.name} data-aos="fade-up" data-aos-delay={i * 80}>
                 <div className="testimonial-card">
                   <div className="testimonial-stars">
                     {Array.from({ length: t.rating }).map((_, si) => (
@@ -552,20 +512,20 @@ export default function Homepage({ onCTA, onRefund }) {
                     </div>
                   </div>
                 </div>
-              </FadeIn>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── FAQ ── */}
+      {/* ═══ FAQ ═══ */}
       <section className="section faq-section" id="faq">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up">
             <p className="section-badge"><HelpCircle size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />FAQ</p>
             <h2 className="section-title">Frequently Asked Questions</h2>
             <p className="section-desc">Everything you need to know about learning with <strong>Zenith Pranavi</strong>.</p>
-          </FadeIn>
+          </div>
           <div className="faq-list">
             {[
               { q: 'How does the free discovery call work?', a: 'The discovery call is a free 30-minute conversation via Google Meet. We learn about your child — their strengths, challenges, curriculum, and goals. There\'s no obligation, no sales pitch. Just a real conversation about how we can help.' },
@@ -577,24 +537,24 @@ export default function Homepage({ onCTA, onRefund }) {
               { q: 'What age groups do you teach?', a: 'We teach students from Year 1 (age 5-6) through Year 12 (age 17-18), plus university entrance exam preparation for SAT, JEE, NEET, and other competitive exams.' },
               { q: 'How often should my child have sessions?', a: 'Most students benefit from 2-3 sessions per week for consistent progress. However, we\'re flexible — some families prefer intensive daily sessions before exams, while others start with one session weekly.' }
             ].map((faq, i) => (
-              <FadeIn key={i} delay={i * 0.05}>
+              <div key={i} data-aos="fade-up" data-aos-delay={i * 50}>
                 <FAQItem question={faq.q} answer={faq.a} />
-              </FadeIn>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CONTACT ── */}
+      {/* ═══ CONTACT ═══ */}
       <section className="section contact-section" id="contact">
         <div className="container">
-          <FadeIn>
+          <div data-aos="fade-up">
             <p className="section-badge">GET IN TOUCH</p>
             <h2 className="section-title">Talk To Us</h2>
             <p className="section-desc">Have questions? We&rsquo;d <strong>love to hear from you</strong>. Send us a message and we&rsquo;ll respond promptly.</p>
-          </FadeIn>
+          </div>
           <div className="contact-wrapper">
-            <FadeIn>
+            <div data-aos="fade-right">
               <form className="contact-form" onSubmit={handleEnquiry}>
                 <div className="form-group">
                   <label htmlFor="enquiry-name">Your Name</label>
@@ -612,8 +572,8 @@ export default function Homepage({ onCTA, onRefund }) {
                   {enquiryLoading ? <span className="btn-loader" /> : 'Send Message'}
                 </button>
               </form>
-            </FadeIn>
-            <FadeIn delay={0.15}>
+            </div>
+            <div data-aos="fade-left" data-aos-delay="150">
               <div className="contact-info">
                 <div className="contact-info-card">
                   <IconCircle icon={Mail} />
@@ -633,12 +593,12 @@ export default function Homepage({ onCTA, onRefund }) {
                   <ArrowRight size={16} className="contact-card-arrow" />
                 </a>
               </div>
-            </FadeIn>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* ═══ FOOTER ═══ */}
       <footer className="footer">
         <div className="container">
           <div className="footer-grid">
