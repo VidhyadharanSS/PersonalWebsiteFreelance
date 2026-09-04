@@ -1,31 +1,35 @@
-/**
- * Reusable loading spinner with optional message
- */
-export default function LoadingSpinner({ message = 'Loading...', size = 'default' }) {
-  const spinnerSize = size === 'small' ? 24 : size === 'large' ? 48 : 36
-  const fontSize = size === 'small' ? '0.76rem' : size === 'large' ? '1rem' : '0.88rem'
+import { useEffect, useState } from 'react'
 
+const DEFAULT_MESSAGES = [
+  'Sharpening pencils in the cloud…',
+  'Connecting curious minds…',
+  'Turning questions into discoveries…',
+  'Preparing your learning space…',
+]
+
+export default function LoadingSpinner({ message, messages = DEFAULT_MESSAGES, size = 'default', fullscreen = false }) {
+  const [messageIndex, setMessageIndex] = useState(0)
+  const rotating = message === undefined && messages.length > 1
+
+  useEffect(() => {
+    if (!rotating) return undefined
+    const timer = window.setInterval(() => setMessageIndex(index => (index + 1) % messages.length), 1600)
+    return () => window.clearInterval(timer)
+  }, [messages, rotating])
+
+  const visibleMessage = message === undefined ? messages[messageIndex] : message
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', gap: 16, padding: size === 'small' ? '20px' : '48px 24px',
-      color: 'var(--text-light)'
-    }}>
-      <div style={{
-        width: spinnerSize, height: spinnerSize,
-        border: `3px solid var(--gold-pale, rgba(197,165,90,0.1))`,
-        borderTopColor: 'var(--gold, #c5a55a)',
-        borderRadius: '50%',
-        animation: 'spin 0.7s linear infinite'
-      }} />
-      {message && (
-        <p style={{
-          fontFamily: 'var(--font-elegant)', fontSize, fontStyle: 'italic',
-          color: 'var(--text-light)', margin: 0
-        }}>
-          {message}
-        </p>
-      )}
+    <div className={`zp-loader zp-loader-${size}${fullscreen ? ' zp-loader-fullscreen' : ''}`} role="status" aria-live="polite">
+      <div className="zp-loader-mark" aria-hidden="true">
+        <span className="zp-loader-ring" />
+        <span className="zp-loader-ring zp-loader-ring-two" />
+        <span className="zp-loader-core">Z</span>
+        <i /><i /><i />
+      </div>
+      {visibleMessage && <p key={visibleMessage} className="zp-loader-message">{visibleMessage}</p>}
+      <span className="zp-loader-caption">ZPED LEARNING ENGINE</span>
     </div>
   )
 }
+
+export { DEFAULT_MESSAGES }

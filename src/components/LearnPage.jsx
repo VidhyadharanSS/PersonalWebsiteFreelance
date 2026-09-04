@@ -3,6 +3,7 @@ import {
   ArrowLeft, ArrowRight, Atom, BookOpen, Brain, Clock, Dna,
   FlaskConical, GraduationCap, Leaf, Microscope, Search, Sparkles, SunMedium
 } from 'lucide-react'
+import WikipediaExplorer from './WikipediaExplorer'
 
 const articles = [
   {
@@ -381,6 +382,12 @@ export default function LearnPage({ selectedSlug = 'biomolecules', onSelectArtic
               <button onClick={() => { setQuery(''); setCategory('All') }}>View all articles</button>
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="wiki-section section">
+        <div className="container">
+          <WikipediaExplorer />
         </div>
       </section>
 

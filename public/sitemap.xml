@@ -65,6 +65,8 @@
     <priority>0.8</priority>
   </url>
 
+  <!-- Live Open Knowledge Explorer is available within the learning hub. -->
+
   <!-- Section anchors (helps Google understand page structure for SPA) -->
   <url>
     <loc>https://zped.org/#why</loc>

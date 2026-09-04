@@ -12,6 +12,7 @@ import resetPasswordHandler from './api/auth/reset-password.js'
 import signinHandler from './api/auth/signin.js'
 import signoutHandler from './api/auth/signout.js'
 import signupHandler from './api/auth/signup.js'
+import wikiHandler from './api/wiki.js'
 
 const app = express()
 const port = Number(process.env.PORT || 3000)
@@ -31,6 +32,7 @@ const routes = {
   '/api/auth/signin': signinHandler,
   '/api/auth/signout': signoutHandler,
   '/api/auth/signup': signupHandler,
+  '/api/wiki': wikiHandler,
 }
 
 for (const [route, handler] of Object.entries(routes)) {

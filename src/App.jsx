@@ -20,7 +20,7 @@ const Dashboard = lazy(() => import('./components/Dashboard'))
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 function LazyFallback() {
-  return <LoadingSpinner message="Loading page..." />
+  return <LoadingSpinner message="Opening your learning space…" />
 }
 
 export default function App() {
@@ -86,17 +86,7 @@ export default function App() {
     setTimeout(() => document.getElementById('article')?.scrollIntoView({ behavior: 'smooth' }), 50)
   }, [navigate])
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-logo-wrap">
-          <img src="/logo-icon.jpeg" alt="ZP" className="loading-logo" />
-        </div>
-        <div className="loading-spinner" />
-        <p className="loading-text">zped <span style={{ fontSize: '0.5em', opacity: 0.7 }}>by Zenith Pranavi</span></p>
-      </div>
-    )
-  }
+  if (loading) return <LoadingSpinner size="large" fullscreen />
 
   return (
     <ToastProvider>

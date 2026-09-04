@@ -5,9 +5,10 @@ import NotFound from '../components/NotFound'
 import ErrorBoundary from '../components/ErrorBoundary'
 
 describe('LoadingSpinner', () => {
-  it('renders with default message', () => {
+  it('renders with a distinctive default learning message', () => {
     render(<LoadingSpinner />)
-    expect(screen.getByText('Loading...')).toBeInTheDocument()
+    expect(screen.getByText('Sharpening pencils in the cloud…')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toBeInTheDocument()
   })
 
   it('renders with custom message', () => {
