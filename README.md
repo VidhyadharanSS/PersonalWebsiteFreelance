@@ -72,9 +72,27 @@ Do not deploy this configuration to Vercel while `DB_HOST=localhost`: Vercel fun
 
 For managed MySQL or TiDB Cloud, set `DB_SSL=true` and use the provider's public host, port, username, password, and database name in the deployment environment.
 
+## Vercel deployment performance
+
+The repository pins Node 22 and npm 10 and uses `npm ci --prefer-offline --no-audit --no-fund` on Vercel. Vercel automatically restores its dependency cache when `package-lock.json` is unchanged; `npm ci` keeps installs deterministic and avoids the slower dependency resolution performed by `npm install`.
+
+To preserve cache hits:
+
+- Commit `package-lock.json` and only regenerate it when dependencies change.
+- Keep the project root and Node version stable in Vercel settings.
+- Do not enable “Clear build cache” for routine deployments.
+- Confirm the Vercel Root Directory points to this repository root.
+
+The Vite build separates router, sanitisation, and icon dependencies into stable vendor chunks so repeat visitors can reuse browser-cached assets.
+
+## Learning library
+
+`/learn` is the student-facing knowledge hub. Articles are searchable and filterable by subject, and each document contains quick facts, key terms, structured explanations, a checkpoint, and related reading. See [`LEARN_CONTENT_GUIDE.md`](./LEARN_CONTENT_GUIDE.md) for the article schema and editorial checklist.
+
 ## Validation
 
 ```bash
+npm ci
 npm run test:run
 npm run build
 ```

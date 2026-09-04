@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
-import { Sun, Moon, LogIn, LogOut, LayoutDashboard, ShieldCheck, Home, Menu, X, ChevronDown } from 'lucide-react'
+import { Palette, Check, LogIn, LogOut, LayoutDashboard, ShieldCheck, Home, Menu, X, ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
 export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, onLearn, view, isAdmin }) {
-  const { theme, toggle } = useTheme()
+  const { theme, themes, selectTheme } = useTheme()
   const { user, signOut, getUserName, getUserAvatar } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const userMenuRef = useRef(null)
+  const themeMenuRef = useRef(null)
   const navRef = useRef(null)
 
   useEffect(() => {
@@ -47,17 +49,16 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
     return () => document.removeEventListener('click', handle)
   }, [mobileOpen])
 
-  // Close user dropdown on outside click
+  // Close desktop dropdowns on outside click
   useEffect(() => {
-    if (!userMenuOpen) return
+    if (!userMenuOpen && !themeMenuOpen) return
     const handle = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
-        setUserMenuOpen(false)
-      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false)
+      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target)) setThemeMenuOpen(false)
     }
     document.addEventListener('click', handle)
     return () => document.removeEventListener('click', handle)
-  }, [userMenuOpen])
+  }, [userMenuOpen, themeMenuOpen])
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -132,9 +133,33 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
 
           {/* Desktop Actions */}
           <div className="nav-actions-desktop">
-            <button className="theme-toggle" onClick={toggle} aria-label="Toggle theme">
-              {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
+            <div className="theme-picker" ref={themeMenuRef}>
+              <button
+                className="theme-toggle"
+                onClick={(event) => { event.stopPropagation(); setThemeMenuOpen(!themeMenuOpen) }}
+                aria-label="Choose colour theme"
+                aria-expanded={themeMenuOpen}
+              >
+                <Palette size={18} />
+              </button>
+              {themeMenuOpen && (
+                <div className="theme-menu" role="menu" aria-label="Colour themes">
+                  <span className="theme-menu-title">Your study space</span>
+                  {themes.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`theme-option${theme === item.id ? ' active' : ''}`}
+                      onClick={() => { selectTheme(item.id); setThemeMenuOpen(false) }}
+                      role="menuitem"
+                    >
+                      <i style={{ background: item.color }} />
+                      <span>{item.label}</span>
+                      {theme === item.id && <Check size={15} />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {user ? (
               <div className="nav-user-group" ref={userMenuRef}>
@@ -214,8 +239,12 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
 
           {/* Mobile: theme + hamburger */}
           <div className="nav-mobile-right">
-            <button className="theme-toggle" onClick={toggle} aria-label="Toggle theme">
-              {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
+            <button
+              className="theme-toggle"
+              onClick={() => selectTheme(themes[(themes.findIndex(item => item.id === theme) + 1) % themes.length].id)}
+              aria-label={`Change theme. Current theme: ${themes.find(item => item.id === theme)?.label}`}
+            >
+              <Palette size={18} />
             </button>
             <button
               className="mobile-toggle"

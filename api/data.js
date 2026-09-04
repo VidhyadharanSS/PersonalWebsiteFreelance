@@ -21,13 +21,32 @@ function requireFields(data, fields) {
   if (missing.length) throw Object.assign(new Error(`Missing fields: ${missing.join(', ')}`), { status: 400 })
 }
 
+function cleanText(value, maxLength) {
+  return String(value ?? '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, maxLength)
+}
+
+function validateEmail(value) {
+  const email = cleanText(value, 254).toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw Object.assign(new Error('Please enter a valid email address'), { status: 400 })
+  }
+  return email
+}
+
 async function handlePublic(operation, payload) {
   if (operation !== 'submitEnquiry') return undefined
   requireFields(payload, ['name', 'email', 'message'])
+  const name = cleanText(payload.name, 100)
+  const email = validateEmail(payload.email)
+  const phone = cleanText(payload.phone, 30) || null
+  const message = cleanText(payload.message, 3000)
+  if (name.length < 2 || message.length < 10) {
+    throw Object.assign(new Error('Please provide your name and a message of at least 10 characters'), { status: 400 })
+  }
   const id = randomUUID()
   await execute(
     'INSERT INTO enquiries (id, name, email, phone, message) VALUES (?, ?, ?, ?, ?)',
-    [id, payload.name, payload.email, payload.phone || null, payload.message]
+    [id, name, email, phone, message]
   )
   return rowById('enquiries', id)
 }

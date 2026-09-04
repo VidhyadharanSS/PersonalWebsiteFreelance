@@ -43,10 +43,10 @@
   --bg-nav: rgba(250,247,242,0.92);
   --border-subtle: var(--cream-dark);
   --shadow-color: rgba(0,0,0,0.08);
-  --font-display: 'Cinzel', serif;
-  --font-serif: 'Playfair Display', serif;
-  --font-elegant: 'Cormorant Garamond', serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-elegant: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --container-width: 1200px;
   --section-padding: 100px 0;
   --transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
@@ -77,6 +77,32 @@
   --bg-body: #0d1117; --bg-card: #161b22; --bg-input: #21262d; --bg-nav: rgba(13,17,23,0.95);
   --border-subtle: #21262d; --shadow-color: rgba(0,0,0,0.3);
   --gradient-hero: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+}
+
+/* Calm ocean and forest study themes */
+[data-theme="ocean"] {
+  color-scheme: light;
+  --navy: #064e5b; --navy-dark: #073642; --navy-light: #18798b; --navy-medium: #0b6477; --navy-pale: rgba(11,100,119,.1);
+  --gold: #ef9f56; --gold-light: #ffc47c; --gold-dark: #c96e2c; --gold-pale: rgba(239,159,86,.14);
+  --cream: #eaf7f7; --cream-light: #f4fbfb; --cream-dark: #cde9e8; --cream-warm: #e0f2f1;
+  --pink: #e47777; --pink-dark: #c95662; --pink-light: #f0a0a0; --pink-deep: #b74e5a; --pink-pale: rgba(228,119,119,.1);
+  --white: #fff; --text-dark: #123940; --text-medium: #40636a; --text-light: #67848a; --text-muted: #82999d; --text-warm: #284f56;
+  --bg-body: #eaf7f7; --bg-card: #fff; --bg-input: #f4fbfb; --bg-nav: rgba(244,251,251,.94); --border-subtle: #cde9e8; --shadow-color: rgba(7,54,66,.1);
+  --gradient-hero: linear-gradient(160deg,#f4fbfb 0%,#dff3f2 60%,#cde9e8 100%);
+  --gradient-gold: linear-gradient(135deg,#ef9f56,#ffc47c,#c96e2c);
+  --gradient-navy: linear-gradient(135deg,#0b6477,#073642);
+}
+[data-theme="forest"] {
+  color-scheme: light;
+  --navy: #294f40; --navy-dark: #17372d; --navy-light: #4e7b65; --navy-medium: #315c48; --navy-pale: rgba(49,92,72,.1);
+  --gold: #d39b48; --gold-light: #e8bd72; --gold-dark: #a8732f; --gold-pale: rgba(211,155,72,.13);
+  --cream: #f1f4e9; --cream-light: #fafbf5; --cream-dark: #dce5d1; --cream-warm: #edf1e4;
+  --pink: #bc7771; --pink-dark: #9f5d58; --pink-light: #d59b95; --pink-deep: #94514d; --pink-pale: rgba(188,119,113,.1);
+  --white: #fff; --text-dark: #20372e; --text-medium: #4d665b; --text-light: #71847b; --text-muted: #8c9b94; --text-warm: #3a574b;
+  --bg-body: #f1f4e9; --bg-card: #fff; --bg-input: #fafbf5; --bg-nav: rgba(250,251,245,.94); --border-subtle: #dce5d1; --shadow-color: rgba(23,55,45,.1);
+  --gradient-hero: linear-gradient(160deg,#fafbf5 0%,#edf3e6 58%,#dce5d1 100%);
+  --gradient-gold: linear-gradient(135deg,#d39b48,#e8bd72,#a8732f);
+  --gradient-navy: linear-gradient(135deg,#315c48,#17372d);
 }
 
 /* Dark theme overrides */

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   ArrowLeft, ArrowRight, Atom, BookOpen, Brain, Clock, Dna,
-  FlaskConical, Leaf, Microscope, Search, Sparkles, SunMedium
+  FlaskConical, GraduationCap, Leaf, Microscope, Search, Sparkles, SunMedium
 } from 'lucide-react'
 
 const articles = [
@@ -178,6 +178,92 @@ const articles = [
     ],
     keyTerms: ['Carbon reservoir', 'Greenhouse gas', 'Photosynthesis', 'Respiration', 'Fossil fuel', 'Climate'],
     checkpoint: 'How can the same carbon atom be part of air, a plant, an animal, and rock at different times?'
+  },
+  {
+    slug: 'active-recall-study-guide',
+    title: 'Active Recall: Study Less, Remember More',
+    category: 'Study Skills',
+    level: 'All Learners',
+    minutes: 7,
+    icon: Brain,
+    heroImage: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1200&h=720&fit=crop',
+    summary: 'Turn revision into a workout for your memory using retrieval practice, spaced repetition, and short feedback loops.',
+    quickFacts: ['Retrieval strengthens memory better than rereading.', 'Spacing beats one long revision session.', 'Feedback prevents mistakes from becoming habits.'],
+    sections: [
+      {
+        heading: 'What Active Recall Means',
+        body: [
+          'Active recall means closing the book and asking your brain to produce the answer. Flashcards, practice questions, blank-page summaries, and teaching a concept aloud are all forms of retrieval practice.',
+          'The effort of remembering is useful. Each successful retrieval strengthens the route back to that knowledge, making it easier to access during an exam.'
+        ]
+      },
+      {
+        heading: 'Build a Simple Recall Cycle',
+        body: [
+          'Study one small idea, hide the source, then write or say everything you remember. Compare your response with the source and correct gaps in a different colour.',
+          'Return to the question after one day, three days, one week, and two weeks. Increase the interval when an answer feels secure and shorten it when you struggle.'
+        ]
+      },
+      {
+        heading: 'Use Questions, Not Highlights',
+        body: [
+          'Turn headings into questions before reading. For example, change “Functions of mitochondria” into “What does a mitochondrion do, and how does its structure help?”',
+          'Good questions require explanation, comparison, or application. They reveal understanding more accurately than recognising a highlighted sentence.'
+        ]
+      },
+      {
+        heading: 'A 30-Minute Revision Plan',
+        body: [
+          'Spend five minutes reviewing goals, fifteen minutes answering questions without notes, five minutes correcting errors, and five minutes scheduling the next review.',
+          'Track confidence separately from accuracy. Feeling familiar with a page is not the same as being able to explain it independently.'
+        ]
+      }
+    ],
+    keyTerms: ['Active recall', 'Retrieval practice', 'Spaced repetition', 'Feedback loop', 'Metacognition'],
+    checkpoint: 'How would you turn one chapter from your current subject into five active-recall questions?'
+  },
+  {
+    slug: 'ai-literacy-for-students',
+    title: 'AI Literacy: A Responsible Student Guide',
+    category: 'Digital Learning',
+    level: 'Middle and High School',
+    minutes: 8,
+    icon: GraduationCap,
+    heroImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=720&fit=crop',
+    summary: 'Learn how to question, verify, and responsibly use AI tools without outsourcing the thinking that makes learning valuable.',
+    quickFacts: ['AI can produce confident but incorrect answers.', 'Private information should never be pasted into public tools.', 'AI works best as a coach, not a substitute author.'],
+    sections: [
+      {
+        heading: 'AI Is a Tool, Not an Authority',
+        body: [
+          'Generative AI predicts useful-looking responses from patterns in data. It does not understand truth in the same way a person checks evidence, so its answers can contain invented facts or citations.',
+          'Treat every response as a draft to investigate. Verify claims with textbooks, trusted educational sites, primary sources, or your teacher.'
+        ]
+      },
+      {
+        heading: 'Prompt for Learning',
+        body: [
+          'Ask for hints, questions, examples, or feedback instead of a finished assignment. A strong prompt might say: “Ask me one question at a time about photosynthesis and explain mistakes after I answer.”',
+          'Include your level and learning goal, but never include passwords, addresses, personal records, or information that identifies another person.'
+        ]
+      },
+      {
+        heading: 'Check Bias and Evidence',
+        body: [
+          'Compare important answers with at least two reliable sources. Look for the author, publication date, supporting evidence, and whether another credible source reaches the same conclusion.',
+          'Ask whose perspective may be missing. Technology reflects choices made by people and can reproduce gaps or bias from its training material.'
+        ]
+      },
+      {
+        heading: 'Use AI With Academic Integrity',
+        body: [
+          'Follow your school’s rules and disclose AI assistance when required. Keep notes showing your own planning, drafts, calculations, and source checks.',
+          'The goal of an assignment is usually to develop your thinking. If a tool completes every difficult step, it removes the practice you need to improve.'
+        ]
+      }
+    ],
+    keyTerms: ['Generative AI', 'Verification', 'Bias', 'Prompt', 'Academic integrity', 'Privacy'],
+    checkpoint: 'What three checks would you perform before trusting an AI-generated explanation for homework?'
   }
 ]
 
@@ -203,19 +289,24 @@ function ArticleCard({ article, active, onSelect }) {
 
 export default function LearnPage({ selectedSlug = 'biomolecules', onSelectArticle, onHome }) {
   const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('All')
   const selectedArticle = getArticleBySlug(selectedSlug)
   const relatedArticles = articles.filter((article) => article.slug !== selectedArticle.slug).slice(0, 3)
+  const categories = ['All', ...new Set(articles.map((article) => article.category))]
 
   const filteredArticles = useMemo(() => {
     const value = query.trim().toLowerCase()
-    if (!value) return articles
-    return articles.filter((article) => (
-      article.title.toLowerCase().includes(value) ||
-      article.category.toLowerCase().includes(value) ||
-      article.summary.toLowerCase().includes(value) ||
-      article.keyTerms.some((term) => term.toLowerCase().includes(value))
-    ))
-  }, [query])
+    return articles.filter((article) => {
+      const matchesCategory = category === 'All' || article.category === category
+      const matchesQuery = !value || (
+        article.title.toLowerCase().includes(value) ||
+        article.category.toLowerCase().includes(value) ||
+        article.summary.toLowerCase().includes(value) ||
+        article.keyTerms.some((term) => term.toLowerCase().includes(value))
+      )
+      return matchesCategory && matchesQuery
+    })
+  }, [query, category])
 
   return (
     <main className="learn-page">
@@ -259,16 +350,37 @@ export default function LearnPage({ selectedSlug = 'biomolecules', onSelectArtic
             </div>
             <span>{filteredArticles.length} articles</span>
           </div>
-          <div className="learn-card-grid">
-            {filteredArticles.map((article) => (
-              <ArticleCard
-                key={article.slug}
-                article={article}
-                active={article.slug === selectedArticle.slug}
-                onSelect={onSelectArticle}
-              />
+          <div className="learn-filters" aria-label="Filter articles by subject">
+            {categories.map((item) => (
+              <button
+                key={item}
+                className={category === item ? 'active' : ''}
+                onClick={() => setCategory(item)}
+                aria-pressed={category === item}
+              >
+                {item}
+              </button>
             ))}
           </div>
+          {filteredArticles.length ? (
+            <div className="learn-card-grid">
+              {filteredArticles.map((article) => (
+                <ArticleCard
+                  key={article.slug}
+                  article={article}
+                  active={article.slug === selectedArticle.slug}
+                  onSelect={onSelectArticle}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="learn-empty">
+              <Search size={24} />
+              <h3>No lesson found yet</h3>
+              <p>Try a different keyword or explore another subject.</p>
+              <button onClick={() => { setQuery(''); setCategory('All') }}>View all articles</button>
+            </div>
+          )}
         </div>
       </section>
 
