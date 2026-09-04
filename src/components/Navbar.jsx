@@ -11,10 +11,14 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
   const [activeSection, setActiveSection] = useState('')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef(null)
+  const navRef = useRef(null)
 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 20)
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight
+      const progress = scrollable > 0 ? Math.min(100, (window.scrollY / scrollable) * 100) : 0
+      navRef.current?.style.setProperty('--scroll-progress', `${progress}%`)
       if (view !== 'home') return
       const sections = ['home', 'why', 'programs', 'pricing', 'how-it-works', 'contact']
       const pos = window.scrollY + 160
@@ -23,6 +27,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
         if (el && el.offsetTop <= pos) { setActiveSection(sections[i]); break }
       }
     }
+    onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [view])
@@ -93,7 +98,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
 
   return (
     <>
-      <nav className={`navbar${scrolled ? ' scrolled' : ''}`}>
+      <nav ref={navRef} className={`navbar${scrolled ? ' scrolled' : ''}`}>
         <div className="nav-container">
           {/* Brand */}
           <a href="#home" className="nav-brand" onClick={e => { e.preventDefault(); scrollTo('home') }}>

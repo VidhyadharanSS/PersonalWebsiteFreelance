@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from './Toast'
 import { submitEnquiry } from '../lib/database'
 import AOS from 'aos'
+import LearningPathFinder from './LearningPathFinder'
 import {
   Globe, Shield, Heart, Flower2,
   BookOpen, Rocket, Award, Users, Languages, Star,
@@ -21,13 +22,19 @@ function IconCircle({ icon: Icon, size = 40, iconSize = 18, className = '' }) {
 
 function FAQItem({ question, answer }) {
   const [open, setOpen] = useState(false)
+  const panelId = `faq-${question.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`
   return (
     <div className={`faq-item${open ? ' faq-item-open' : ''}`}>
-      <button className="faq-question" onClick={() => setOpen(!open)}>
+      <button
+        className="faq-question"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={panelId}
+      >
         <span>{question}</span>
         {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </button>
-      <div className={`faq-answer${open ? ' faq-answer-open' : ''}`}>
+      <div id={panelId} className={`faq-answer${open ? ' faq-answer-open' : ''}`} aria-hidden={!open}>
         <p>{answer}</p>
       </div>
     </div>
@@ -52,6 +59,7 @@ function BackToTop() {
 export default function Homepage({ onCTA, onRefund }) {
   const toast = useToast()
   const [enquiryLoading, setEnquiryLoading] = useState(false)
+  const [testimonialPage, setTestimonialPage] = useState(0)
 
   // Initialize AOS
   useEffect(() => {
@@ -117,6 +125,14 @@ export default function Homepage({ onCTA, onRefund }) {
       features: ['Specialist trained educators','Personalised learning plan','3-month structured plan','Doubt sessions included','Monthly parent meetings','Refund for unused classes'] }
   ]
   const defaultFeatures = ['Live one-on-one sessions','3-month structured plan','Doubt sessions included','Monthly parent meetings','Refund for unused classes']
+  const testimonials = [
+    { name: 'Sarah M.', location: 'London, UK', rating: 5, text: 'My son was struggling with maths for years. After just 3 months with Zenith Pranavi, he went from a C to an A*. The tutor understood exactly how he learns.', avatar: 'S' },
+    { name: 'Rajesh K.', location: 'Mumbai, India', rating: 5, text: 'As a parent of an autistic child, finding the right tutor felt impossible. Zenith Pranavi matched us with someone who truly understands my daughter. She looks forward to every session.', avatar: 'R' },
+    { name: 'Emily C.', location: 'Sydney, Australia', rating: 5, text: 'The IB curriculum support is outstanding. My daughter’s predicted grades improved significantly. The personalised learning map they created was a game-changer.', avatar: 'E' },
+    { name: 'Ahmed H.', location: 'Dubai, UAE', rating: 5, text: 'Fair pricing and world-class quality. We tried 4 other platforms before finding Zenith Pranavi. The difference is night and day — truly personalised teaching.', avatar: 'A' },
+    { name: 'Maria L.', location: 'São Paulo, Brazil', rating: 5, text: 'My twins have completely different learning styles. Zenith Pranavi gave each of them a different tutor perfectly matched to their needs. Both are thriving now.', avatar: 'M' },
+    { name: 'James T.', location: 'Toronto, Canada', rating: 5, text: 'The progress reports are incredible. I can see exactly what my son covered, where he improved, and what needs work. Complete transparency.', avatar: 'J' }
+  ]
 
   return (
     <main id="homepage">
@@ -255,6 +271,9 @@ export default function Homepage({ onCTA, onRefund }) {
           </div>
         </div>
       </section>
+
+      {/* ═══ INTERACTIVE PATH FINDER ═══ */}
+      <LearningPathFinder onCTA={onCTA} />
 
       {/* ═══ PRICING ═══ */}
       <section className="section pricing-section" id="pricing">
@@ -487,16 +506,14 @@ export default function Homepage({ onCTA, onRefund }) {
             <h2 className="section-title">What Parents &amp; Students Say</h2>
             <p className="section-desc">Real stories from <strong>real families</strong> who chose Zenith Pranavi.</p>
           </div>
-          <div className="testimonials-grid">
-            {[
-              { name: 'Sarah M.', location: 'London, UK', rating: 5, text: 'My son was struggling with maths for years. After just 3 months with Zenith Pranavi, he went from a C to an A*. The tutor understood exactly how he learns.', avatar: 'S' },
-              { name: 'Rajesh K.', location: 'Mumbai, India', rating: 5, text: 'As a parent of an autistic child, finding the right tutor felt impossible. Zenith Pranavi matched us with someone who truly understands my daughter. She looks forward to every session.', avatar: 'R' },
-              { name: 'Emily C.', location: 'Sydney, Australia', rating: 5, text: 'The IB curriculum support is outstanding. My daughter\'s predicted grades improved significantly. The personalised learning map they created was a game-changer.', avatar: 'E' },
-              { name: 'Ahmed H.', location: 'Dubai, UAE', rating: 5, text: 'Fair pricing and world-class quality. We tried 4 other platforms before finding Zenith Pranavi. The difference is night and day — truly personalised teaching.', avatar: 'A' },
-              { name: 'Maria L.', location: 'São Paulo, Brazil', rating: 5, text: 'My twins have completely different learning styles. Zenith Pranavi gave each of them a different tutor perfectly matched to their needs. Both are thriving now.', avatar: 'M' },
-              { name: 'James T.', location: 'Toronto, Canada', rating: 5, text: 'The progress reports are incredible. I can see exactly what my son covered, where he improved, and what needs work. Complete transparency.', avatar: 'J' }
-            ].map((t, i) => (
-              <div key={t.name} data-aos="fade-up" data-aos-delay={i * 80}>
+          <div className="testimonial-controls" aria-label="Testimonial pages">
+            <button type="button" className="testimonial-arrow" onClick={() => setTestimonialPage(page => Math.max(0, page - 1))} disabled={testimonialPage === 0} aria-label="Previous testimonials">←</button>
+            <span><strong>{testimonialPage + 1}</strong> / 2</span>
+            <button type="button" className="testimonial-arrow" onClick={() => setTestimonialPage(page => Math.min(1, page + 1))} disabled={testimonialPage === 1} aria-label="Next testimonials">→</button>
+          </div>
+          <div className="testimonials-grid testimonial-page" key={testimonialPage} aria-live="polite">
+            {testimonials.slice(testimonialPage * 3, testimonialPage * 3 + 3).map((t, i) => (
+              <div key={t.name} className="testimonial-slide" data-aos="fade-up" data-aos-delay={i * 80}>
                 <div className="testimonial-card">
                   <div className="testimonial-stars">
                     {Array.from({ length: t.rating }).map((_, si) => (

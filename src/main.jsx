@@ -13,6 +13,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'aos/dist/aos.css'
 // Custom styles (loaded AFTER bootstrap to override)
 import './styles/index.css'
+import './styles/polish.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
