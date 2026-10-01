@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, BookOpen, Clock } from 'lucide-react'
 import { fetchBlogBySlug, fetchPublishedBlogs } from '../lib/blogs'
 import LoadingSpinner from './LoadingSpinner'
+import MarkdownRenderer from './MarkdownRenderer'
 
 const readingTime = content => Math.max(1, Math.ceil(String(content || '').trim().split(/\s+/).length / 220))
 
@@ -35,7 +36,7 @@ export default function BlogPage({ slug, onSelectBlog }) {
           <div className="blog-article-meta"><BookOpen size={15} /> {blog.author} <span>·</span> <Clock size={15} /> {readingTime(blog.content)} min read</div>
           <h1>{blog.title}</h1>
           <p className="blog-lead">{blog.excerpt}</p>
-          <div className="blog-body">{blog.content}</div>
+          <MarkdownRenderer content={blog.content} className="blog-body" />
         </article>
       </main>
     )
