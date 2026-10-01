@@ -117,4 +117,5 @@
     <priority>0.7</priority>
   </url>
 
+  <url><loc>https://zped.org/blogs</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>

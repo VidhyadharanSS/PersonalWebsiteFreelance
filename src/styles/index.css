@@ -105,6 +105,38 @@
   --gradient-navy: linear-gradient(135deg,#315c48,#17372d);
 }
 
+/* Blogs */
+.blog-page { min-height: 75vh; padding-top: 74px; background: var(--bg-body); }
+.blog-hero { padding: 90px 0 70px; color: #fff; background: linear-gradient(135deg,var(--navy-dark),var(--navy)); }
+.blog-hero span,.blog-article-meta { color: var(--gold-light); font-size: .78rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+.blog-hero h1 { max-width: 850px; margin: 14px 0; font: 800 clamp(2.2rem,5vw,4.5rem)/1.05 var(--font-display); }
+.blog-hero p { max-width: 680px; color: rgba(255,255,255,.75); font-size: 1.05rem; }
+.blog-grid-section { padding-top: 70px; padding-bottom: 100px; }
+.blog-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(310px,1fr)); gap: 24px; }
+.blog-card { padding: 32px; border: 1px solid var(--border-subtle); border-radius: 24px; color: var(--text-dark); background: var(--bg-card); box-shadow: var(--shadow-sm); text-align: left; cursor: pointer; transition: var(--transition); }
+.blog-card:hover { transform: translateY(-6px); border-color: var(--gold); box-shadow: var(--shadow-lg); }
+.blog-card-icon { display: grid; place-items: center; width: 50px; height: 50px; margin-bottom: 22px; border-radius: 15px; color: var(--gold-dark); background: var(--gold-pale); }
+.blog-card-meta { color: var(--text-light); font-size: .72rem; }
+.blog-card h2 { margin: 10px 0; font: 800 1.45rem/1.25 var(--font-display); }
+.blog-card p { color: var(--text-medium); line-height: 1.7; }
+.blog-card > span { color: var(--gold-dark); font-weight: 800; }
+.blog-article { max-width: 850px; padding-top: 65px; padding-bottom: 100px; }
+.blog-back { display: flex; gap: 7px; margin-bottom: 35px; border: 0; color: var(--gold-dark); background: none; font-weight: 800; }
+.blog-article-meta { display: flex; align-items: center; gap: 9px; }
+.blog-article h1 { margin: 18px 0; font: 850 clamp(2.2rem,5vw,4rem)/1.08 var(--font-display); }
+.blog-lead { padding-bottom: 30px; border-bottom: 1px solid var(--border-subtle); color: var(--text-medium); font-size: 1.2rem; line-height: 1.7; }
+.blog-body { margin-top: 35px; color: var(--text-medium); font-size: 1.02rem; line-height: 1.85; white-space: pre-wrap; }
+.blog-empty { padding: 80px 24px; text-align: center; }
+.admin-blog-layout { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(320px,.8fr); gap: 24px; }
+.admin-blog-form,.admin-blog-list { padding: 25px; border: 1px solid var(--border-subtle); border-radius: 20px; background: var(--bg-card); }
+.admin-blog-heading { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
+.admin-blog-heading h3 { margin: 0; font: 800 1.2rem var(--font-display); }.admin-blog-heading p { margin: 4px 0 0; color: var(--text-light); font-size: .8rem; }
+.admin-blog-form label { display: grid; gap: 6px; margin-bottom: 14px; color: var(--text-medium); font-size: .8rem; font-weight: 700; }
+.admin-blog-form input,.admin-blog-form textarea,.admin-blog-form select { width: 100%; padding: 11px 13px; border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text-dark); background: var(--bg-input); font: 500 .88rem var(--font-body); }
+.admin-blog-fields { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }.admin-icon-btn { border: 0; color: var(--text-medium); background: transparent; }
+.admin-blog-row { display: flex; justify-content: space-between; gap: 15px; padding: 16px 0; border-bottom: 1px solid var(--border-subtle); }.admin-blog-row h4 { margin: 6px 0 2px; font-size: .92rem; }.admin-blog-row small { color: var(--text-light); }.admin-blog-row > div:last-child { display: flex; gap: 5px; }.admin-blog-row button { padding: 8px; border: 0; border-radius: 8px; color: var(--text-medium); background: var(--bg-input); }.admin-blog-status { padding: 3px 7px; border-radius: 999px; color: #fff; background: var(--text-light); font-size: .62rem; font-weight: 800; text-transform: uppercase; }.admin-blog-status.published { background: var(--success); }
+@media (max-width: 850px) { .admin-blog-layout { grid-template-columns: 1fr; }.blog-hero { padding: 65px 0 50px; } }
+
 /* Dark theme overrides */
 [data-theme="dark"] .navbar { background: var(--bg-nav); border-bottom-color: var(--border-subtle); }
 [data-theme="dark"] .hero { background: var(--gradient-hero); }

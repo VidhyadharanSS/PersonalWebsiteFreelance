@@ -18,6 +18,7 @@ import { ADMIN_EMAILS } from './lib/config'
 const LearnPage = lazy(() => import('./components/LearnPage'))
 const Dashboard = lazy(() => import('./components/Dashboard'))
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
+const BlogPage = lazy(() => import('./components/BlogPage'))
 
 function LazyFallback() {
   return <LoadingSpinner message="Opening your learning space…" />
@@ -44,6 +45,7 @@ export default function App() {
     if (path.startsWith('/learn')) return 'learn'
     if (path === '/dashboard') return 'dashboard'
     if (path === '/admin') return 'admin'
+    if (path.startsWith('/blogs')) return 'blogs'
     if (path === '/') return 'home'
     return 'home'
   }, [location.pathname])
@@ -81,6 +83,11 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [navigate])
 
+  const handleBlogs = useCallback((slug) => {
+    navigate(slug ? `/blogs/${slug}` : '/blogs')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [navigate])
+
   const handleSelectArticle = useCallback((slug) => {
     navigate(`/learn/${slug}`)
     setTimeout(() => document.getElementById('article')?.scrollIntoView({ behavior: 'smooth' }), 50)
@@ -99,6 +106,7 @@ export default function App() {
         onAdmin={handleAdmin}
         onHome={handleHome}
         onLearn={() => handleLearn()}
+        onBlogs={() => handleBlogs()}
         view={view}
         isAdmin={isAdmin}
       />
@@ -129,6 +137,8 @@ export default function App() {
                   />
                 }
               />
+              <Route path="/blogs" element={<BlogPage onSelectBlog={handleBlogs} />} />
+              <Route path="/blogs/:slug" element={<BlogPageWrapper onSelectBlog={handleBlogs} />} />
               <Route
                 path="/dashboard"
                 element={user ? <Dashboard /> : null}
@@ -166,5 +176,10 @@ function LearnPageWrapper({ onSelectArticle, onHome }) {
   )
 }
 
-// Need useParams for the wrapper
+function BlogPageWrapper({ onSelectBlog }) {
+  const { slug } = useParams()
+  return <BlogPage slug={slug} onSelectBlog={onSelectBlog} />
+}
+
+// Need useParams for route wrappers
 import { useParams } from 'react-router-dom'

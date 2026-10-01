@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
+import AdminBlogManager from './AdminBlogManager'
 import {
   fetchAllBookings, fetchAllEnquiries,
   updateBookingStatus as saveBookingStatus,
@@ -756,6 +757,9 @@ export default function AdminPanel() {
             <button className={`admin-tab${activeTab === 'analytics' ? ' active' : ''}`} onClick={() => setActiveTab('analytics')}>
               <BarChart3 size={16} /> <span>Analytics</span>
             </button>
+            <button className={`admin-tab${activeTab === 'blogs' ? ' active' : ''}`} onClick={() => setActiveTab('blogs')}>
+              <BookOpen size={16} /> <span>Blogs</span>
+            </button>
             <button className={`admin-tab${activeTab === 'audit' ? ' active' : ''}`} onClick={() => setActiveTab('audit')}>
               <Shield size={16} /> <span>Audit Log</span>
               {auditLogs.length > 0 && <span className="admin-tab-count admin-tab-count-audit">{auditLogs.length}</span>}
@@ -1114,6 +1118,12 @@ export default function AdminPanel() {
                 <div className="analytics-quick-stat"><Mail size={16} /><span>Enquiries: <strong>{enquiries.length}</strong></span></div>
                 <div className="analytics-quick-stat"><TrendingUp size={16} /><span>This Month: <strong>{bookings.filter(b => { const d = new Date(b.created_at); const now = new Date(); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() }).length}</strong> bookings</span></div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'blogs' && (
+            <div className="admin-tab-content admin-tab-fade">
+              <AdminBlogManager toast={toast} />
             </div>
           )}
 

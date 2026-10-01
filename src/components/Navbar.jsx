@@ -3,7 +3,7 @@ import { Palette, Check, LogIn, LogOut, LayoutDashboard, ShieldCheck, Home, Menu
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
-export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, onLearn, view, isAdmin }) {
+export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, onLearn, onBlogs, view, isAdmin }) {
   const { theme, themes, selectTheme } = useTheme()
   const { user, signOut, getUserName, getUserAvatar } = useAuth()
   const [scrolled, setScrolled] = useState(false)
@@ -120,6 +120,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
                 </a>
               </li>
             ))}
+            <li><a href="/blogs" className={`nav-link${view === 'blogs' ? ' active' : ''}`} onClick={e => { e.preventDefault(); setMobileOpen(false); onBlogs() }}>Blogs</a></li>
             <li>
               <a
                 href="/learn"
@@ -294,6 +295,7 @@ export default function Navbar({ onCTA, onSignIn, onDashboard, onAdmin, onHome, 
               </a>
             </li>
           ))}
+          <li><a href="/blogs" className={`mobile-nav-link${view === 'blogs' ? ' active' : ''}`} onClick={e => { e.preventDefault(); setMobileOpen(false); onBlogs() }}>Blogs</a></li>
           <li>
             <a
               href="/learn"

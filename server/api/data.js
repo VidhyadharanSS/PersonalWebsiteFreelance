@@ -34,6 +34,17 @@ function validateEmail(value) {
 }
 
 async function handlePublic(operation, payload) {
+  if (operation === 'fetchPublishedBlogs') {
+    return query(`SELECT id, slug, title, excerpt, content, author, published_at, created_at
+      FROM blogs WHERE status = 'published' ORDER BY COALESCE(published_at, created_at) DESC`)
+  }
+  if (operation === 'fetchBlogBySlug') {
+    const slug = cleanText(payload.slug, 180).toLowerCase()
+    const rows = await query(`SELECT id, slug, title, excerpt, content, author, published_at, created_at
+      FROM blogs WHERE slug = ? AND status = 'published' LIMIT 1`, [slug])
+    if (!rows.length) throw Object.assign(new Error('Blog not found'), { status: 404 })
+    return rows[0]
+  }
   if (operation !== 'submitEnquiry') return undefined
   requireFields(payload, ['name', 'email', 'message'])
   const name = cleanText(payload.name, 100)
@@ -114,6 +125,39 @@ async function handleUser(operation, payload, user) {
 }
 
 async function handleAdmin(operation, payload, admin) {
+  if (operation === 'fetchAllBlogs') return query('SELECT * FROM blogs ORDER BY created_at DESC')
+  if (operation === 'createBlog' || operation === 'updateBlog') {
+    requireFields(payload, ['title', 'excerpt', 'content'])
+    const title = cleanText(payload.title, 240)
+    const requestedSlug = cleanText(payload.slug, 180).toLowerCase()
+    const slug = (requestedSlug || title.toLowerCase())
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 180)
+    if (!slug) throw Object.assign(new Error('A valid blog slug is required'), { status: 400 })
+    const excerpt = cleanText(payload.excerpt, 500)
+    const content = String(payload.content || '').replace(/\r\n/g, '\n').trim().slice(0, 100000)
+    const author = cleanText(payload.author || 'Zenith Pranavi Education (ZPed)', 150)
+    const status = payload.status === 'published' ? 'published' : 'draft'
+    if (title.length < 5 || excerpt.length < 10 || content.length < 50) {
+      throw Object.assign(new Error('Please provide a complete title, excerpt, and article'), { status: 400 })
+    }
+    if (operation === 'createBlog') {
+      const id = randomUUID()
+      await execute(`INSERT INTO blogs (id, slug, title, excerpt, content, author, status, published_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, IF(? = 'published', NOW(), NULL))`,
+      [id, slug, title, excerpt, content, author, status, status])
+      return rowById('blogs', id)
+    }
+    requireFields(payload, ['id'])
+    await execute(`UPDATE blogs SET slug = ?, title = ?, excerpt = ?, content = ?, author = ?, status = ?,
+      published_at = CASE WHEN ? = 'published' THEN COALESCE(published_at, NOW()) ELSE NULL END WHERE id = ?`,
+    [slug, title, excerpt, content, author, status, status, payload.id])
+    return rowById('blogs', payload.id)
+  }
+  if (operation === 'deleteBlog') {
+    requireFields(payload, ['id'])
+    await execute('DELETE FROM blogs WHERE id = ?', [payload.id])
+    return true
+  }
   if (operation === 'fetchAllBookings') return query('SELECT * FROM bookings ORDER BY created_at DESC')
   if (operation === 'fetchAllEnquiries') return query('SELECT * FROM enquiries ORDER BY created_at DESC')
   if (operation === 'updateBookingStatus') {

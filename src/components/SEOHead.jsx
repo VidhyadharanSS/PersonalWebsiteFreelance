@@ -31,6 +31,14 @@ const SEO_CONFIG = {
     ogDescription: 'Readable science lessons with key terms, quick facts, checkpoints, and examples for curious learners.',
     robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
   },
+  blogs: {
+    title: 'ZPed Blogs — Personalised and Inclusive Education',
+    description: 'Insights from Zenith Pranavi Education about personalised learning, inclusive education, autism support, and helping every child thrive.',
+    canonical: 'https://zped.org/blogs',
+    ogTitle: 'ZPed Blogs — Every Learner Matters',
+    ogDescription: 'Guidance for students, parents, and educators from Zenith Pranavi Education.',
+    robots: 'index, follow, max-image-preview:large, max-snippet:-1',
+  },
   admin: {
     title: 'Admin Panel — zped | Zenith Pranavi',
     description: 'zped administration panel for managing bookings, students, and tutoring operations.',
