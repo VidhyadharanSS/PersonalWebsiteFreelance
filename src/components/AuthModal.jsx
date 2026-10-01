@@ -26,16 +26,17 @@ export default function AuthModal({ open, onClose }) {
   const [showPw, setShowPw] = useState(false)
 
   useEffect(() => {
-    if (open) {
-      setMode(new URLSearchParams(window.location.search).has('reset_token') ? 'reset' : 'signin')
-      setEmail('')
-      setPassword('')
-      setName('')
-      setShowPw(false)
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    if (!open) return undefined
+
+    setMode(new URLSearchParams(window.location.search).has('reset_token') ? 'reset' : 'signin')
+    setEmail('')
+    setPassword('')
+    setName('')
+    setShowPw(false)
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previousOverflow }
   }, [open])
 
   useEffect(() => {
@@ -116,12 +117,18 @@ export default function AuthModal({ open, onClose }) {
 
   return (
     <div className="modal-overlay active" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal modal-auth" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>&times;</button>
+      <div
+        className="modal modal-auth"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        onClick={e => e.stopPropagation()}
+      >
+        <button type="button" className="modal-close" onClick={onClose} aria-label="Close sign in dialog">&times;</button>
 
         <div className="auth-modal-header">
           <img src="/logo-icon.jpeg" alt="ZP" className="auth-modal-logo" />
-          <h3 className="auth-modal-title">
+          <h3 id="auth-modal-title" className="auth-modal-title">
             {mode === 'signin' && 'Welcome Back'}
             {mode === 'signup' && 'Create Account'}
             {mode === 'forgot' && 'Reset Password'}
